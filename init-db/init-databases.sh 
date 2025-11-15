@@ -1,0 +1,12 @@
+#!/bin/bash
+set -e
+
+# El script se conecta a la base de datos por defecto ($POSTGRES_DB) para ejecutar los comandos.
+psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-EOSQL
+    -- Crea la base de datos para la aplicación Chainlit
+    CREATE DATABASE chainlitdb;
+    
+    -- Crea una base de datos vacía con el mismo nombre que el usuario
+    -- para silenciar los errores de conexión de procesos en segundo plano.
+    CREATE DATABASE ctmuser;
+EOSQL

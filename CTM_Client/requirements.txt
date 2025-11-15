@@ -1,0 +1,4 @@
+asyncpg
+boto3
+chainlit
+httpx
