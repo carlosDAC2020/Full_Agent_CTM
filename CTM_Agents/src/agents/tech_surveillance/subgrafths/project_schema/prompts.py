@@ -1,26 +1,11 @@
 # prompts.py
 
-SMART_OBJECTIVES_PROMPT = """
-Rol: Eres un experto en gestión de proyectos y planificación estratégica.
-Tarea: Genera entre 3 y 5 objetivos de proyecto utilizando la metodología SMART (Específicos, Medibles, Alcanzables, Relevantes, con Plazo).
 
-Contexto del Proyecto:
-- Título del Proyecto: "{title}"
-- Descripción del Proyecto: "{description}"
 
-Instrucciones:
-1.  Analiza el título y la descripción para comprender el propósito principal del proyecto.
-2.  Para cada objetivo, describe claramente cómo cumple con cada uno de los criterios SMART.
-3.  Presenta los objetivos en una lista numerada y bien estructurada.
 
-Ejemplo de formato para un objetivo:
-1.  **Objetivo:** Desarrollar un prototipo funcional del módulo de pagos.
-    *   **Específico (S):** Crear un prototipo que procese transacciones simuladas con tarjeta de crédito y PayPal.
-    *   **Medible (M):** El prototipo debe procesar el 99% de las transacciones de prueba sin errores.
-    *   **Alcanzable (A):** El equipo de desarrollo tiene la experiencia y las herramientas necesarias.
-    *   **Relevante (R):** Es un paso crucial para validar la viabilidad técnica antes de la producción completa.
-    *   **Plazo (T):** Completar el desarrollo y las pruebas en 6 semanas.
-"""
+
+
+
 
 ACTIVITY_SCHEDULE_PROMPT = """
 Rol: Eres un experimentado Project Manager.

@@ -22,7 +22,8 @@ dependencies = [
     "tavily-python", 
     "langchain-community",
     "langdetect",
-    "google-genai"
+    "google-genai",
+    "semanticscholar"
 ]
 
 

@@ -25,13 +25,18 @@ def router_node(state: GraphState) -> dict:
     print("--- Ejecutando Nodo: Enrutador ---")
     last_message = state["messages"][-1]
     
+    report_components = state.get("report_components") or {}
+    general_info = report_components.get("general_info") or {}
+    project_title = general_info.get("project_title", "N/A")
+    project_description = general_info.get("project_description", "N/A")
+
     prompt_template = PromptTemplate.from_template(
         template, 
         partial_variables={
-            "last_message": last_message,
+            "last_message": str(last_message.content), 
             "context_summary": f"""
-            project_title: {state.get('project_title', 'N/A')} 
-            project_description: {state.get('project_description', 'N/A')}
+            project_title: {project_title} 
+            project_description: {project_description}
             """
         })
     

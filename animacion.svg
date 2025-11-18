@@ -1,0 +1,282 @@
+<svg width="900" height="650" viewBox="0 0 900 650" xmlns="http://www.w3.org/2000/svg" style="background-color: #050505; font-family: 'Courier New', monospace;">
+
+  <defs>
+    <!-- 1. Filtro de Resplandor (Neon Glow) -->
+    <filter id="neon-glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="2.5" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <!-- 2. Patrón de Scanlines (Efecto Monitor Antiguo) -->
+    <pattern id="scanlines" patternUnits="userSpaceOnUse" width="10" height="4">
+      <rect width="10" height="2" fill="#000" opacity="0.3"/>
+    </pattern>
+
+    <!-- 3. Gradientes Verdes -->
+    <radialGradient id="core-gradient" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#ccffcc" stop-opacity="1"/>
+      <stop offset="40%" stop-color="#00ff00" stop-opacity="0.8"/>
+      <stop offset="100%" stop-color="#003300" stop-opacity="0"/>
+    </radialGradient>
+    
+    <linearGradient id="beam-fade" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#0f0" stop-opacity="0" />
+      <stop offset="50%" stop-color="#0f0" stop-opacity="0.5" />
+      <stop offset="100%" stop-color="#0f0" stop-opacity="0" />
+    </linearGradient>
+  </defs>
+
+  <style>
+    /* --- CONFIGURACIÓN GLOBAL --- */
+    :root {
+      --neon-green: #00ff41;
+      --dark-green: #003b00;
+      --dim-green: #0d1a0d;
+    }
+
+    /* --- FONDO Y RED (GRID) --- */
+    .grid-lines {
+      stroke: var(--dark-green);
+      stroke-width: 1;
+      opacity: 0.3;
+      animation: panGrid 20s linear infinite;
+    }
+    @keyframes panGrid { from { stroke-dashoffset: 0; } to { stroke-dashoffset: 100; } }
+
+    /* --- EL NÚCLEO CENTRAL (INPUT) --- */
+    .core-ring {
+      fill: none;
+      stroke: var(--neon-green);
+      stroke-width: 2;
+      stroke-dasharray: 20 40;
+      transform-origin: 450px 325px;
+      filter: url(#neon-glow);
+    }
+    .ring-outer { r: 80; animation: spinRight 10s linear infinite; stroke-opacity: 0.5; }
+    .ring-mid { r: 60; animation: spinLeft 6s linear infinite; stroke-width: 3; }
+    .ring-inner { r: 40; animation: pulseCore 4s ease-in-out infinite; fill: rgba(0, 255, 0, 0.1); }
+
+    @keyframes spinRight { 100% { transform: rotate(360deg); } }
+    @keyframes spinLeft { 100% { transform: rotate(-360deg); } }
+    @keyframes pulseCore {
+      0%, 100% { r: 40; opacity: 0.5; stroke: var(--neon-green); }
+      50% { r: 45; opacity: 1; stroke: #fff; }
+    }
+
+    /* --- NODOS DE DATOS (ÍTEMS) --- */
+    .data-node {
+      opacity: 0;
+    }
+    
+    /* Animación compleja de nodos: Aparecer -> Escanear -> Validar -> Absorber */
+    .node-anim { animation: processNode 16s infinite cubic-bezier(0.4, 0.0, 0.2, 1); }
+    
+    .n1 { animation-delay: 2s; transform-origin: center; }
+    .n2 { animation-delay: 2.5s; transform-origin: center; }
+    .n3 { animation-delay: 3s; transform-origin: center; }
+    .n4 { animation-delay: 3.5s; transform-origin: center; } /* El nodo "malo" */
+    .n5 { animation-delay: 4s; transform-origin: center; }
+
+    @keyframes processNode {
+      0% { opacity: 0; transform: translate(var(--sx), var(--sy)) scale(0); }
+      10% { opacity: 1; transform: translate(var(--sx), var(--sy)) scale(1); fill: #000; stroke: var(--neon-green); }
+      20% { transform: translate(var(--sx), var(--sy)); } 
+      
+      /* Fase de Evaluación (Parpadeo) */
+      25% { fill: var(--neon-green); } 
+      30% { fill: #000; }
+      
+      /* Transición hacia el centro (Comparación Vectorial) */
+      40% { transform: translate(450px, 325px) scale(0.5); opacity: 1; }
+      45% { opacity: 0; transform: translate(450px, 325px) scale(0); }
+      100% { opacity: 0; }
+    }
+
+    /* Nodo específico que falla (Rojo) */
+    .bad-node {
+      stroke: #ff003c !important;
+    }
+    .bad-node-fill { animation: badFill 16s infinite cubic-bezier(0.4, 0.0, 0.2, 1); animation-delay: 3.5s; }
+    
+    @keyframes badFill {
+      0%, 20% { fill: #000; }
+      25% { fill: #ff003c; } 
+      40% { opacity: 0; }
+      100% { opacity: 0; }
+    }
+
+    /* --- LÍNEAS DE CONEXIÓN (DATA STREAMS) --- */
+    .connector {
+      stroke: var(--neon-green);
+      stroke-width: 1;
+      stroke-dasharray: 5 5;
+      opacity: 0;
+      animation: beamData 16s infinite;
+    }
+    .c1 { animation-delay: 2s; }
+    .c2 { animation-delay: 2.5s; }
+    .c3 { animation-delay: 3s; }
+    .c4 { animation-delay: 3.5s; stroke: #ff003c; } /* Conexión corrupta */
+    .c5 { animation-delay: 4s; }
+
+    @keyframes beamData {
+      0% { opacity: 0; stroke-dashoffset: 100; }
+      10% { opacity: 0.6; }
+      35% { stroke-dashoffset: 0; opacity: 0.8; stroke-width: 2; } 
+      40% { opacity: 0; }
+      100% { opacity: 0; }
+    }
+
+    /* --- HUD TEXT UI --- */
+    .hud-text {
+      font-size: 12px;
+      fill: var(--neon-green);
+      opacity: 0.7;
+    }
+    
+    .status-bar {
+      fill: var(--dark-green);
+      stroke: var(--neon-green);
+      stroke-width: 1;
+    }
+    .status-fill {
+      fill: var(--neon-green);
+      animation: loadBar 16s infinite linear;
+    }
+    @keyframes loadBar {
+      0%, 10% { width: 0; fill: var(--dark-green); }
+      40% { width: 100px; fill: #ffff00; } 
+      60% { width: 180px; fill: var(--neon-green); filter: url(#neon-glow); } 
+      90% { width: 200px; opacity: 1; }
+      100% { opacity: 0; }
+    }
+
+    /* --- VEREDICTO FINAL --- */
+    .verdict-group { opacity: 0; animation: showVerdict 16s infinite; }
+    @keyframes showVerdict {
+      0%, 55% { opacity: 0; transform: scale(0.8); transform-origin: 450px 325px; }
+      60% { opacity: 1; transform: scale(1.1); }
+      65% { transform: scale(1); }
+      90% { opacity: 1; }
+      100% { opacity: 0; }
+    }
+
+    /* Efecto de partículas de fondo */
+    .particle { fill: #0f0; opacity: 0; animation: floatUp 5s infinite linear; }
+    @keyframes floatUp { 0% { cy: 650; opacity: 0; } 50% { opacity: 0.5; } 100% { cy: 0; opacity: 0; } }
+
+  </style>
+
+  <!-- 1. FONDO Y GRID (CORREGIDO) -->
+  <rect width="100%" height="100%" fill="#050505" />
+  
+  <!-- Grid perspectiva decorativo -->
+  <path d="M0 100 H900 M0 200 H900 M0 300 H900 M0 400 H900 M0 500 H900 M0 600 H900" class="grid-lines" />
+  <path d="M100 0 V650 M200 0 V650 M300 0 V650 M400 0 V650 M500 0 V650 M600 0 V650 M700 0 V650 M800 0 V650" class="grid-lines" style="stroke-dasharray: 2 2;" />
+
+  <!-- Partículas de datos flotantes -->
+  <circle class="particle" cx="100" cy="600" r="1" style="animation-delay:0s"/>
+  <circle class="particle" cx="300" cy="600" r="2" style="animation-delay:1s"/>
+  <circle class="particle" cx="600" cy="600" r="1" style="animation-delay:2.5s"/>
+  <circle class="particle" cx="800" cy="600" r="2" style="animation-delay:0.5s"/>
+
+  <!-- 2. CONECTORES DE DATOS -->
+  <g transform="translate(450, 325)">
+    <line x1="0" y1="0" x2="-300" y2="-150" class="connector c1" />
+    <line x1="0" y1="0" x2="300" y2="-100" class="connector c2" />
+    <line x1="0" y1="0" x2="-250" y2="150" class="connector c3" />
+    <line x1="0" y1="0" x2="280" y2="180" class="connector c4" />
+    <line x1="0" y1="0" x2="0" y2="-250" class="connector c5" />
+  </g>
+
+  <!-- 3. ÍTEMS DE REFERENCIA (NODOS) -->
+  
+  <!-- Item 1: Fuente Fiable -->
+  <g class="node-anim n1" style="--sx: 150px; --sy: 175px;">
+    <rect x="-15" y="-15" width="30" height="30" fill="#000" stroke="#00ff41" stroke-width="2" />
+    <text x="-25" y="-25" font-size="10" fill="#00ff41">SRC_01</text>
+    <rect x="-10" y="-5" width="20" height="2" fill="#00ff41" opacity="0.5"/>
+    <rect x="-10" y="0" width="15" height="2" fill="#00ff41" opacity="0.5"/>
+  </g>
+
+  <!-- Item 2: Contexto Alto -->
+  <g class="node-anim n2" style="--sx: 750px; --sy: 225px;">
+    <polygon points="0,-20 20,0 0,20 -20,0" fill="#000" stroke="#00ff41" stroke-width="2" />
+    <text x="25" y="0" font-size="10" fill="#00ff41">CTX_MATCH</text>
+  </g>
+
+  <!-- Item 3: Inferencia Positiva -->
+  <g class="node-anim n3" style="--sx: 200px; --sy: 475px;">
+    <circle r="15" fill="#000" stroke="#00ff41" stroke-width="2" />
+    <text x="-20" y="30" font-size="10" fill="#00ff41">INF_POS</text>
+  </g>
+
+  <!-- Item 4: DATO CONTRADICTORIO (ANOMALÍA) -->
+  <g class="node-anim n4" style="--sx: 730px; --sy: 505px;">
+    <path d="M-15,-15 L15,15 M-15,15 L15,-15" stroke="#ff003c" stroke-width="4" />
+    <rect x="-20" y="-20" width="40" height="40" fill="none" stroke="#ff003c" stroke-width="2" class="bad-node" />
+    <text x="25" y="-10" font-size="10" fill="#ff003c">NEGATION</text>
+  </g>
+  
+  <!-- Item 5: Datos Extra -->
+  <g class="node-anim n5" style="--sx: 450px; --sy: 75px;">
+    <rect x="-10" y="-20" width="20" height="40" fill="#000" stroke="#00ff41" />
+  </g>
+
+  <!-- 4. EL NÚCLEO CENTRAL -->
+  <g transform="translate(450, 325)">
+    <circle class="core-ring ring-outer" cx="0" cy="0" />
+    <circle class="core-ring ring-mid" cx="0" cy="0" />
+    <circle class="core-ring ring-inner" cx="0" cy="0" />
+    
+    <g class="verdict-group">
+        <circle r="50" fill="url(#core-gradient)" filter="url(#neon-glow)" opacity="0.8"/>
+        <path d="M-20 0 L-5 15 L25 -15" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" />
+        <text x="0" y="70" text-anchor="middle" font-size="14" fill="#fff" font-weight="bold" letter-spacing="2">VERIFICADO</text>
+    </g>
+  </g>
+
+  <!-- 5. HUD INTERFACE -->
+  
+  <!-- Barra superior -->
+  <rect x="50" y="30" width="800" height="2" fill="#003b00" />
+  <rect x="50" y="30" width="100" height="6" fill="#00ff41" opacity="0.8">
+    <animate attributeName="x" values="50;750;50" dur="8s" repeatCount="indefinite" />
+  </rect>
+
+  <!-- Panel de Estado -->
+  <g transform="translate(50, 550)">
+    <text x="0" y="-15" class="hud-text">SYSTEM_STATUS: PROCESSING VECTOR SPACE</text>
+    <rect class="status-bar" x="0" y="0" width="200" height="15" />
+    <rect class="status-fill" x="0" y="0" height="15" />
+    
+    <text x="0" y="35" font-size="10" fill="#00ff41" opacity="0.5">
+      <tspan x="0" dy="0">Accessing Knowledge Graph...</tspan>
+      <tspan x="0" dy="12" opacity="0">
+        <animate attributeName="opacity" values="0;1;1;0" dur="16s" begin="2s" repeatCount="indefinite"/>Fetching Nodes...
+      </tspan>
+      <tspan x="0" dy="12" opacity="0">
+        <animate attributeName="opacity" values="0;1;1;0" dur="16s" begin="6s" repeatCount="indefinite"/>Calculating Euclidean Distance...
+      </tspan>
+      <tspan x="0" dy="12" opacity="0" fill="#fff">
+        <animate attributeName="opacity" values="0;1;1;0" dur="16s" begin="10s" repeatCount="indefinite"/>INTEGRATION COMPLETE.
+      </tspan>
+    </text>
+  </g>
+
+
+  <g transform="translate(700, 60)">
+    <text x="0" y="0" class="hud-text" text-anchor="end">CONFIDENCE_LEVEL</text>
+    <text x="0" y="25" font-size="24" fill="#00ff41" text-anchor="end" font-weight="bold">
+       <animate attributeName="opacity" values="0.5;1;0.5" dur="0.5s" repeatCount="indefinite"/>
+       98.4%
+    </text>
+    <polyline points="-100,40 -80,35 -60,50 -40,30 -20,35 0,20" fill="none" stroke="#00ff41" stroke-width="1" />
+  </g>
+
+  <rect width="100%" height="100%" fill="url(#scanlines)" pointer-events="none" />
+
+</svg>

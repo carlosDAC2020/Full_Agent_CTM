@@ -1,9 +1,8 @@
 import os
 import asyncio
 from langchain.tools import tool
-from langchain_community.retrievers import ArxivRetriever
-from langchain_community.retrievers import PubMedRetriever
-from langchain_community.retrievers import WikipediaRetriever
+from langchain_community.retrievers import ArxivRetriever, PubMedRetriever, WikipediaRetriever
+from langchain_community.tools.semanticscholar.tool import SemanticScholarQueryRun
 from tavily import TavilyClient
 
 # 1. Búsqueda en ArXiv (papers científicos)
@@ -157,10 +156,33 @@ async def academic_search(query: str, max_results: int = 5) -> str:
     return "\n\n" + "="*80 + "\n\n".join(formatted_results)
 
 
+@tool
+async def search_semantic_scholar(query: str, max_results: int = 5) -> str:
+    """Search Semantic Scholar for AI/ML research papers with citation context.
+    
+    Best for:
+    - Finding highly-cited papers and their impact
+    - Understanding research genealogy and influence
+    - Discovering papers cited by key works
+    - Comprehensive academic literature overview
+    
+    Args:
+        query: Research topic (e.g., "multi-agent reinforcement learning")
+        max_results: Number of papers (default: 5)
+    
+    Returns:
+        Formatted list of papers with citation counts and influence.
+    """
+    tool = SemanticScholarQueryRun()
+    results = await tool.ainvoke(query)
+    return results
+
+
 # Lista de herramientas
 research_tools = [
     search_arxiv,
     search_pubmed,
     search_wikipedia,
-    academic_search
+    academic_search,
+    search_semantic_scholar 
 ]

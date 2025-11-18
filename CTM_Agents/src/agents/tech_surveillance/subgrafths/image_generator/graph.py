@@ -27,8 +27,12 @@ def prompt_generator_image_node(state: GraphState):
     Genera un prompt optimizado para la creación de imágenes basándose
     en el título y descripción del proyecto.
     """
-    project_title = state.get("project_title", "proyecto tecnológico")
-    project_description = state.get("project_description", "un proyecto innovador")
+    # --- LEER DESDE report_components ---
+    report_components = state.get("report_components", {})
+    general_info = report_components.get("general_info", {})
+    
+    project_title = general_info.get("project_title", "proyecto tecnológico")
+    project_description = general_info.get("project_description", "un proyecto innovador")
     
     # Template para generar el prompt de imagen
     prompt_template = PromptTemplate(
@@ -52,9 +56,9 @@ def prompt_generator_image_node(state: GraphState):
         )
         
         return {
-            "messages": [message],
-            "image_prompt": generated_prompt  # Guardamos el prompt generado
-        }
+                "messages": [message],
+                "image_prompt": generated_prompt 
+            }
     
     except Exception as e:
         error_message = AIMessage(
@@ -72,7 +76,9 @@ def generator_image_node(state: GraphState):
     en una carpeta específica.
     """
     image_prompt = state.get("image_prompt")
-    project_title = state.get("project_title", "proyecto_tecnologico")
+    report_components = state.get("report_components", {})
+    general_info = report_components.get("general_info", {})
+    project_title = general_info.get("project_title", "proyecto_tecnologico")
     
     if not image_prompt:
         error_message = AIMessage(
