@@ -14,8 +14,18 @@ dependencies = [
     "langgraph>=1.0.0",
     "python-dotenv>=1.0.1",
     "tavily-python>=0.7.12",
-    "reportlab"
+    "reportlab",
+    "jinja2",
+    "arxiv", 
+    "xmltodict", 
+    "wikipedia", 
+    "tavily-python", 
+    "langchain-community",
+    "langdetect",
+    "google-genai"
 ]
+
+
 
 
 [project.optional-dependencies]

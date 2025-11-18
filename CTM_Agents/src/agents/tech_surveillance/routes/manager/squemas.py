@@ -1,4 +1,5 @@
 from pydantic import BaseModel, Field
+from typing import Literal
 
 class RouteQuery(BaseModel):
     """Clasifica la intención del usuario."""

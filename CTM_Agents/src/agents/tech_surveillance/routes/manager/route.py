@@ -1,11 +1,18 @@
+import os
+
+from agents.tech_surveillance.state import GraphState
 from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_core.prompts import PromptTemplate
+
+from agents.tech_surveillance.routes.manager.squemas import RouteQuery
+from agents.tech_surveillance.routes.manager.prompts import template
 
 # Modelo base para chat general
 chat_model = ChatGoogleGenerativeAI(
     model="gemini-2.5-flash", # Corregido para usar el nombre correcto
     api_key=os.environ.get("GEMINI_API_KEY"),
     temperature=0.7,
-    convert_system_message_to_human=True # Necesario para algunos modelos de Gemini
+    convert_system_message_to_human=True 
 )
 
 # Modelo "aumentado" para la tarea de enrutamiento
@@ -18,19 +25,24 @@ def router_node(state: GraphState) -> dict:
     print("--- Ejecutando Nodo: Enrutador ---")
     last_message = state["messages"][-1]
     
-    prompt = f"""Eres un clasificador de intenciones experto. Tu tarea es analizar el siguiente mensaje de un usuario y decidir si está:
-    (A) Describiendo un nuevo proyecto (intención 'PROYECTO').
-    (B) Haciendo una pregunta general o continuando una conversación (intención 'CHAT').
-
-    Mensaje del usuario: "{last_message['content']}"
-
-    Responde únicamente con la intención.
-    """
+    prompt_template = PromptTemplate.from_template(
+        template, 
+        partial_variables={
+            "last_message": last_message,
+            "context_summary": f"""
+            project_title: {state.get('project_title', 'N/A')} 
+            project_description: {state.get('project_description', 'N/A')}
+            """
+        })
     
+    prompt = prompt_template.format()
+
     # Llama al LLM de enrutamiento
     decision_result = router_llm.invoke(prompt)
     
     print(f"--- Decisión del Enrutador: {decision_result.decision} ---")
     
     # Actualiza el estado con la decisión para que la arista condicional pueda leerla
-    return {"route_decision": decision_result.decision}
+    return {
+            "route_decision":decision_result.decision
+        }
