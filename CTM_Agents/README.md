@@ -1,63 +1,84 @@
-# New LangGraph Project
+# Informe de Actividades - Proyecto de Vigilancia Tecnológica
+## Servidor LangGraph `ctm_agent`
+**Periodo:** Octubre 2024
 
-[![CI](https://github.com/langchain-ai/new-langgraph-project/actions/workflows/unit-tests.yml/badge.svg)](https://github.com/langchain-ai/new-langgraph-project/actions/workflows/unit-tests.yml)
-[![Integration Tests](https://github.com/langchain-ai/new-langgraph-project/actions/workflows/integration-tests.yml/badge.svg)](https://github.com/langchain-ai/new-langgraph-project/actions/workflows/integration-tests.yml)
+---
 
-This template demonstrates a simple application implemented using [LangGraph](https://github.com/langchain-ai/langgraph), designed for showing how to get started with [LangGraph Server](https://langchain-ai.github.io/langgraph/concepts/langgraph_server/#langgraph-server) and using [LangGraph Studio](https://langchain-ai.github.io/langgraph/concepts/langgraph_studio/), a visual debugging IDE.
+### 1. Introducción
 
-<div align="center">
-  <img src="./static/studio_ui.png" alt="Graph view in LangGraph studio UI" width="75%" />
-</div>
+Este documento presenta el funcionamiento del servidor `ctm_agent`, diseñado para actuar como un asistente inteligente en la formulación de proyectos de vigilancia tecnológica. El sistema automatiza la creación de informes complejos, pasando de una idea general a un documento estructurado con rigor académico y metodológico.
 
-The core logic defined in `src/agent/graph.py`, showcases an single-step application that responds with a fixed string and the configuration provided.
+Este informe pretende explicar el estado del desarrollo actual del agente `ctm_agent`, el ppanteamiento de la logica aseguir y sus componenets principales.  
 
-You can extend this graph to orchestrate more complex agentic workflows that can be visualized and debugged in LangGraph Studio.
+### 2. Flujo de Generación del Reporte
 
-## Getting Started
+El valor principal del sistema reside en su capacidad para encadenar diferentes etapas de trabajo, simulando cómo un equipo humano abordaría la formulación de un proyecto.
 
-1. Install dependencies, along with the [LangGraph CLI](https://langchain-ai.github.io/langgraph/concepts/langgraph_cli/), which will be used to run the server.
+![Flujo del Agente](./static/flow.png)
 
-```bash
-cd path/to/your/app
-pip install -e . "langgraph-cli[inmem]"
-```
+A continuación, se describe el proceso paso a paso:
 
-2. (Optional) Customize the code and project as needed. Create a `.env` file if you need to use secrets.
+#### Paso 1: Entendimiento de la Solicitud (Ingesta)
+Todo comienza cuando el usuario describe su idea y una convocatoria asociada (ej. *"Quiero un proyecto sobre IA en la agricultura"*).
+*   **Lo que hace el sistema:** Analiza el texto para extraer los datos clave: **Título del Proyecto**, **Descripción** y **Palabras Clave**.
+*   **Resultado:** El agente "entiende" de qué trata el proyecto y prepara una carpeta virtual (el estado) donde irá guardando toda la información que genere.
 
-```bash
-cp .env.example .env
-```
+#### Paso 2: Investigación Académica
+Antes de escribir, el sistema necesita informarse.
+*   **Lo que hace el sistema:** Un agente especializado busca información en fuentes científicas reales (como ArXiv o PubMed) y en la web.
+*   **Resultado:** Genera un **Marco Teórico** sólido y una lista de **Referencias Bibliográficas** en formato APA. Esto asegura que el proyecto tenga sustento científico y no sea una "alucinación" de la IA.
 
-If you want to enable LangSmith tracing, add your LangSmith API key to the `.env` file.
+#### Paso 3: Estructuración Metodológica (El "Cerebro" del Proyecto)
+Con la información teórica lista, el sistema pasa a definir la estructura del proyecto. Este proceso es secuencial y lógico:
+1.  **Justificación:** Redacta por qué es importante el proyecto.
+2.  **Objetivos:** Define un objetivo general y objetivos específicos medibles (SMART).
+3.  **Metodología:** Propone cómo se va a ejecutar el trabajo.
+4.  **Cronograma:** Crea una tabla de actividades estimada.
+5.  **Riesgos:** Identifica posibles problemas y cómo mitigarlos.
+6.  **Impactos:** Proyecta los beneficios sociales, económicos y tecnológicos.
+7.  **Resumen Ejecutivo:** Sintetiza todo lo anterior en una visión general.
 
-```text
-# .env
-LANGSMITH_API_KEY=lsv2...
-```
+#### Paso 4: Generación Visual
+Para que el reporte sea más atractivo, el sistema crea sus propias ilustraciones.
+*   **Lo que hace el sistema:** Lee el título y la descripción del proyecto, imagina una portada adecuada y crea un "prompt" (instrucción) para un modelo de generación de imágenes.
+*   **Resultado:** Una imagen única y alusiva al tema del proyecto que se inserta en el reporte final.
 
-3. Start the LangGraph Server.
+#### Paso 5: Ensamble del Reporte Final
+Finalmente, el sistema toma todas las piezas generadas en los pasos anteriores (teoría, metodología, imagen, cronograma) y las une en un solo documento bien formateado.
 
-```shell
-langgraph dev
+---
 
-langgraph dev --allow-blocking
-```
+### 3. Componentes Clave (Resumen No Técnico)
 
-For more information on getting started with LangGraph Server, [see here](https://langchain-ai.github.io/langgraph/tutorials/langgraph-platform/local-server/).
+Para lograr este flujo, el sistema utiliza varios "expertos" virtuales:
 
-## How to customize
+*   **El Coordinador (Router):** Es quien recibe al usuario y decide si quiere conversar o empezar un proyecto nuevo.
+*   **El Investigador (Academic Agent):** Es el encargado de buscar en internet y leer papers. Tiene herramientas para acceder a bases de datos científicas.
+*   **El Planificador (Project Schema):** Es quien sabe de metodología de proyectos. No busca en internet, sino que piensa y estructura la información lógica.
+*   **El Artista (Image Generator):** Se encarga exclusivamente de la parte visual.
 
-1. **Define runtime context**: Modify the `Context` class in the `graph.py` file to expose the arguments you want to configure per assistant. For example, in a chatbot application you may want to define a dynamic system prompt or LLM to use. For more information on runtime context in LangGraph, [see here](https://langchain-ai.github.io/langgraph/agents/context/?h=context#static-runtime-context).
+### 4. Tecnologías Implementadas
 
-2. **Extend the graph**: The core logic of the application is defined in [graph.py](./src/agent/graph.py). You can modify this file to add new nodes, edges, or change the flow of information.
+El sistema se construye sobre un stack tecnológico moderno y robusto:
 
-## Development
+*   **LangGraph:** Framework de orquestación para definir el flujo de control y el estado de los agentes.
+*   **Google Gemini 2.5 Flash:** Modelo de lenguaje principal (LLM) utilizado para razonamiento, generación de texto y estructuración de datos.
+*   **Tavily AI:** Motor de búsqueda optimizado para agentes de IA, utilizado para la recuperación de información en tiempo real.
+*   **LangChain:** Biblioteca base para la interacción con modelos y herramientas.
+*   **Python 3.11+:** Lenguaje de programación base.
 
-While iterating on your graph in LangGraph Studio, you can edit past state and rerun your app from previous states to debug specific nodes. Local changes will be automatically applied via hot reload.
+### 5. Estado Actual y Logros de Octubre
 
-Follow-up requests extend the same thread. You can create an entirely new thread, clearing previous history, using the `+` button in the top right.
+Durante este mes, logramos que todos estos "expertos" trabajen en equipo de forma autónoma.
+*   Se completó la conexión entre la investigación y la planificación: ahora la metodología se basa en lo que investigó el agente académico.
+*   Se integró la generación de imágenes automática.
+*   El sistema es capaz de entregar un reporte completo en formato Markdown listo para ser leído.
 
-For more advanced features and examples, refer to the [LangGraph documentation](https://langchain-ai.github.io/langgraph/). These resources can help you adapt this template for your specific use case and build more sophisticated conversational agents.
+---
 
-LangGraph Studio also integrates with [LangSmith](https://smith.langchain.com/) for more in-depth tracing and collaboration with teammates, allowing you to analyze and optimize your chatbot's performance.
+### 6. Próximos Pasos
 
+*   Mejorar la capacidad de investuiagcion y redacciond el marco terocio por parte del agente académico.  
+*   Mejora de los propmts utilizados para la genracion de la secciones dle documento final.
+*   Mejorar el formato del reporte final ya que actualemnete no cumple con los estandares esperados. 
+*   a parte de la genberacio del documento final generar una presentacion segun las directrices sujeridas enla ultima reunion. 
