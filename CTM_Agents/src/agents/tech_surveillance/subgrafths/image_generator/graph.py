@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import os
 from langgraph.graph import END, StateGraph
-from agents.tech_surveillance.state import GraphState
+from agents.tech_surveillance.state import GraphState, ReportSchema
 from langchain_core.messages import AIMessage, HumanMessage
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.prompts import PromptTemplate
@@ -28,11 +28,15 @@ def prompt_generator_image_node(state: GraphState):
     en el título y descripción del proyecto.
     """
     # --- LEER DESDE report_components ---
-    report_components = state.get("report_components", {})
-    general_info = report_components.get("general_info", {})
+    report_components = state.get("report_components") or ReportSchema()
     
-    project_title = general_info.get("project_title", "proyecto tecnológico")
-    project_description = general_info.get("project_description", "un proyecto innovador")
+    # Safe access using Pydantic models
+    project_title = "proyecto tecnológico"
+    project_description = "un proyecto innovador"
+    
+    if report_components.general_info:
+        project_title = report_components.general_info.project_title or "proyecto tecnológico"
+        project_description = report_components.general_info.project_description or "un proyecto innovador"
     
     # Template para generar el prompt de imagen
     prompt_template = PromptTemplate(
@@ -76,9 +80,12 @@ def generator_image_node(state: GraphState):
     en una carpeta específica.
     """
     image_prompt = state.get("image_prompt")
-    report_components = state.get("report_components", {})
-    general_info = report_components.get("general_info", {})
-    project_title = general_info.get("project_title", "proyecto_tecnologico")
+    
+    report_components = state.get("report_components") or ReportSchema()
+    
+    project_title = "proyecto_tecnologico"
+    if report_components.general_info:
+        project_title = report_components.general_info.project_title or "proyecto_tecnologico"
     
     if not image_prompt:
         error_message = AIMessage(
@@ -94,7 +101,7 @@ def generator_image_node(state: GraphState):
         os.makedirs(output_dir, exist_ok=True)
         
         response = genai_client.models.generate_content(
-            model="gemini-2.5-flash-image",
+            model="gemini-3-pro-image-preview",
             contents=[image_prompt],
         )
         

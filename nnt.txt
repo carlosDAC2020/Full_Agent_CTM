@@ -3,3 +3,7 @@
 docker compose down
 
 docker compose up --build
+
+pip install -e .
+
+langgraph dev --allow-blocking

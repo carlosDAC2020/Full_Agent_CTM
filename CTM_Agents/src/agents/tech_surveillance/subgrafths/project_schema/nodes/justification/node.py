@@ -5,7 +5,7 @@ from langchain_core.messages import AIMessage
 from langchain_google_genai import ChatGoogleGenerativeAI
 
 # Importamos los nuevos esquemas del estado
-from agents.tech_surveillance.state import GraphState, ReportSchema
+from agents.tech_surveillance.state import GraphState, ReportSchema, Justification
 # Importamos los prompts (que también modificaremos)
 from .prompts import JUSTIFICATION_PROMPT
 
@@ -21,18 +21,24 @@ llm = ChatGoogleGenerativeAI(
 
 def generate_justification(state: GraphState) -> dict:
     """
-    Nodo 1: Genera el Planteamiento del Problema y Justificación.
+    Nodo 1: Genera el Planteamiento del Problema y Justificación usando Structured Output.
     """
-    print("---SUBGRAPH: Generando Justificación---")
+    print("---SUBGRAPH: Generando Justificación (Structured)---")
 
     # 1. Leer de forma segura el estado actual
-    report_components = state.get("report_components", ReportSchema())
-    general_info = report_components.get("general_info", {})
-    theoretical_framework = report_components.get("theoretical_framework", {})
+    report_components = state.get("report_components") or ReportSchema()
+    
+    # Safe access to nested Pydantic models
+    project_title = "No especificado"
+    project_description = "No especificado"
+    
+    if report_components.general_info:
+        project_title = report_components.general_info.project_title or "No especificado"
+        project_description = report_components.general_info.project_description or "No especificado"
 
-    project_title = general_info.get("project_title", "No especificado")
-    project_description = general_info.get("project_description", "No especificado")
-    framework_body = theoretical_framework.get("body", "No se encontró marco teórico.")
+    framework_body = "No se encontró marco teórico."
+    if report_components.theoretical_framework:
+        framework_body = report_components.theoretical_framework.body or "No se encontró marco teórico."
 
     # 2. Formatear el prompt con la información extraída
     prompt = JUSTIFICATION_PROMPT.format(
@@ -41,22 +47,22 @@ def generate_justification(state: GraphState) -> dict:
         theoretical_framework_body=framework_body
     )
 
-    # 3. Invocar al LLM para generar el contenido
-    response = llm.invoke(prompt)
-    generated_text = response.content
+    # 3. Configurar el LLM para salida estructurada
+    structured_llm = llm.with_structured_output(Justification)
 
-    # 4. Actualizar el esquema del reporte en el estado
-    # Obtenemos el objeto actual y lo modificamos, no creamos uno nuevo
-    current_report_schema = state.get("report_components", ReportSchema())
-    current_report_schema['problem_statement_justification'] = generated_text
+    # 4. Invocar al LLM
+    justification_schema = structured_llm.invoke(prompt)
+
+    # 5. Actualizar el esquema del reporte en el estado
+    report_components.problem_statement_justification = justification_schema
     
-    # 5. Mensaje de confirmación para el historial
-    message = AIMessage(content="Justificación del proyecto generada. Procediendo a definir los objetivos.")
+    # 6. Mensaje de confirmación para el historial
+    message = AIMessage(content="Justificación del proyecto generada (Estructurado). Procediendo a definir los objetivos.")
     
     print("--- Justificación generada y guardada en el estado. ---")
 
-    # 6. Devolver el estado actualizado
+    # 7. Devolver el estado actualizado
     return {
-        "report_components": current_report_schema,
+        "report_components": report_components,
         "messages": [message]
     }

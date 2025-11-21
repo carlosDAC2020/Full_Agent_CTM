@@ -19,17 +19,20 @@ llm = ChatGoogleGenerativeAI(
 
 def build_risk_matrix(state: GraphState) -> dict:
     """
-    Nodo 5: Construye la Matriz de Riesgos.
+    Nodo 5: Construye la Matriz de Riesgos usando Structured Output.
     """
-    print("---SUBGRAPH: Construyendo Matriz de Riesgos---")
+    print("---SUBGRAPH: Construyendo Matriz de Riesgos (Structured)---")
 
     # 1. Leer de forma segura el estado actual
-    report_components = state.get("report_components", ReportSchema())
-    general_info = report_components.get("general_info", {})
-    execution_plan = report_components.get("execution_plan", {})
-
-    project_title = general_info.get("project_title", "No especificado")
-    activity_schedule = execution_plan.get("activity_schedule", "No hay cronograma disponible.")
+    report_components = state.get("report_components") or ReportSchema()
+    
+    project_title = "No especificado"
+    if report_components.general_info:
+        project_title = report_components.general_info.project_title or "No especificado"
+        
+    activity_schedule = "No hay cronograma disponible."
+    if report_components.execution_plan:
+        activity_schedule = report_components.execution_plan.activity_schedule or "No hay cronograma disponible."
 
     # 2. Formatear el prompt
     prompt = RISK_MATRIX_PROMPT.format(
@@ -37,27 +40,28 @@ def build_risk_matrix(state: GraphState) -> dict:
         activity_schedule=activity_schedule
     )
 
-    # 3. Invocar al LLM
-    response = llm.invoke(prompt)
-    generated_matrix = response.content
+    # 3. Configurar el LLM para salida estructurada
+    structured_llm = llm.with_structured_output(ExecutionPlan)
 
-    # 4. Actualizar el esquema del reporte en el estado
-    current_report_schema = state.get("report_components", ReportSchema())
+    # 4. Invocar al LLM
+    generated_plan = structured_llm.invoke(prompt)
+
+    # 5. Actualizar el esquema del reporte en el estado
     
-    # 'execution_plan' ya debería existir por el nodo anterior, pero por seguridad lo verificamos.
-    if 'execution_plan' not in current_report_schema or not current_report_schema['execution_plan']:
-        current_report_schema['execution_plan'] = ExecutionPlan()
+    if not report_components.execution_plan:
+        report_components.execution_plan = ExecutionPlan()
         
-    current_report_schema['execution_plan']['risk_matrix'] = generated_matrix
+    # Actualizamos SOLO el campo de matriz de riesgos
+    if generated_plan.risk_matrix:
+        report_components.execution_plan.risk_matrix = generated_plan.risk_matrix
     
-    # 5. Mensaje de confirmación
-    message = AIMessage(content="Matriz de riesgos construida. Procediendo a definir los impactos del proyecto.")
+    # 6. Mensaje de confirmación
+    message = AIMessage(content="Matriz de riesgos construida (Estructurado). Procediendo a definir los impactos del proyecto.")
     
     print("--- Matriz de riesgos generada y guardada en el estado. ---")
 
-    # 6. Devolver el estado actualizado
+    # 7. Devolver el estado actualizado
     return {
-        "report_components": current_report_schema,
+        "report_components": report_components,
         "messages": [message]
     }
-    

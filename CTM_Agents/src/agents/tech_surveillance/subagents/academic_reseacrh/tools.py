@@ -1,12 +1,95 @@
 import os
 import asyncio
+import functools
+import time
+from tenacity import (
+    retry,
+    stop_after_attempt,
+    wait_exponential,
+    retry_if_exception_type
+)
 from langchain.tools import tool
-from langchain_community.retrievers import ArxivRetriever, PubMedRetriever, WikipediaRetriever
+from langchain_community.retrievers import (
+    ArxivRetriever,
+    PubMedRetriever,
+    WikipediaRetriever
+)
 from langchain_community.tools.semanticscholar.tool import SemanticScholarQueryRun
 from tavily import TavilyClient
 
+# ============================================================================
+# RATE LIMITING DECORATOR - Aplica a TODAS las tools
+# ============================================================================
+
+class RateLimiter:
+    """Control rate limiting across multiple API services"""
+    
+    def __init__(self):
+        self.last_request_time = {}
+        self.min_intervals = {
+            'arxiv': 3,           # 3 segundos entre solicitudes
+            'pubmed': 2,          # 2 segundos
+            'wikipedia': 1,       # 1 segundo
+            'tavily': 1,          # 1 segundo
+            'semantic_scholar': 2 # 2 segundos
+        }
+        self.lock = asyncio.Lock()
+    
+    async def wait_if_needed(self, service: str):
+        """Esperar si es necesario antes de hacer una solicitud"""
+        async with self.lock:
+            now = time.time()
+            last_time = self.last_request_time.get(service, 0)
+            elapsed = now - last_time
+            min_interval = self.min_intervals.get(service, 1)
+            
+            if elapsed < min_interval:
+                wait_time = min_interval - elapsed
+                print(f"⏳ Rate limit: esperando {wait_time:.2f}s para {service}...")
+                await asyncio.sleep(wait_time)
+            
+            self.last_request_time[service] = time.time()
+
+# Instancia global del rate limiter
+rate_limiter = RateLimiter()
+
+def rate_limited_tool(service_name: str, max_retries: int = 3):
+    """
+    Decorador que aplica rate limiting + reintentos exponenciales a cualquier tool.
+    
+    Args:
+        service_name: Nombre del servicio ('arxiv', 'pubmed', 'tavily', etc.)
+        max_retries: Número máximo de reintentos (default: 3)
+    
+    Usage:
+        @tool
+        @rate_limited_tool('arxiv')
+        async def search_arxiv(query: str) -> str:
+            ...
+    """
+    def decorator(func):
+        @functools.wraps(func)
+        async def wrapper(*args, **kwargs):
+            await rate_limiter.wait_if_needed(service_name)
+            return await func(*args, **kwargs)
+        
+        # Aplicar reintentos con backoff exponencial
+        wrapper = retry(
+            stop=stop_after_attempt(max_retries),
+            wait=wait_exponential(multiplier=1, min=2, max=10),
+            retry=retry_if_exception_type((
+                Exception,  # Captura cualquier excepción
+            )),
+            reraise=True
+        )(wrapper)
+        
+        return wrapper
+    
+    return decorator
+
 # 1. Búsqueda en ArXiv (papers científicos)
 @tool
+@rate_limited_tool('arxiv', max_retries=3)
 async def search_arxiv(query: str, max_results: int = 5) -> str:
     """Search for academic papers in ArXiv across computer science, AI/ML, mathematics, and physics.
     
@@ -21,10 +104,6 @@ async def search_arxiv(query: str, max_results: int = 5) -> str:
     
     Returns:
         Formatted list of papers with titles, authors, publication dates, and abstracts.
-    
-    Usage tips:
-    - Use specific technical terms: "LangGraph agent architecture" works better than "AI agents"
-    - Include key concepts: "ReAct reasoning" or "chain-of-thought prompting"
     """
     retriever = ArxivRetriever(top_k_results=max_results)
     docs = await retriever.ainvoke(query)
@@ -41,15 +120,15 @@ async def search_arxiv(query: str, max_results: int = 5) -> str:
     return "\n\n" + "="*80 + "\n\n".join(results)
 
 
-# 2. Búsqueda en PubMed (medicina/biología)
 @tool
+@rate_limited_tool('pubmed', max_retries=3)
 async def search_pubmed(query: str, max_results: int = 5) -> str:
     """Search PubMed for biomedical and life sciences research papers.
     
     Best for:
     - AI applications in healthcare, medical imaging, drug discovery
     - Bioinformatics and computational biology
-    - Neuroscience and cognitive science (relevant for AI cognition)
+    - Neuroscience and cognitive science
     
     Args:
         query: Medical/biological search terms
@@ -57,10 +136,6 @@ async def search_pubmed(query: str, max_results: int = 5) -> str:
     
     Returns:
         Formatted list of medical research articles.
-    
-    Usage tips:
-    - Only use if the research topic intersects with medicine/biology
-    - For pure AI/ML topics, prefer ArXiv instead
     """
     retriever = PubMedRetriever(top_k_results=max_results)
     docs = await retriever.ainvoke(query)
@@ -75,8 +150,8 @@ async def search_pubmed(query: str, max_results: int = 5) -> str:
     return "\n\n" + "="*80 + "\n\n".join(results)
 
 
-# 3. Búsqueda en Wikipedia
 @tool
+@rate_limited_tool('wikipedia', max_retries=2)
 async def search_wikipedia(query: str, lang: str = "en") -> str:
     """Search Wikipedia for general background information and concept definitions.
     
@@ -86,16 +161,11 @@ async def search_wikipedia(query: str, lang: str = "en") -> str:
     - Quick overviews before diving into academic papers
     
     Args:
-        query: Topic to search (e.g., "multi-agent system", "reinforcement learning")
+        query: Topic to search
         lang: Language code ("en" for English, "es" for Spanish)
     
     Returns:
-        Wikipedia article excerpts (first 500 chars per article).
-    
-    Usage tips:
-    - Use this FIRST to understand unfamiliar terms
-    - Not a primary source - always verify with academic papers
-    - Good for context but cite academic sources in the final report
+        Wikipedia article excerpts.
     """
     retriever = WikipediaRetriever(lang=lang, top_k_results=2)
     docs = await retriever.ainvoke(query)
@@ -109,38 +179,29 @@ async def search_wikipedia(query: str, lang: str = "en") -> str:
     return "\n\n" + "="*80 + "\n\n".join(results)
 
 
-# 4. Búsqueda académica con Tavily
 @tool
+@rate_limited_tool('tavily', max_retries=3)
 async def academic_search(query: str, max_results: int = 5) -> str:
     """Perform advanced web search optimized for academic and technical content.
     
     Best for:
-    - Recent blog posts from AI research labs (OpenAI, Anthropic, DeepMind, Meta AI)
+    - Recent blog posts from AI research labs
     - Technical documentation and tutorials
-    - Conference proceedings not yet in ArXiv
+    - Conference proceedings
     - Industry applications and case studies
     - GitHub repositories with research implementations
     
     Args:
         query: Search query with specific terms
-        max_results: Number of results (default: 5, max: 10)
+        max_results: Number of results (default: 5)
     
     Returns:
         Search results with URLs, titles, and content snippets.
-    
-    Usage tips:
-    - Great for finding the latest developments not yet published as papers
-    - Use to discover practical implementations and code repositories
-    - Complements ArXiv by finding grey literature and industry insights
-    - Add terms like "2024", "2025" for recent content
     """
     client = TavilyClient(api_key=os.environ["TAVILY_API_KEY"])
+    
     def sync_search():
-        return client.search(
-            query,
-            max_results=max_results,
-            search_depth="advanced"
-        )
+        return client.search(query, max_results=max_results, search_depth="advanced")
     
     results = await asyncio.to_thread(sync_search)
     
@@ -157,6 +218,7 @@ async def academic_search(query: str, max_results: int = 5) -> str:
 
 
 @tool
+@rate_limited_tool('semantic_scholar', max_retries=3)
 async def search_semantic_scholar(query: str, max_results: int = 5) -> str:
     """Search Semantic Scholar for AI/ML research papers with citation context.
     
@@ -164,17 +226,16 @@ async def search_semantic_scholar(query: str, max_results: int = 5) -> str:
     - Finding highly-cited papers and their impact
     - Understanding research genealogy and influence
     - Discovering papers cited by key works
-    - Comprehensive academic literature overview
     
     Args:
-        query: Research topic (e.g., "multi-agent reinforcement learning")
+        query: Research topic
         max_results: Number of papers (default: 5)
     
     Returns:
-        Formatted list of papers with citation counts and influence.
+        Formatted list of papers with citation counts.
     """
-    tool = SemanticScholarQueryRun()
-    results = await tool.ainvoke(query)
+    tool_instance = SemanticScholarQueryRun()
+    results = await tool_instance.ainvoke(query)
     return results
 
 
@@ -182,7 +243,7 @@ async def search_semantic_scholar(query: str, max_results: int = 5) -> str:
 research_tools = [
     search_arxiv,
     search_pubmed,
-    search_wikipedia,
+    #search_wikipedia,
     academic_search,
     search_semantic_scholar 
 ]

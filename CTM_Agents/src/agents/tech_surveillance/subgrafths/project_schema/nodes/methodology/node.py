@@ -1,4 +1,3 @@
-
 from __future__ import annotations
 
 import os 
@@ -6,7 +5,7 @@ from langchain_core.messages import AIMessage
 from langchain_google_genai import ChatGoogleGenerativeAI
 
 # Importamos los nuevos esquemas del estado
-from agents.tech_surveillance.state import GraphState, ReportSchema
+from agents.tech_surveillance.state import GraphState, ReportSchema, Methodology
 
 # Importamos los prompts 
 from .prompts import METHODOLOGY_PROMPT
@@ -22,18 +21,22 @@ llm = ChatGoogleGenerativeAI(
 
 def generate_methodology(state: GraphState) -> dict:
     """
-    Nodo 3: Genera la Metodología Propuesta.
+    Nodo 3: Genera la Metodología Propuesta usando Structured Output.
     """
-    print("---SUBGRAPH: Generando Metodología---")
+    print("---SUBGRAPH: Generando Metodología (Structured)---")
 
     # 1. Leer de forma segura el estado actual
-    report_components = state.get("report_components", ReportSchema())
-    general_info = report_components.get("general_info", {})
-    objectives = report_components.get("objectives", {})
-
-    project_title = general_info.get("project_title", "No especificado")
-    general_objective = objectives.get("general_objective", "")
-    specific_objectives = objectives.get("specific_objectives_smart", "")
+    report_components = state.get("report_components") or ReportSchema()
+    
+    project_title = "No especificado"
+    if report_components.general_info:
+        project_title = report_components.general_info.project_title or "No especificado"
+        
+    general_objective = ""
+    specific_objectives = ""
+    if report_components.objectives:
+        general_objective = report_components.objectives.general_objective or ""
+        specific_objectives = report_components.objectives.specific_objectives_smart or ""
 
     # 2. Formatear el prompt
     prompt = METHODOLOGY_PROMPT.format(
@@ -42,21 +45,22 @@ def generate_methodology(state: GraphState) -> dict:
         specific_objectives_smart=specific_objectives
     )
 
-    # 3. Invocar al LLM
-    response = llm.invoke(prompt)
-    generated_text = response.content
+    # 3. Configurar el LLM para salida estructurada
+    structured_llm = llm.with_structured_output(Methodology)
 
-    # 4. Actualizar el esquema del reporte en el estado
-    current_report_schema = state.get("report_components", ReportSchema())
-    current_report_schema['methodology'] = generated_text
+    # 4. Invocar al LLM
+    methodology_schema = structured_llm.invoke(prompt)
+
+    # 5. Actualizar el esquema del reporte en el estado
+    report_components.methodology = methodology_schema
     
-    # 5. Mensaje de confirmación
-    message = AIMessage(content="Metodología del proyecto definida. Procediendo a crear el cronograma de actividades.")
+    # 6. Mensaje de confirmación
+    message = AIMessage(content="Metodología del proyecto definida (Estructurado). Procediendo a crear el cronograma de actividades.")
     
     print("--- Metodología generada y guardada en el estado. ---")
 
-    # 6. Devolver el estado actualizado
+    # 7. Devolver el estado actualizado
     return {
-        "report_components": current_report_schema,
+        "report_components": report_components,
         "messages": [message]
     }

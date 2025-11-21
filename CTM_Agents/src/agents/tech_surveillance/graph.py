@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from langgraph.graph import END, StateGraph
 from agents.tech_surveillance.state import GraphState
 
@@ -17,6 +18,17 @@ from agents.tech_surveillance.subagents.academic_reseacrh.node import academic_r
 # importamos subgrafos 
 from agents.tech_surveillance.subgrafths.image_generator.graph import Image_generator_subgraph
 from agents.tech_surveillance.subgrafths.project_schema.graph import project_schema_subgraph
+
+# --- Configuración de Ejecución ---
+# Leemos las variables de entorno para controlar el flujo
+# CTM_EXECUTION_SCOPE: ALL, ACADEMIC, SCHEMA, IMAGE
+# CTM_EXECUTION_STRATEGY: SEQUENTIAL, PARALLEL (Solo aplica para ALL)
+EXECUTION_SCOPE = os.environ.get("CTM_EXECUTION_SCOPE", "ALL").upper()
+EXECUTION_STRATEGY = os.environ.get("CTM_EXECUTION_STRATEGY", "SEQUENTIAL").upper()
+
+print(f"--- CONFIGURACIÓN DE GRAFO ---")
+print(f"SCOPE: {EXECUTION_SCOPE}")
+print(f"STRATEGY: {EXECUTION_STRATEGY}")
 
 # --- Construir el Grafo ---
 
@@ -48,18 +60,53 @@ workflow.add_conditional_edges(
     }
 )
 
-# Definimos los puntos finales
+# --- Lógica de Conexión Dinámica ---
 
-# ejecucion en paralelo ára la generacion de reporte 
-workflow.add_edge("ingest", "academic_research")
-#workflow.add_edge("ingest", "project_schemas")
-#workflow.add_edge("ingest", "images_generator")
+if EXECUTION_SCOPE == "ALL":
+    if EXECUTION_STRATEGY == "PARALLEL":
+        # Ejecución Semi-Paralela Optimizada:
+        # 1. Ingestión -> Investigación (Secuencial para contexto)
+        # 2. Investigación -> Esquema Y Imagen (Paralelo)
+        # 3. Ambos -> Reporte (Convergencia)
+        
+        workflow.add_edge("ingest", "academic_research")
+        
+        # Bifurcación después de la investigación
+        workflow.add_edge("academic_research", "project_schemas")
+        workflow.add_edge("academic_research", "images_generator")
+        
+        # Convergencia (El reporte se ejecutará dos veces, la segunda será la completa)
+        workflow.add_edge("project_schemas", "report")
+        workflow.add_edge("images_generator", "report")
+        
+    else:
+        # Ejecución Secuencial (Default y Recomendada)
+        workflow.add_edge("ingest", "academic_research")
+        workflow.add_edge("academic_research", "project_schemas")
+        workflow.add_edge("project_schemas", "images_generator")
+        workflow.add_edge("images_generator", "report")
 
-# esperamos la ejecuion de cada parte del reporte para traerla y genrar el reporte 
-workflow.add_edge("academic_research", "project_schemas")
-workflow.add_edge("project_schemas", "images_generator")
-workflow.add_edge("images_generator", "report")
+elif EXECUTION_SCOPE == "ACADEMIC":
+    workflow.add_edge("ingest", "academic_research")
+    workflow.add_edge("academic_research", "report")
 
+elif EXECUTION_SCOPE == "SCHEMA":
+    workflow.add_edge("ingest", "project_schemas")
+    workflow.add_edge("project_schemas", "report")
+
+elif EXECUTION_SCOPE == "IMAGE":
+    workflow.add_edge("ingest", "images_generator")
+    workflow.add_edge("images_generator", "report")
+
+else:
+    # Fallback seguro: Secuencial completa
+    print(f"⚠️ Scope desconocido '{EXECUTION_SCOPE}'. Usando configuración por defecto (ALL SEQUENTIAL).")
+    workflow.add_edge("ingest", "academic_research")
+    workflow.add_edge("academic_research", "project_schemas")
+    workflow.add_edge("project_schemas", "images_generator")
+    workflow.add_edge("images_generator", "report")
+
+# Finalización
 workflow.add_edge("report", END)
 workflow.add_edge("chat", END)
 

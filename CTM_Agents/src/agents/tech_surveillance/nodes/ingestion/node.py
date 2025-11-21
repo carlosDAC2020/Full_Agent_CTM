@@ -1,4 +1,3 @@
-# ingestion_node.py
 
 import os 
 from langchain_google_genai import ChatGoogleGenerativeAI
@@ -35,7 +34,6 @@ def ingestion_node(state: GraphState) -> dict:
     try:
         # 1. Llama al LLM para extraer la información
         project_info: ProjectInfo = extraction_llm.invoke(prompt)
-
         # 2. Construye la sección 'GeneralInfo' para nuestro nuevo estado
         general_info = GeneralInfo(
             project_title=project_info.title,

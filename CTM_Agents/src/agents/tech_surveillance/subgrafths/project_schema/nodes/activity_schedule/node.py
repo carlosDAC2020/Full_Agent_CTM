@@ -19,18 +19,22 @@ llm = ChatGoogleGenerativeAI(
 
 def create_activity_schedule(state: GraphState) -> dict:
     """
-    Nodo 4: Crea el Cronograma de Actividades.
+    Nodo 4: Crea el Cronograma de Actividades usando Structured Output.
     """
-    print("---SUBGRAPH: Creando Cronograma---")
+    print("---SUBGRAPH: Creando Cronograma (Structured)---")
 
     # 1. Leer de forma segura el estado actual
-    report_components = state.get("report_components", ReportSchema())
-    general_info = report_components.get("general_info", {})
-    objectives = report_components.get("objectives", {})
-    methodology = report_components.get("methodology", "No se definió metodología.")
-
-    project_title = general_info.get("project_title", "No especificado")
-    specific_objectives = objectives.get("specific_objectives_smart", "")
+    report_components = state.get("report_components") or ReportSchema()
+    
+    project_title = "No especificado"
+    if report_components.general_info:
+        project_title = report_components.general_info.project_title or "No especificado"
+        
+    specific_objectives = ""
+    if report_components.objectives:
+        specific_objectives = report_components.objectives.specific_objectives_smart or ""
+        
+    methodology = report_components.methodology or "No se definió metodología."
 
     # 2. Formatear el prompt
     prompt = ACTIVITY_SCHEDULE_PROMPT.format(
@@ -39,26 +43,30 @@ def create_activity_schedule(state: GraphState) -> dict:
         specific_objectives_smart=specific_objectives
     )
 
-    # 3. Invocar al LLM
-    response = llm.invoke(prompt)
-    generated_schedule = response.content
+    # 3. Configurar el LLM para salida estructurada
+    # Usamos ExecutionPlan, el LLM llenará activity_schedule y dejará risk_matrix en None
+    structured_llm = llm.with_structured_output(ExecutionPlan)
 
-    # 4. Actualizar el esquema del reporte en el estado
-    current_report_schema = state.get("report_components", ReportSchema())
+    # 4. Invocar al LLM
+    generated_plan = structured_llm.invoke(prompt)
+
+    # 5. Actualizar el esquema del reporte en el estado
     
-    # Asegurarnos de que 'execution_plan' exista antes de escribir en él
-    if 'execution_plan' not in current_report_schema or not current_report_schema['execution_plan']:
-        current_report_schema['execution_plan'] = ExecutionPlan()
+    # Asegurarnos de que 'execution_plan' exista
+    if not report_components.execution_plan:
+        report_components.execution_plan = ExecutionPlan()
         
-    current_report_schema['execution_plan']['activity_schedule'] = generated_schedule
+    # Actualizamos SOLO el campo de cronograma
+    if generated_plan.activity_schedule:
+        report_components.execution_plan.activity_schedule = generated_plan.activity_schedule
     
-    # 5. Mensaje de confirmación
-    message = AIMessage(content="Cronograma de actividades generado. Procediendo a construir la matriz de riesgos.")
+    # 6. Mensaje de confirmación
+    message = AIMessage(content="Cronograma de actividades generado (Estructurado). Procediendo a construir la matriz de riesgos.")
     
     print("--- Cronograma generado y guardado en el estado. ---")
 
-    # 6. Devolver el estado actualizado
+    # 7. Devolver el estado actualizado
     return {
-        "report_components": current_report_schema,
+        "report_components": report_components,
         "messages": [message]
     }

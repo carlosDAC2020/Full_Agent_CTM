@@ -1,4 +1,3 @@
-
 from __future__ import annotations
 
 import os 
@@ -20,17 +19,19 @@ llm = ChatGoogleGenerativeAI(
 
 def generate_objectives(state: GraphState) -> dict:
     """
-    Nodo 2: Genera los Objetivos del Proyecto.
+    Nodo 2: Genera los Objetivos del Proyecto usando Structured Output.
     """
-    print("---SUBGRAPH: Generando Objetivos---")
+    print("---SUBGRAPH: Generando Objetivos (Structured)---")
 
     # 1. Leer de forma segura el estado actual
-    report_components = state.get("report_components", ReportSchema())
-    general_info = report_components.get("general_info", {})
+    report_components = state.get("report_components") or ReportSchema()
     
-    project_title = general_info.get("project_title", "No especificado")
+    project_title = "No especificado"
+    if report_components.general_info:
+        project_title = report_components.general_info.project_title or "No especificado"
+    
     # La entrada clave: la justificación del nodo anterior
-    justification = report_components.get("problem_statement_justification", "No hay justificación disponible.")
+    justification = report_components.problem_statement_justification or "No hay justificación disponible."
 
     # 2. Formatear el prompt
     prompt = SMART_OBJECTIVES_PROMPT.format(
@@ -38,54 +39,23 @@ def generate_objectives(state: GraphState) -> dict:
         problem_statement_justification=justification
     )
 
-    # 3. Invocar al LLM
-    response = llm.invoke(prompt)
-    generated_text = response.content
+    # 3. Configurar el LLM para salida estructurada
+    structured_llm = llm.with_structured_output(ProjectObjectives)
 
-    # 4. Separar el objetivo general de los específicos
-    general_obj, specific_objs = separate_objectives(generated_text)
+    # 4. Invocar al LLM
+    # El resultado ya será una instancia de ProjectObjectives
+    objectives_schema = structured_llm.invoke(prompt)
 
-    # 5. Construir el objeto ProjectObjectives
-    objectives_schema = ProjectObjectives(
-        general_objective=general_obj,
-        specific_objectives_smart=specific_objs
-    )
-
-    # 6. Actualizar el esquema del reporte en el estado
-    current_report_schema = state.get("report_components", ReportSchema())
-    current_report_schema['objectives'] = objectives_schema
+    # 5. Actualizar el esquema del reporte en el estado
+    report_components.objectives = objectives_schema
     
-    # 7. Mensaje de confirmación
-    message = AIMessage(content="Objetivos del proyecto generados. Procediendo a definir la metodología.")
+    # 6. Mensaje de confirmación
+    message = AIMessage(content="Objetivos del proyecto generados (Estructurado). Procediendo a definir la metodología.")
     
     print("--- Objetivos generados y guardados en el estado. ---")
 
-    # 8. Devolver el estado actualizado
+    # 7. Devolver el estado actualizado
     return {
-        "report_components": current_report_schema,
+        "report_components": report_components,
         "messages": [message]
     }
-
-
-def separate_objectives(full_text: str) -> tuple[str, str]:
-    """
-    Separa el objetivo general de los objetivos específicos usando el encabezado como ancla.
-    """
-    general_header = "### 5.1. Objetivo General"
-    specific_header = "### 5.2. Objetivos Específicos (SMART)"
-    
-    try:
-        # Encuentra las posiciones de los encabezados
-        start_general = full_text.index(general_header)
-        start_specific = full_text.index(specific_header)
-        
-        # Extrae el texto para el objetivo general
-        general_obj_text = full_text[start_general + len(general_header):start_specific].strip()
-        
-        # El resto del texto son los objetivos específicos
-        specific_obj_text = full_text[start_specific:].strip()
-        
-        return general_obj_text, specific_obj_text
-    except ValueError:
-        # Si no encuentra los encabezados, no puede separar. Retorna el texto completo en específicos.
-        return "No se pudo extraer el objetivo general.", full_text

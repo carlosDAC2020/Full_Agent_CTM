@@ -1,84 +1,141 @@
-# state.py
-
-from typing_extensions import TypedDict
-from typing import List, Optional, Annotated
+from pydantic import BaseModel, Field
+from typing import Optional, List, Annotated , Any
 from langgraph.graph import add_messages
 from langchain_core.messages import BaseMessage
+from typing_extensions import TypedDict
 
-# --- Funciones de Utilidad ---
+# --- Esquemas Anidados para el Reporte (Pydantic) ---
 
-def latest_value(current, updates):
-    """Toma el último valor, ignora duplicados desde nodos paralelos."""
-    if isinstance(updates, list):
-        return updates[-1] if updates else current
-    return updates
-
-# --- Esquemas Anidados para el Reporte ---
-
-class GeneralInfo(TypedDict):
+class GeneralInfo(BaseModel):
     """Sección 2: Generalidades del Proyecto."""
-    project_title: Optional[str] = None
-    project_description: Optional[str] = None
-    duration_months: Optional[int] = None
-    thematic_line: Optional[str] = None
-    keywords: Optional[List[str]] = None
-    # Puedes añadir más campos extraídos del PDF, como entidades
-    main_entity: Optional[str] = None
-    collaborating_entities: Optional[List[str]] = None
+    project_title: Optional[str] = Field(default=None, description="Título del proyecto")
+    project_description: Optional[str] = Field(default=None, description="Descripción del proyecto")
+    duration_months: Optional[int] = Field(default=None, description="Duración en meses")
+    thematic_line: Optional[str] = Field(default=None, description="Línea temática")
+    keywords: Optional[List[str]] = Field(default=None, description="Palabras clave")
+    main_entity: Optional[str] = Field(default=None, description="Entidad principal")
+    collaborating_entities: Optional[List[str]] = Field(default=None, description="Entidades colaboradoras")
 
-class TheoreticalFramework(TypedDict):
-    """Sección 4: Marco Teórico."""
-    body: Optional[str] = None          # El texto principal de la investigación
-    references_apa: Optional[str] = None # La bibliografía extraída y formateada
-
-class ProjectObjectives(TypedDict):
-    """Sección 5: Objetivos."""
-    general_objective: Optional[str] = None
-    specific_objectives_smart: Optional[str] = None # El texto generado con el formato SMART
-
-class ExecutionPlan(TypedDict):
-    """Sección 7: Plan de Ejecución y Gestión."""
-    activity_schedule: Optional[str] = None  # El cronograma en formato Markdown
-    risk_matrix: Optional[str] = None        # La matriz de riesgos en formato Markdown
-
-class ReportSchema(TypedDict):
-    """
-    Contenedor principal para todos los componentes estructurados del informe final.
-    Cada campo corresponde a una sección principal de la plantilla Markdown.
-    """
-    # Secciones generadas por nodos
-    executive_summary: Optional[str] = None                # Sección 1
-    problem_statement_justification: Optional[str] = None  # Sección 3
-    methodology: Optional[str] = None                      # Sección 6
-    results_and_impacts: Optional[str] = None              # Sección 8
+class TheoreticalFramework(BaseModel):
+    """Schema for the Theoretical Framework and State of the Art section."""
     
-    # Secciones compuestas de sub-esquemas
-    general_info: Optional[GeneralInfo] = None
-    theoretical_framework: Optional[TheoreticalFramework] = None
-    objectives: Optional[ProjectObjectives] = None
-    execution_plan: Optional[ExecutionPlan] = None
+    body: Optional[str] = Field(
+        default=None, 
+        description=(
+            "The main narrative text of the report in Markdown format. "
+            "It must explicitly include content for sections: "
+            "4.1 (Introduction to Domain), "
+            "4.2 (Literature Review), "
+            "4.3 (State of the Art), and "
+            "4.4 (Knowledge Gaps). "
+            "Do NOT include the references list here."
+        )
+    )
+    references_apa: Optional[str] = Field(
+        default=None, 
+        description=(
+            "The complete list of bibliographic references corresponding to Section 9. "
+            "Must be strictly formatted in APA 7th Edition style. "
+            "This field should contain the list of citations."
+        )
+    )
 
-# --- Estado Principal del Grafo ---
+class Justification(BaseModel):
+    """Section 3: Problem Statement and Justification."""
+    content: Optional[str] = Field(
+        default=None,
+        description=(
+            "The complete text for the Problem Statement and Justification section in Markdown. "
+            "It should clearly define the problem, its magnitude, and why this project is necessary."
+        )
+    )
+
+class ProjectObjectives(BaseModel):
+    """Section 5: Project Objectives."""
+    general_objective: Optional[str] = Field(
+        default=None, 
+        description=(
+            "The general objective of the project. This should be a single, comprehensive statement "
+            "that defines the overall goal of the project."
+        )
+    )
+    specific_objectives_smart: Optional[str] = Field(
+        default=None, 
+        description=(
+            "The specific objectives of the project, formatted as a Markdown list. "
+            "These objectives must strictly adhere to the SMART criteria (Specific, Measurable, "
+            "Achievable, Relevant, Time-bound)."
+        )
+    )
+
+class Methodology(BaseModel):
+    """Section 6: Proposed Methodology."""
+    content: Optional[str] = Field(
+        default=None,
+        description=(
+            "The complete text for the Proposed Methodology section in Markdown. "
+            "It should describe the approach, methods, and techniques that will be used to achieve the objectives."
+        )
+    )
+
+class ExecutionPlan(BaseModel):
+    """Section 7: Execution and Management Plan."""
+    activity_schedule: Optional[str] = Field(
+        default=None, 
+        description=(
+            "A detailed activity schedule or Gantt chart description in Markdown format. "
+            "It should outline the phases, activities, and estimated duration for each."
+        )
+    )
+    risk_matrix: Optional[str] = Field(
+        default=None, 
+        description=(
+            "A risk matrix or analysis in Markdown format (e.g., a table). "
+            "It should identify potential risks, their probability, impact, and mitigation strategies."
+        )
+    )
+
+class Impacts(BaseModel):
+    """Section 8: Expected Results and Impacts."""
+    content: Optional[str] = Field(
+        default=None,
+        description=(
+            "The complete text for the Expected Results and Impacts section in Markdown. "
+            "It should detail the scientific, technological, economic, and social impacts of the project."
+        )
+    )
+
+class ExecutiveSummary(BaseModel):
+    """Section 1: Executive Summary."""
+    content: Optional[str] = Field(
+        default=None,
+        description=(
+            "The Executive Summary of the project in Markdown. "
+            "It should provide a concise overview of the entire project, including the problem, objectives, methodology, and expected results."
+        )
+    )
+
+class ReportSchema(BaseModel):
+    """Contenedor principal para componentes estructurados del informe."""
+    executive_summary: Optional[ExecutiveSummary] = Field(default=None, description="Sección 1")
+    problem_statement_justification: Optional[Justification] = Field(default=None, description="Sección 3")
+    methodology: Optional[Methodology] = Field(default=None, description="Sección 6")
+    results_and_impacts: Optional[Impacts] = Field(default=None, description="Sección 8")
+    
+    general_info: Optional[GeneralInfo] = Field(default=None, description="Información general")
+    theoretical_framework: Optional[TheoreticalFramework] = Field(default=None, description="Marco teórico")
+    objectives: Optional[ProjectObjectives] = Field(default=None, description="Objetivos")
+    execution_plan: Optional[ExecutionPlan] = Field(default=None, description="Plan de ejecución")
+
+# --- Estado Principal del Grafo (Híbrido: TypedDict + Pydantic) ---
 
 class GraphState(TypedDict):
-    """
-    Representa el estado de nuestro grafo, ahora más organizado.
-    """
-    # --- Estado de la Conversación y Entrada ---
+    """Estado del grafo con validación Pydantic."""
     messages: Annotated[list[BaseMessage], add_messages]
-    document_urls: Optional[List[str]] = None
-    
-    # --- Control de Flujo ---
-    route_decision: Annotated[Optional[str], latest_value] = None
-
-    # --- Componentes para la Generación de Imágenes ---
-    image_prompt: Annotated[Optional[str], latest_value] = None
-    generated_image_path: Annotated[Optional[str], latest_value] = None
-    
-    # --- ESQUEMA CENTRAL DEL REPORTE ---
-    # Este objeto se irá llenando progresivamente por los diferentes nodos.
-    report_components: Annotated[Optional[ReportSchema], latest_value] = None
-
-    # --- Campo Final ---
-    # El nodo de reporte final tomará 'report_components' y generará este string.
-    final_report: Annotated[Optional[str], latest_value] = None
+    document_urls: Optional[List[str]]
+    route_decision: Optional[str]
+    image_prompt: Optional[str]
+    generated_image_path: Optional[str]
+    report_components: Optional[ReportSchema]  # Ahora Pydantic
+    final_report: Optional[str]
+    randonm_response: Optional[Any]
