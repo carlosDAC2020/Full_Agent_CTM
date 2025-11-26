@@ -201,7 +201,7 @@ async def academic_search(query: str, max_results: int = 5) -> str:
     client = TavilyClient(api_key=os.environ["TAVILY_API_KEY"])
     
     def sync_search():
-        return client.search(query, max_results=max_results, search_depth="advanced")
+        return client.search(query, max_results=max_results, search_depth="basic")
     
     results = await asyncio.to_thread(sync_search)
     

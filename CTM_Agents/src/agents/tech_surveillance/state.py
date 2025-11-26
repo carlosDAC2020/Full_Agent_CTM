@@ -4,6 +4,7 @@ from langgraph.graph import add_messages
 from langchain_core.messages import BaseMessage
 from typing_extensions import TypedDict
 
+
 # --- Esquemas Anidados para el Reporte (Pydantic) ---
 
 class GeneralInfo(BaseModel):
@@ -127,6 +128,16 @@ class ReportSchema(BaseModel):
     objectives: Optional[ProjectObjectives] = Field(default=None, description="Objetivos")
     execution_plan: Optional[ExecutionPlan] = Field(default=None, description="Plan de ejecución")
 
+class CallInfo(BaseModel):
+    """Información extraída de la convocatoria."""
+    title: Optional[str] = Field(default=None, description="Título de la convocatoria")
+    objective: Optional[str] = Field(default=None, description="Objetivo principal de la convocatoria")
+    funding: Optional[str] = Field(default=None, description="Información sobre financiamiento")
+    keywords: Optional[List[str]] = Field(default=None, description="Palabras clave de la convocatoria")
+    important_dates: Optional[str] = Field(default=None, description="Fechas importantes (inicio, cierre)")
+    benefits: Optional[List[str]] = Field(default=None, description="Beneficios listados")
+    url: Optional[str] = Field(default=None, description="URL de más información")
+
 # --- Estado Principal del Grafo (Híbrido: TypedDict + Pydantic) ---
 
 class GraphState(TypedDict):
@@ -134,6 +145,7 @@ class GraphState(TypedDict):
     messages: Annotated[list[BaseMessage], add_messages]
     document_urls: Optional[List[str]]
     route_decision: Optional[str]
+    call_info: Optional[CallInfo] # Información de la convocatoria
     image_prompt: Optional[str]
     generated_image_path: Optional[str]
     report_components: Optional[ReportSchema]  # Ahora Pydantic

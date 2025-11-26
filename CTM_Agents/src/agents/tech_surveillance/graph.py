@@ -1,3 +1,4 @@
+
 from __future__ import annotations
 
 import os
@@ -14,10 +15,12 @@ from agents.tech_surveillance.nodes.report.node import report_node
 
 # importamos subagentes 
 from agents.tech_surveillance.subagents.academic_reseacrh.node import academic_research_node
+from agents.tech_surveillance.subagents.presentation_generation.node import presentation_generation_node
 
 # importamos subgrafos 
 from agents.tech_surveillance.subgrafths.image_generator.graph import Image_generator_subgraph
 from agents.tech_surveillance.subgrafths.project_schema.graph import project_schema_subgraph
+
 
 # --- Configuración de Ejecución ---
 # Leemos las variables de entorno para controlar el flujo
@@ -42,6 +45,7 @@ workflow.add_node("report", report_node)
 
 # Añadimos sub agentes como nodos 
 workflow.add_node("academic_research", academic_research_node)
+workflow.add_node("presentation_generator", presentation_generation_node)
 
 # Añadimos los subgrafos como nodos
 workflow.add_node("project_schemas", project_schema_subgraph)
@@ -74,17 +78,21 @@ if EXECUTION_SCOPE == "ALL":
         # Bifurcación después de la investigación
         workflow.add_edge("academic_research", "project_schemas")
         workflow.add_edge("academic_research", "images_generator")
+        workflow.add_edge("academic_research", "presentation_generatior")
         
         # Convergencia (El reporte se ejecutará dos veces, la segunda será la completa)
         workflow.add_edge("project_schemas", "report")
         workflow.add_edge("images_generator", "report")
+        workflow.add_edge("presentation_generator", "report")
         
     else:
         # Ejecución Secuencial (Default y Recomendada)
         workflow.add_edge("ingest", "academic_research")
         workflow.add_edge("academic_research", "project_schemas")
         workflow.add_edge("project_schemas", "images_generator")
-        workflow.add_edge("images_generator", "report")
+        # Presentación antes del reporte
+        workflow.add_edge("images_generator", "presentation_generator")
+        workflow.add_edge("presentation_generator", "report")
 
 elif EXECUTION_SCOPE == "ACADEMIC":
     workflow.add_edge("ingest", "academic_research")
@@ -98,13 +106,17 @@ elif EXECUTION_SCOPE == "IMAGE":
     workflow.add_edge("ingest", "images_generator")
     workflow.add_edge("images_generator", "report")
 
+elif EXECUTION_SCOPE == "PRESENTATION":
+    workflow.add_edge("ingest", "presentation_generator")
+    workflow.add_edge("presentation_generator", "report")
 else:
     # Fallback seguro: Secuencial completa
     print(f"⚠️ Scope desconocido '{EXECUTION_SCOPE}'. Usando configuración por defecto (ALL SEQUENTIAL).")
     workflow.add_edge("ingest", "academic_research")
     workflow.add_edge("academic_research", "project_schemas")
     workflow.add_edge("project_schemas", "images_generator")
-    workflow.add_edge("images_generator", "report")
+    workflow.add_edge("images_generator", "presentation_generator")
+    workflow.add_edge("presentation_generator", "report")
 
 # Finalización
 workflow.add_edge("report", END)

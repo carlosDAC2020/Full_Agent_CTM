@@ -23,7 +23,11 @@ dependencies = [
     "langchain-community",
     "langdetect",
     "google-genai",
-    "semanticscholar"
+    "semanticscholar",
+    "python-pptx",
+    "python-docx",
+    "pillow",
+    "duckduckgo-search"
 ]
 
 
