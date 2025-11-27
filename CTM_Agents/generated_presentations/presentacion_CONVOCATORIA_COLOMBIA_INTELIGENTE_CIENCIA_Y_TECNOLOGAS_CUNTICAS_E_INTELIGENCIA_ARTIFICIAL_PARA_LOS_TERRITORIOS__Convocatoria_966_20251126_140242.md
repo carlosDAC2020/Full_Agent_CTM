@@ -50,20 +50,20 @@ style: |
     z-index: 100;
   }
 
-  /* --- PORTADA (IMAGEN NAVAL/INDUSTRIAL) --- */
+  /* --- PORTADA CON DEGRADADO ELEGANTE --- */
   section.title-slide {
     padding: 0;
-    min-height: 100vh; /* CRÍTICO: Asegura altura completa */
+    min-height: 100vh;
     position: relative;
     
-    /* Fondo con imagen */
-    background-image: 
-      linear-gradient(rgba(0,51,102,0.75), rgba(0,51,102,0.85)), 
-      url('https://raw.githubusercontent.com/carlosDAC2020/Full_Agent_CTM/refs/heads/main/CTM_Agents/generated_images/detecci%C3%B3n_de_anomal%C3%ADas_s%C3%ADsmicas_en_zonas_rurales_mediante_inteligencia_artificial.png');
-    
-    background-size: cover; 
-    background-position: center center;
-    background-repeat: no-repeat;
+    /* Degradado multidireccional con colores COTECMAR */
+    background: linear-gradient(135deg, 
+      #003366 0%,      /* Azul primario */
+      #004d99 25%,     /* Azul acento */
+      #0066cc 50%,     /* Azul medio */
+      #004d99 75%,     /* Azul acento */
+      #003366 100%     /* Azul primario */
+    );
     
     /* Centrado del contenido */
     display: flex; 
@@ -71,26 +71,65 @@ style: |
     justify-content: center; 
     align-items: center; 
     text-align: center;
+    color: white;
     
-    color: white; 
+    /* Efecto de patrón sutil */
+    overflow: hidden;
+  }
+
+  /* Efecto de brillo sutil en la portada */
+  section.title-slide::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(
+      circle,
+      rgba(255, 192, 0, 0.1) 0%,    /* Amarillo COTECMAR muy sutil */
+      transparent 50%
+    );
+    animation: rotate 20s linear infinite;
+  }
+
+  @keyframes rotate {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
   }
 
   section.title-slide h1 { 
     color: white; 
     font-size: 2.8em; 
     margin-bottom: 20px; 
-    text-shadow: 3px 3px 6px rgba(0,0,0,0.8);
+    text-shadow: 3px 3px 8px rgba(0,0,0,0.6);
     position: relative;
     z-index: 2;
+    line-height: 1.2;
   }
 
   section.title-slide h3 { 
-    color: var(--secondary);
+    color: #FFC000;  /* Amarillo COTECMAR */
     font-size: 1.5em;
-    font-weight: normal;
-    text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+    font-weight: 600;
+    text-shadow: 2px 2px 6px rgba(0,0,0,0.6);
     position: relative;
     z-index: 2;
+    letter-spacing: 0.5px;
+  }
+
+  /* Logo COTECMAR como marca de agua en la portada */
+  section.title-slide::after {
+    content: '';
+    position: absolute;
+    width: 40%;
+    height: 40%;
+    background-image: url('https://atmos.com.co/wp-content/uploads/2024/02/COTECMAR.png');
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: contain;
+    opacity: 0.08;
+    z-index: 1;
   }
 
   /* --- COMPONENTES --- */

@@ -1,7 +1,5 @@
 # prompts.py
 
-# ... (otros prompts) ...
-
 ACTIVITY_SCHEDULE_PROMPT = """\
 ## ROLE: You are a senior Project Manager with extensive experience planning complex R&D projects.
 

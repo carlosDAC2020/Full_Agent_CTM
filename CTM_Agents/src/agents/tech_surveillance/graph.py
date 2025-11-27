@@ -90,9 +90,10 @@ if EXECUTION_SCOPE == "ALL":
         workflow.add_edge("ingest", "academic_research")
         workflow.add_edge("academic_research", "project_schemas")
         workflow.add_edge("project_schemas", "images_generator")
+        workflow.add_edge("images_generator", "report")
         # Presentación antes del reporte
-        workflow.add_edge("images_generator", "presentation_generator")
-        workflow.add_edge("presentation_generator", "report")
+        #workflow.add_edge("images_generator", "presentation_generator")
+        #workflow.add_edge("presentation_generator", "report")
 
 elif EXECUTION_SCOPE == "ACADEMIC":
     workflow.add_edge("ingest", "academic_research")

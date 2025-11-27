@@ -11,8 +11,7 @@ from tenacity import (
 from langchain.tools import tool
 from langchain_community.retrievers import (
     ArxivRetriever,
-    PubMedRetriever,
-    WikipediaRetriever
+    PubMedRetriever
 )
 from langchain_community.tools.semanticscholar.tool import SemanticScholarQueryRun
 from tavily import TavilyClient
@@ -29,7 +28,6 @@ class RateLimiter:
         self.min_intervals = {
             'arxiv': 3,           # 3 segundos entre solicitudes
             'pubmed': 2,          # 2 segundos
-            'wikipedia': 1,       # 1 segundo
             'tavily': 1,          # 1 segundo
             'semantic_scholar': 2 # 2 segundos
         }
@@ -151,35 +149,6 @@ async def search_pubmed(query: str, max_results: int = 5) -> str:
 
 
 @tool
-@rate_limited_tool('wikipedia', max_retries=2)
-async def search_wikipedia(query: str, lang: str = "en") -> str:
-    """Search Wikipedia for general background information and concept definitions.
-    
-    Best for:
-    - Understanding basic concepts and terminology
-    - Historical context and evolution of technologies
-    - Quick overviews before diving into academic papers
-    
-    Args:
-        query: Topic to search
-        lang: Language code ("en" for English, "es" for Spanish)
-    
-    Returns:
-        Wikipedia article excerpts.
-    """
-    retriever = WikipediaRetriever(lang=lang, top_k_results=2)
-    docs = await retriever.ainvoke(query)
-    
-    results = []
-    for doc in docs:
-        results.append(
-            f"📚 **Wikipedia**: {doc.metadata.get('title', 'N/A')}\n"
-            f"📝 {doc.page_content[:500]}...\n"
-        )
-    return "\n\n" + "="*80 + "\n\n".join(results)
-
-
-@tool
 @rate_limited_tool('tavily', max_retries=3)
 async def academic_search(query: str, max_results: int = 5) -> str:
     """Perform advanced web search optimized for academic and technical content.
@@ -243,7 +212,6 @@ async def search_semantic_scholar(query: str, max_results: int = 5) -> str:
 research_tools = [
     search_arxiv,
     search_pubmed,
-    #search_wikipedia,
     academic_search,
     search_semantic_scholar 
 ]

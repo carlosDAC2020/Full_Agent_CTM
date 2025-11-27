@@ -57,57 +57,74 @@ def clean_text(text):
     return text
 
 def process_table(table_text, styles):
-    """Convierte texto de tabla Markdown a un objeto Table de ReportLab."""
+    """Convierte texto de tabla Markdown a un objeto Table de ReportLab, respetando celdas vacías."""
     lines = table_text.strip().split('\n')
     data = []
     
     for line in lines:
-        # Omitir la línea separadora (ej: |---|---|)
+        # Omitir líneas separadoras
         if '---' in line:
             continue
+            
+        # 1. Separar por pipe '|'
+        # El markdown suele ser: | col1 | col2 | col3 |
+        # split('|') genera un elemento vacío al inicio y al final.
+        raw_cells = line.split('|')
         
-        # Dividir por la tubería y limpiar espacios
-        # [1:-1] elimina el primer y último elemento vacío que genera split('|')
-        row_raw = [cell.strip() for cell in line.split('|')]
+        # 2. Eliminar el primer y último elemento (son artefactos del split si la línea empieza/termina con |)
+        if len(raw_cells) > 2:
+            row_content = raw_cells[1:-1]
+        else:
+            row_content = raw_cells
+
+        # 3. Limpiar espacios en blanco pero NO eliminar la celda si queda vacía string ""
+        row_cleaned = [cell.strip() for cell in row_content]
         
-        # Filtrar celdas vacías generadas por los bordes de la tabla
-        row_cleaned = [cell for cell in row_raw if cell]
-        
-        # Si la fila está vacía después de limpiar, continuar
-        if not row_cleaned:
+        # Validación extra: Si toda la fila está vacía, saltar
+        if not any(row_cleaned):
             continue
 
-        # Convertir texto de celda a Paragraphs para permitir wrap de texto
+        # Convertir a Paragraphs
         row_flowables = []
         for i, cell_text in enumerate(row_cleaned):
+            # Usar estilo Header para la primera fila, Cell para el resto
             style = styles['TableHeader'] if len(data) == 0 else styles['TableCell']
-            row_flowables.append(Paragraph(clean_text(cell_text), style))
+            
+            # Limpiar texto (tu función clean_text)
+            text_content = clean_text(cell_text)
+            
+            # Si la celda está vacía, ponemos un espacio no rompible para que renderice el borde
+            if not text_content:
+                text_content = "&nbsp;"
+                
+            row_flowables.append(Paragraph(text_content, style))
         
         data.append(row_flowables)
 
     if not data:
         return None
 
-    # Calcular anchos de columna de forma inteligente
+    # --- Lógica de anchos (se mantiene igual o se ajusta) ---
     num_cols = len(data[0])
-    available_width = 17*cm  # Ancho disponible en la página (ajustado para márgenes)
+    # Aseguramos que todas las filas tengan el mismo número de columnas que la cabecera
+    # Si alguna fila tiene menos (error de formato markdown), rellenamos
+    for row in data:
+        while len(row) < num_cols:
+            row.append(Paragraph("", styles['TableCell']))
+            
+    available_width = 17*cm 
     
-    # Estrategia de anchos según número de columnas
-    if num_cols == 4:
-        # Para tablas de 4 columnas (como Cronograma): 
-        # Columna 1 (Fase) más estrecha, Columna 2 (Actividad) más ancha
+    if num_cols == 4: # Cronograma
         col_widths = [3*cm, 7*cm, 4*cm, 3*cm]
-    elif num_cols == 5:
-        # Para tablas de 5 columnas (como Matriz de Riesgos):
-        # Distribuir más proporcionalmente
+    elif num_cols == 5: # Riesgos
         col_widths = [1.5*cm, 5*cm, 2.5*cm, 2.5*cm, 5.5*cm]
     else:
-        # Distribución uniforme para otras tablas
         col_width = available_width / num_cols
         col_widths = [col_width] * num_cols
     
     t = Table(data, colWidths=col_widths)
     
+    # Estilos (Tu estilo original)
     t.setStyle(TableStyle([
         ('BACKGROUND', (0, 0), (-1, 0), COTECMAR_BLUE),
         ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
@@ -115,7 +132,7 @@ def process_table(table_text, styles):
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
         ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
         ('PADDING', (0, 0), (-1, -1), 6),
-        ('WORDWRAP', (0, 0), (-1, -1), True),  # Importante: habilitar word wrap
+        ('WORDWRAP', (0, 0), (-1, -1), True),
     ]))
     return t
 

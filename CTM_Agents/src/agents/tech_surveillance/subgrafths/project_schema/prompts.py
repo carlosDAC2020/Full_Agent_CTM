@@ -1,12 +1,5 @@
 # prompts.py
 
-
-
-
-
-
-
-
 ACTIVITY_SCHEDULE_PROMPT = """
 Rol: Eres un experimentado Project Manager.
 Tarea: Crear un cronograma de actividades de alto nivel para el proyecto descrito.
