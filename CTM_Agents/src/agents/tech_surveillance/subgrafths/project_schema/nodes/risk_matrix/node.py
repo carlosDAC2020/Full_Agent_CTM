@@ -8,6 +8,7 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from agents.tech_surveillance.state import GraphState, ReportSchema, ExecutionPlan
 # Importamos los prompts 
 from .prompts import RISK_MATRIX_PROMPT
+from ...prompts import SHARED_CONTEXT_HEADER
 
 # --- Inicialización del LLM (sin cambios) ---
 llm = ChatGoogleGenerativeAI(
@@ -35,6 +36,10 @@ def build_risk_matrix(state: GraphState) -> dict:
         activity_schedule = report_components.execution_plan.activity_schedule or "No hay cronograma disponible."
 
     # 2. Formatear el prompt
+    initial_schema = state.get("initial_schema") or "No se encontró el esquema inicial."
+    header_prompt = SHARED_CONTEXT_HEADER.format(
+        initial_schema=initial_schema
+    )
     prompt = RISK_MATRIX_PROMPT.format(
         project_title=project_title,
         activity_schedule=activity_schedule
@@ -44,7 +49,8 @@ def build_risk_matrix(state: GraphState) -> dict:
     structured_llm = llm.with_structured_output(ExecutionPlan)
 
     # 4. Invocar al LLM
-    generated_plan = structured_llm.invoke(prompt)
+    full_prompt = header_prompt + "\n" + prompt
+    generated_plan = structured_llm.invoke(full_prompt)
 
     # 5. Actualizar el esquema del reporte en el estado
     

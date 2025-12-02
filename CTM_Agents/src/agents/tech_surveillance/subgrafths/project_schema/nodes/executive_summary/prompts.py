@@ -42,7 +42,6 @@ You must synthesize the provided context into a powerful, 4-paragraph summary. D
 
 ## REQUIRED OUTPUT FORMAT (Strictly follow this Markdown)
 
-### **1. Resumen Ejecutivo**
 
 (Your 4-paragraph executive summary here.)
 

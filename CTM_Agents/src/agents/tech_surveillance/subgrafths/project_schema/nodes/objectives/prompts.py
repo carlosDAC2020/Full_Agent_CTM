@@ -31,10 +31,10 @@ SMART_OBJECTIVES_PROMPT = """\
 
 ## REQUIRED OUTPUT FORMAT (Strictly follow this Markdown)
 
-### **5.1. Objetivo General**
+### 5.1. Objetivo General
 (Your generated general objective here.)
 
-### **5.2. Objetivos Específicos (SMART)**
+### 5.2. Objetivos Específicos (SMART)
 
 1.  **Objetivo:** (Title of the first specific objective).
     *   **Específico (S):** (Detailed explanation).

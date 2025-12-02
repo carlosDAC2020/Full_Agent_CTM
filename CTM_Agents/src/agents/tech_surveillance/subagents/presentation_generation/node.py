@@ -91,7 +91,8 @@ async def presentation_generation_node(state: GraphState):
 
         return {
             "messages": [AIMessage(content=msg_content)],
-            "random_response": final_marp
+            "random_response": final_marp,
+            "presentation_summary": text_response
         }
 
     except Exception as e:

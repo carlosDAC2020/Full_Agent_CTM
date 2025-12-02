@@ -13,7 +13,7 @@ from agents.tech_surveillance.state import GraphState, ReportSchema, GeneralInfo
 chat_model = ChatGoogleGenerativeAI(
     model="gemini-2.5-flash",
     api_key=os.environ.get("GEMINI_API_KEY"),
-    temperature=0.7,
+    temperature=2.0,
     convert_system_message_to_human=True
 )
 extraction_llm = chat_model.with_structured_output(IngestionResult)

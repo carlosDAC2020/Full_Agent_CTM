@@ -57,79 +57,10 @@ services:
     networks:
       - ctm_network
 
-  # ====================================================================
-  # === SERVICIOS PARA EL CLIENTE CHAINLIT (CTM_Client)              ===
-  # ====================================================================
-
-  # Servicio del Cliente 
-  chainlit_client:
-    build:
-      context: ./CTM_Client
-      dockerfile: Dockerfile
-    container_name: ctm-chainlit-client
-    env_file: .env
-    ports:
-      - "8001:8000"
-    depends_on:
-      db_client:
-        condition: service_healthy
-      localstack:
-        condition: service_healthy
-    restart: unless-stopped
-    networks:
-      - ctm_network
-
-  db_client:
-    image: postgres:16-alpine
-    container_name: ctm-db-client
-    environment:
-      POSTGRES_DB: ${POSTGRES_DB_CLIENT}
-      POSTGRES_USER: ${POSTGRES_USER_CLIENT}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD_CLIENT}
-    volumes:
-      - postgres_client_data:/var/lib/postgresql/data
-    ports:
-      - "5433:5432" # Mapeamos al puerto 5433 en el host por si quieres conectarte externamente
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER_CLIENT}"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    restart: unless-stopped
-    networks:
-      - ctm_network
-
-  # Servicio de Almacenamiento Local 
-  localstack:
-    image: localstack/localstack:latest
-    container_name: ctm-localstack
-    environment:
-      - SERVICES=s3
-      - AWS_ACCESS_KEY_ID=${APP_AWS_ACCESS_KEY}
-      - AWS_SECRET_ACCESS_KEY=${APP_AWS_SECRET_KEY}
-      - AWS_DEFAULT_REGION=${APP_AWS_REGION}
-      - BUCKET_NAME=${BUCKET_NAME} 
-    ports:
-      - "4566:4566"
-    volumes:
-      # Monta el script en el directorio de inicialización de LocalStack
-      - ./CTM_Client/localstack-script.sh:/etc/localstack/init/ready.d/init-s3.sh
-      - "/var/run/docker.sock:/var/run/docker.sock"
-    healthcheck:
-      test: ["CMD", "awslocal", "s3", "ls"]
-      interval: 5s
-      timeout: 2s
-      retries: 5
-    restart: unless-stopped
-    networks:
-      - ctm_network
-
-
 
 # Definimos los volúmenes para persistir datos
 volumes:
   postgres_agent_data:
-  postgres_client_data:
   redis_data:
 
 # Definimos una red común para que todos los servicios puedan comunicarse

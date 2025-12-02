@@ -8,6 +8,7 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from agents.tech_surveillance.state import GraphState, ReportSchema, Justification
 # Importamos los prompts (que también modificaremos)
 from .prompts import JUSTIFICATION_PROMPT
+from ...prompts import SHARED_CONTEXT_HEADER
 
 # --- Inicialización del LLM (sin cambios) ---
 llm = ChatGoogleGenerativeAI(
@@ -41,6 +42,10 @@ def generate_justification(state: GraphState) -> dict:
         framework_body = report_components.theoretical_framework.body or "No se encontró marco teórico."
 
     # 2. Formatear el prompt con la información extraída
+    initial_schema = state.get("initial_schema") or "No se encontró el esquema inicial."
+    header_prompt = SHARED_CONTEXT_HEADER.format(
+        initial_schema=initial_schema
+    )
     prompt = JUSTIFICATION_PROMPT.format(
         project_title=project_title,
         project_description=project_description,
@@ -51,7 +56,8 @@ def generate_justification(state: GraphState) -> dict:
     structured_llm = llm.with_structured_output(Justification)
 
     # 4. Invocar al LLM
-    justification_schema = structured_llm.invoke(prompt)
+    full_prompt = header_prompt + "\n" + prompt
+    justification_schema = structured_llm.invoke(full_prompt)
 
     # 5. Actualizar el esquema del reporte en el estado
     report_components.problem_statement_justification = justification_schema

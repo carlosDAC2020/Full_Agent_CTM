@@ -29,7 +29,6 @@ Your process MUST follow these steps before generating the final report:
 
 # Final Report Structure (Strictly follow this Markdown format)
 
-## 4. Marco Teórico y Estado del Arte
 
 ### 4.1. Introducción al Dominio
 (Provide a brief introduction to the main field of study, defining key concepts based on Wikipedia and foundational papers. 2-3 paragraphs.)

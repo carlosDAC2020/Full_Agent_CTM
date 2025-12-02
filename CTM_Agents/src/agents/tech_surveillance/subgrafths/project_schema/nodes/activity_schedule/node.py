@@ -1,13 +1,16 @@
+
 from __future__ import annotations
 
 import os 
 from langchain_core.messages import AIMessage
 from langchain_google_genai import ChatGoogleGenerativeAI
+from pydantic import BaseModel, Field
 
 # Importamos los nuevos esquemas del estado
-from agents.tech_surveillance.state import GraphState, ReportSchema, ExecutionPlan
+from agents.tech_surveillance.state import GraphState, ReportSchema, ExecutionPlan, GeneralInfo
 # Importamos los prompts 
 from .prompts import ACTIVITY_SCHEDULE_PROMPT
+from ...prompts import SHARED_CONTEXT_HEADER
 
 # --- Inicialización del LLM (sin cambios) ---
 llm = ChatGoogleGenerativeAI(
@@ -16,6 +19,11 @@ llm = ChatGoogleGenerativeAI(
     temperature=0.7,
     convert_system_message_to_human=True 
 )
+
+class ScheduleGenerationOutput(BaseModel):
+    """Salida estructurada para la generación del cronograma."""
+    activity_schedule: str = Field(description="A detailed activity schedule or Gantt chart description in Markdown format.")
+    duration_months: int = Field(description="The total duration of the project in months, derived from the schedule.")
 
 def create_activity_schedule(state: GraphState) -> dict:
     """
@@ -36,6 +44,12 @@ def create_activity_schedule(state: GraphState) -> dict:
         
     methodology = report_components.methodology or "No se definió metodología."
 
+    
+    initial_schema = state.get("initial_schema") or "No se encontró el esquema inicial."
+
+    header_prompt = SHARED_CONTEXT_HEADER.format(
+        initial_schema=initial_schema
+    )
     # 2. Formatear el prompt
     prompt = ACTIVITY_SCHEDULE_PROMPT.format(
         project_title=project_title,
@@ -44,11 +58,12 @@ def create_activity_schedule(state: GraphState) -> dict:
     )
 
     # 3. Configurar el LLM para salida estructurada
-    # Usamos ExecutionPlan, el LLM llenará activity_schedule y dejará risk_matrix en None
-    structured_llm = llm.with_structured_output(ExecutionPlan)
+    # Usamos un esquema intermedio para capturar también la duración
+    structured_llm = llm.with_structured_output(ScheduleGenerationOutput)
 
     # 4. Invocar al LLM
-    generated_plan = structured_llm.invoke(prompt)
+    full_prompt = header_prompt + "\n" + prompt
+    generated_output = structured_llm.invoke(full_prompt)
 
     # 5. Actualizar el esquema del reporte en el estado
     
@@ -56,12 +71,19 @@ def create_activity_schedule(state: GraphState) -> dict:
     if not report_components.execution_plan:
         report_components.execution_plan = ExecutionPlan()
         
-    # Actualizamos SOLO el campo de cronograma
-    if generated_plan.activity_schedule:
-        report_components.execution_plan.activity_schedule = generated_plan.activity_schedule
+    # Actualizamos el campo de cronograma
+    if generated_output.activity_schedule:
+        report_components.execution_plan.activity_schedule = generated_output.activity_schedule
+        
+    # Actualizamos la duración en GeneralInfo
+    if generated_output.duration_months:
+        if not report_components.general_info:
+            report_components.general_info = GeneralInfo()
+        report_components.general_info.duration_months = generated_output.duration_months
+        print(f"--- Duración del proyecto actualizada: {generated_output.duration_months} meses ---")
     
     # 6. Mensaje de confirmación
-    message = AIMessage(content="Cronograma de actividades generado (Estructurado). Procediendo a construir la matriz de riesgos.")
+    message = AIMessage(content=f"Cronograma generado (Duración: {generated_output.duration_months} meses). Procediendo a matriz de riesgos.")
     
     print("--- Cronograma generado y guardado en el estado. ---")
 

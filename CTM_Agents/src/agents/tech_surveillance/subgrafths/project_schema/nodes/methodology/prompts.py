@@ -35,7 +35,6 @@ METHODOLOGY_PROMPT = """\
 
 ## REQUIRED OUTPUT FORMAT (Strictly follow this Markdown)
 
-### **6. Metodología Propuesta**
 
 **Framework Seleccionado:** (e.g., Modelo en V de Ingeniería de Sistemas)
 

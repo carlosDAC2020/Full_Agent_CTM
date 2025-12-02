@@ -9,6 +9,7 @@ from agents.tech_surveillance.state import GraphState, ReportSchema, Methodology
 
 # Importamos los prompts 
 from .prompts import METHODOLOGY_PROMPT
+from ...prompts import SHARED_CONTEXT_HEADER
 
 
 # --- Inicialización del LLM (sin cambios) ---
@@ -39,6 +40,10 @@ def generate_methodology(state: GraphState) -> dict:
         specific_objectives = report_components.objectives.specific_objectives_smart or ""
 
     # 2. Formatear el prompt
+    initial_schema = state.get("initial_schema") or "No se encontró el esquema inicial."
+    header_prompt = SHARED_CONTEXT_HEADER.format(
+        initial_schema=initial_schema
+    )
     prompt = METHODOLOGY_PROMPT.format(
         project_title=project_title,
         general_objective=general_objective,
@@ -49,7 +54,8 @@ def generate_methodology(state: GraphState) -> dict:
     structured_llm = llm.with_structured_output(Methodology)
 
     # 4. Invocar al LLM
-    methodology_schema = structured_llm.invoke(prompt)
+    full_prompt = header_prompt + "\n" + prompt
+    methodology_schema = structured_llm.invoke(full_prompt)
 
     # 5. Actualizar el esquema del reporte en el estado
     report_components.methodology = methodology_schema

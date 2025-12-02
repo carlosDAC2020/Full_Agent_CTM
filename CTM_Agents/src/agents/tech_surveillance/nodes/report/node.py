@@ -1,238 +1,37 @@
 import os
 import re
-import html
 from datetime import datetime
-from pathlib import Path
 
-# Importaciones de ReportLab
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image, PageBreak, Table, TableStyle
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.platypus import SimpleDocTemplate, Spacer, Image, PageBreak, Paragraph, KeepTogether
+from reportlab.platypus.tableofcontents import TableOfContents
 from reportlab.lib.units import cm
-from reportlab.lib.enums import TA_LEFT, TA_JUSTIFY, TA_CENTER
-from reportlab.lib import colors
 from reportlab.lib.pagesizes import letter
+from reportlab.lib import colors
+from reportlab.lib.styles import ParagraphStyle
+from reportlab.lib.enums import TA_CENTER
 
-# Asumiendo que estas importaciones existen en tu proyecto
+# Asumiendo importaciones existentes...
 from agents.tech_surveillance.state import GraphState, ReportSchema
+from .utils import get_custom_styles, PageTemplate, markdown_to_flowables, ReportDocTemplate, COTECMAR_BLUE, COTECMAR_DARK_BLUE
 
+
+# --- Carpeta de Reportes ---
 REPORTS_DIR = "generated_reports"
 
-# --- Colores y Estilos ---
-COTECMAR_BLUE = colors.HexColor('#0066CC')
-COTECMAR_DARK_BLUE = colors.HexColor('#003366')
-COTECMAR_GRAY = colors.HexColor('#4A4A4A')
-
-def get_custom_styles():
-    """Crea una hoja de estilos personalizada."""
-    styles = getSampleStyleSheet()
-    # (Tus estilos originales se mantienen igual, aseguramos que existan)
-    if 'H1' not in styles:
-        styles.add(ParagraphStyle(name='H1', fontSize=18, fontName='Helvetica-Bold', textColor=COTECMAR_DARK_BLUE, spaceAfter=14, alignment=TA_LEFT))
-    if 'H2' not in styles:
-        styles.add(ParagraphStyle(name='H2', fontSize=14, fontName='Helvetica-Bold', textColor=COTECMAR_BLUE, spaceBefore=12, spaceAfter=10, alignment=TA_LEFT))
-    if 'H3' not in styles:
-        styles.add(ParagraphStyle(name='H3', fontSize=12, fontName='Helvetica-Bold', textColor=COTECMAR_GRAY, spaceBefore=10, spaceAfter=8, alignment=TA_LEFT))
-    if 'Body' not in styles:
-        styles.add(ParagraphStyle(name='Body', fontSize=10, fontName='Helvetica', leading=14, alignment=TA_JUSTIFY, spaceAfter=6))
-    if 'CustomBullet' not in styles:
-        styles.add(ParagraphStyle(name='CustomBullet', parent=styles['Body'], leftIndent=20, spaceBefore=2, spaceAfter=2))
-    if 'TableHeader' not in styles:
-        styles.add(ParagraphStyle(name='TableHeader', fontSize=9, fontName='Helvetica-Bold', textColor=colors.white, alignment=TA_CENTER))
-    if 'TableCell' not in styles:
-        styles.add(ParagraphStyle(name='TableCell', fontSize=8, fontName='Helvetica', leading=10, alignment=TA_LEFT))
-    return styles
-
-def clean_text(text):
-    """Escapa caracteres XML y convierte Markdown básico a etiquetas ReportLab."""
-    if not text:
-        return ""
-    # 1. Escapar caracteres XML primero (importante para evitar crashes con & < >)
-    text = html.escape(text, quote=False)
-    
-    # 2. Convertir Markdown a etiquetas XML soportadas por ReportLab
-    # Negrita: **texto** -> <b>texto</b>
-    text = re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', text)
-    # Cursiva: *texto* -> <i>texto</i>
-    text = re.sub(r'\*(.*?)\*', r'<i>\1</i>', text)
-    return text
-
-def process_table(table_text, styles):
-    """Convierte texto de tabla Markdown a un objeto Table de ReportLab, respetando celdas vacías."""
-    lines = table_text.strip().split('\n')
-    data = []
-    
-    for line in lines:
-        # Omitir líneas separadoras
-        if '---' in line:
-            continue
-            
-        # 1. Separar por pipe '|'
-        # El markdown suele ser: | col1 | col2 | col3 |
-        # split('|') genera un elemento vacío al inicio y al final.
-        raw_cells = line.split('|')
-        
-        # 2. Eliminar el primer y último elemento (son artefactos del split si la línea empieza/termina con |)
-        if len(raw_cells) > 2:
-            row_content = raw_cells[1:-1]
-        else:
-            row_content = raw_cells
-
-        # 3. Limpiar espacios en blanco pero NO eliminar la celda si queda vacía string ""
-        row_cleaned = [cell.strip() for cell in row_content]
-        
-        # Validación extra: Si toda la fila está vacía, saltar
-        if not any(row_cleaned):
-            continue
-
-        # Convertir a Paragraphs
-        row_flowables = []
-        for i, cell_text in enumerate(row_cleaned):
-            # Usar estilo Header para la primera fila, Cell para el resto
-            style = styles['TableHeader'] if len(data) == 0 else styles['TableCell']
-            
-            # Limpiar texto (tu función clean_text)
-            text_content = clean_text(cell_text)
-            
-            # Si la celda está vacía, ponemos un espacio no rompible para que renderice el borde
-            if not text_content:
-                text_content = "&nbsp;"
-                
-            row_flowables.append(Paragraph(text_content, style))
-        
-        data.append(row_flowables)
-
-    if not data:
-        return None
-
-    # --- Lógica de anchos (se mantiene igual o se ajusta) ---
-    num_cols = len(data[0])
-    # Aseguramos que todas las filas tengan el mismo número de columnas que la cabecera
-    # Si alguna fila tiene menos (error de formato markdown), rellenamos
-    for row in data:
-        while len(row) < num_cols:
-            row.append(Paragraph("", styles['TableCell']))
-            
-    available_width = 17*cm 
-    
-    if num_cols == 4: # Cronograma
-        col_widths = [3*cm, 7*cm, 4*cm, 3*cm]
-    elif num_cols == 5: # Riesgos
-        col_widths = [1.5*cm, 5*cm, 2.5*cm, 2.5*cm, 5.5*cm]
-    else:
-        col_width = available_width / num_cols
-        col_widths = [col_width] * num_cols
-    
-    t = Table(data, colWidths=col_widths)
-    
-    # Estilos (Tu estilo original)
-    t.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (-1, 0), COTECMAR_BLUE),
-        ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
-        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-        ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
-        ('PADDING', (0, 0), (-1, -1), 6),
-        ('WORDWRAP', (0, 0), (-1, -1), True),
-    ]))
-    return t
-
-def markdown_to_flowables(markdown_text, styles):
-    """Parsea el markdown completo y devuelve una lista de Flowables."""
-    flowables = []
-    lines = markdown_text.split('\n')
-    i = 0
-    
-    while i < len(lines):
-        line = lines[i].strip()
-        
-        # 1. Detección de Tabla
-        if line.startswith('|'):
-            table_lines = []
-            while i < len(lines) and (lines[i].strip().startswith('|') or lines[i].strip() == ""):
-                if lines[i].strip(): # Solo agregar si tiene contenido
-                    table_lines.append(lines[i])
-                i += 1
-            
-            table = process_table('\n'.join(table_lines), styles)
-            if table:
-                flowables.append(table)
-                flowables.append(Spacer(1, 0.5*cm))
-            continue # El índice ya avanzó
-            
-        # 2. Encabezados
-        if line.startswith('### '):
-            # Limpieza especial: evitar duplicidad visual si el texto también tiene **
-            clean_line = line[4:].replace('**', '').strip()
-            flowables.append(Paragraph(clean_text(clean_line), styles['H3']))
-        elif line.startswith('## '):
-            clean_line = line[3:].replace('**', '').strip()
-            flowables.append(Paragraph(clean_text(clean_line), styles['H2']))
-        elif line.startswith('# '):
-            clean_line = line[2:].replace('**', '').strip()
-            flowables.append(Paragraph(clean_text(clean_line), styles['H1']))
-            
-        # 3. Listas
-        elif line.startswith('* ') or line.startswith('- '):
-            item_text = line[2:]
-            flowables.append(Paragraph(f'• {clean_text(item_text)}', styles['CustomBullet']))
-            
-        # 4. Párrafos normales
-        elif line:
-            flowables.append(Paragraph(clean_text(line), styles['Body']))
-        
-        # Espaciado entre párrafos (simple)
-        if line:
-             flowables.append(Spacer(1, 0.2*cm))
-             
-        i += 1
-        
-    return flowables
-
-# --- Plantilla de Página (Sin cambios, asumiendo que funciona) ---
-class PageTemplate:
-    def __init__(self, page_size=letter):
-        self.page_width, self.page_height = page_size
-        self.left_margin = 2 * cm
-        self.right_margin = 2 * cm
-        self.bottom_margin = 2.5 * cm
-
-    def on_first_page(self, canvas, doc):
-        self.draw_footer(canvas, doc)
-
-    def on_later_pages(self, canvas, doc):
-        self.draw_footer(canvas, doc)
-
-    def draw_footer(self, canvas, doc):
-        canvas.saveState()
-        canvas.setStrokeColor(COTECMAR_BLUE)
-        canvas.setLineWidth(0.5)
-        canvas.line(self.left_margin, self.bottom_margin - 0.5*cm, 
-                   self.page_width - self.right_margin, self.bottom_margin - 0.5*cm)
-        canvas.setFont('Helvetica', 8)
-        canvas.setFillColor(COTECMAR_GRAY)
-        canvas.drawString(self.left_margin, self.bottom_margin - 1*cm, 
-                         "Documento Generado por Sistema de Vigilancia Tecnológica")
-        canvas.drawRightString(self.page_width - self.right_margin, 
-                              self.bottom_margin - 1*cm, 
-                              f"Página {canvas.getPageNumber()}")
-        canvas.restoreState()
-
-# --- Nodo Principal ---
 
 def report_node(state: GraphState):
     print("--- Ejecutando Nodo: Generación de Reporte PDF ---")
     
     report_components = state.get("report_components")
+
     if not report_components:
         return {}
 
     # Convertir a objeto si es dict
     if isinstance(report_components, dict):
-        # Usamos un truco simple si ReportSchema da problemas, o usamos el schema real
         try:
             data = ReportSchema(**report_components)
         except:
-            # Fallback: crear una clase simple al vuelo o usar diccionario
             class Data: pass
             data = Data()
             for k, v in report_components.items():
@@ -240,15 +39,13 @@ def report_node(state: GraphState):
     else:
         data = report_components
 
-    # --- Extracción de Datos (Soporte para Pydantic y Dict) ---
+    # --- Extracción de Datos ---
     
-    # Helper para obtener atributos de forma segura (sea dict o objeto)
     def get_field(obj, field, default=None):
         if isinstance(obj, dict):
             return obj.get(field, default)
         return getattr(obj, field, default)
 
-    # Helper para obtener el contenido de una sección (string o None)
     def get_section_content(section_obj, field='content'):
         if not section_obj:
             return ""
@@ -260,6 +57,7 @@ def report_node(state: GraphState):
     title = get_field(gen_info, 'project_title', "Proyecto Sin Título") if gen_info else "Proyecto Sin Título"
     desc = get_field(gen_info, 'project_description', "N/A") if gen_info else "N/A"
     kws = get_field(gen_info, 'keywords', []) if gen_info else []
+    duration = get_field(gen_info, 'duration_months', "N/A") if gen_info else "N/A"
     if isinstance(kws, str): kws = [kws]
     
     # 2. Resumen Ejecutivo
@@ -291,16 +89,25 @@ def report_node(state: GraphState):
     # 8. Resultados
     results = get_section_content(get_field(data, 'results_and_impacts'), 'content')
 
+    # Obtener datos de convocatoria
+    call_info = state.get("call_info")
+    
     # Construcción del Markdown
     full_markdown_report = f"""
-# {title}
 
-## 1. Resumen Ejecutivo
+## 1. Generalidades del Proyecto
+
+**Título:** {title}
+**Convocatoria:** {call_info.title if call_info else 'N/A'}
+**Entidad/Persona:** COTECMAR
+**Línea Temática:** {', '.join(call_info.keywords) if call_info and call_info.keywords else 'N/A'}
+
+
+* **Descripción:** {desc}
+* **Palabras Clave:** {', '.join(kws) if kws else 'N/A'}
+
+## 2. Resumen Ejecutivo
 {exec_summary}
-
-## 2. Generalidades del Proyecto
-*   **Descripción:** {desc}
-*   **Palabras Clave:** {', '.join(kws) if kws else 'N/A'}
 
 ## 3. Planteamiento del Problema y Justificación
 {justification}
@@ -324,8 +131,7 @@ def report_node(state: GraphState):
 {references}
 """
 
-    # Limpieza de contenido repetitivo conocido (Hack para arreglar el output del LLM)
-    # Elimina subtítulos repetidos como "### **1. Resumen Ejecutivo**" que vienen después del H2
+    # Limpieza de contenido repetitivo
     full_markdown_report = re.sub(r'## (\d+\..+)\n+### \*\*\1\*\*', r'## \1', full_markdown_report)
     full_markdown_report = re.sub(r'## (\d+\..+)\n+## \1', r'## \1', full_markdown_report)
 
@@ -335,30 +141,150 @@ def report_node(state: GraphState):
     file_path = os.path.join(REPORTS_DIR, file_name)
 
     try:
-        doc = SimpleDocTemplate(file_path, pagesize=letter, rightMargin=2*cm, leftMargin=2*cm, topMargin=2.5*cm, bottomMargin=2.5*cm)
+        # Crear documento con plantilla personalizada
+        doc = ReportDocTemplate(
+            file_path, 
+            pagesize=letter, 
+            rightMargin=2*cm, 
+            leftMargin=2*cm, 
+            topMargin=2.5*cm, 
+            bottomMargin=2.5*cm
+        )
+        
         styles = get_custom_styles()
         pt = PageTemplate()
         
         story = []
         
-        # Si tienes una imagen en el estado:
-        image_path = state.get("generated_image_path") 
+        # ========================================
+        # PÁGINA 1: PORTADA CON IMAGEN Y MARCO
+        # ========================================
+        image_path = state.get("generated_image_path")
         if image_path and os.path.exists(image_path):
-            img = Image(image_path, width=15*cm, height=10*cm, kind='proportional') # Kind proportional evita deformación
+            # El área imprimible (Frame) es aprox 17.1cm x 22.5cm debido a los márgenes.
+            # Debemos hacer la imagen un poco más pequeña que eso para que entre.
+            
+            # Usamos 22 cm de alto como límite seguro.
+            # Manteniendo ratio 3:4 -> Ancho = 22 * 0.75 = 16.5 cm
+            
+            img_width = 16.5 * cm
+            img_height = 22.0 * cm
+            
+            # --- AJUSTE DE POSICIÓN ---
+            # Usamos un espaciador negativo para "subir" la imagen visualmente
+            # hacia el margen superior, aprovechando que la imagen ahora sí cabe.
+            story.append(Spacer(1,0 * cm))
+            
+            # Insertar imagen
+            img = Image(image_path, width=img_width, height=img_height, kind='proportional')
             img.hAlign = 'CENTER'
             story.append(img)
-            story.append(Spacer(1, 1*cm))
+            
+            story.append(PageBreak())
+        else:
+            # Si no hay imagen, crear portada de texto
+            story.append(Spacer(1, 4*cm))
+            
+            # Título de la portada
+            cover_title_style = ParagraphStyle(
+                name='CoverTitle',
+                fontSize=24,
+                fontName='Helvetica-Bold',
+                leading=30,
+                alignment=TA_CENTER,
+                textColor=COTECMAR_DARK_BLUE,
+                spaceAfter=20
+            )
+            
+            story.append(Paragraph(title, cover_title_style))
+            story.append(Spacer(1, 0.8*cm))
+            
+            # Subtítulo de convocatoria
+            cover_subtitle_style = ParagraphStyle(
+                name='CoverSubtitle',
+                fontSize=14,
+                fontName='Helvetica',
+                leading=18,
+                alignment=TA_CENTER,
+                textColor=COTECMAR_BLUE,
+                spaceAfter=10
+            )
+            
+            if call_info:
+                story.append(Paragraph(call_info.title, cover_subtitle_style))
+            
+            story.append(Spacer(1, 10*cm))
+            
+            # Información adicional centrada
+            footer_style = ParagraphStyle(
+                name='CoverFooter',
+                fontSize=10,
+                fontName='Helvetica',
+                alignment=TA_CENTER,
+                textColor=colors.HexColor('#666666')
+            )
+            
+            story.append(Paragraph(f"COTECMAR - {datetime.now().strftime('%B %Y')}", footer_style))
+            story.append(PageBreak())
 
+        # ========================================
+        # PÁGINA 2: TABLA DE CONTENIDO
+        # ========================================
+        toc = TableOfContents()
+        toc.dotsMinLevel = 0
+        toc.levelStyles = [
+            styles['TOCHeading1'],
+            styles['TOCHeading2'],
+            styles['TOCHeading3']
+        ]
+        
+        # Título de la TOC (Estilo específico)
+        toc_title_style = ParagraphStyle(
+            name='TOCTitle',
+            parent=styles['H1'],
+            alignment=TA_CENTER
+        )
+        
+        story.append(Spacer(1, 1*cm))
+        story.append(Paragraph("<b>Tabla de Contenido</b>", toc_title_style))
+        story.append(Spacer(1, 0.8*cm))
+        
+        # Línea decorativa
+        from reportlab.platypus import HRFlowable
+        hr = HRFlowable(
+            width="80%",
+            thickness=2,
+            color=COTECMAR_BLUE,
+            spaceBefore=0,
+            spaceAfter=20,
+            hAlign='CENTER'
+        )
+        story.append(hr)
+        
+        story.append(toc)
+        story.append(PageBreak())
+
+        # ========================================
+        # RESTO DEL CONTENIDO
+        # ========================================
         story.extend(markdown_to_flowables(full_markdown_report, styles))
 
-        doc.build(story, onFirstPage=pt.on_first_page, onLaterPages=pt.on_later_pages)
+        # Generar PDF con callbacks personalizados
+        doc.multiBuild(
+            story, 
+            onFirstPage=pt.on_first_page,  # Usa el marco decorativo
+            onLaterPages=pt.on_later_pages  # Usa encabezado/pie estándar
+        )
+        
         print(f"   ✅ Reporte PDF generado: {file_path}")
 
-        # guardar un markdown con el tetxo del reporte 
-        markdown_file_path = os.path.join(REPORTS_DIR, f"{sanitized_title}_{datetime.now().strftime('%Y%m%d_%H%M')}.md")
+        # Guardar markdown
+        markdown_file_path = os.path.join(
+            REPORTS_DIR, 
+            f"{sanitized_title}_{datetime.now().strftime('%Y%m%d_%H%M')}.md"
+        )
         with open(markdown_file_path, 'w', encoding='utf-8') as f:
             f.write(full_markdown_report)
-        print(f"   ✅ Reporte Markdown generado: {markdown_file_path}")
         
         return {"final_report": file_path}
 

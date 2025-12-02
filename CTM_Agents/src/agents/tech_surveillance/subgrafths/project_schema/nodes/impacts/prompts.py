@@ -35,14 +35,12 @@ Your response must be structured into two distinct sub-sections: "Expected Resul
 
 ## REQUIRED OUTPUT FORMAT (Strictly follow this Markdown)
 
-### **8. Resultados e Impactos Esperados**
-
-#### **8.1. Resultados Esperados (Entregables)**
+### **8.1. Resultados Esperados (Entregables)**
 *   **[Nombre del Entregable 1]:** Breve descripción del entregable y a qué objetivo específico corresponde.
 *   **[Nombre del Entregable 2]:** Breve descripción del entregable y a qué objetivo específico corresponde.
 *   ...
 
-#### **8.2. Impactos Esperados**
+### **8.2. Impactos Esperados**
 *   **Impacto Técnico/Científico:**
     (Párrafo describiendo el impacto en esta área).
 

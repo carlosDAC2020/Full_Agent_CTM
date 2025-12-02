@@ -32,6 +32,9 @@ Your primary goal is to weave a compelling narrative that logically connects the
 - Conclude by summarizing the project's strategic importance.
 - Answer the questions: Why is this project timely and critical? What is its potential impact on the involved organizations, the industry, and the region? Reinforce its innovative nature.
 
+### NOTE
+no wirte references how **Paragraph 1: The Macro Context & High-Level Problem.** , **Paragraph 2: The Evidence-Based Gap (The "Why Now?").** etc in the output, just write the text as a continuous justification section.
+
 ## CRITICAL CONSTRAINT
 You MUST write the response in the **SAME LANGUAGE** as the provided context. If the project description and theoretical framework are in Spanish, your entire output must be in Spanish.
 

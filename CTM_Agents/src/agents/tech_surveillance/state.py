@@ -150,4 +150,12 @@ class GraphState(TypedDict):
     generated_image_path: Optional[str]
     report_components: Optional[ReportSchema]  # Ahora Pydantic
     final_report: Optional[str]
+
+    # resumen de presentacion
+    presentation_summary : Optional[str]
+
+    # esquema incial de dpocumento 
+    initial_schema: Optional[str]
+
+    
     randonm_response: Optional[Any]

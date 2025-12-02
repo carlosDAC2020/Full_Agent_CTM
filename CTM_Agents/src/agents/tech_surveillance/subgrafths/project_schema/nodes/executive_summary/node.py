@@ -8,6 +8,7 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from agents.tech_surveillance.state import GraphState, ReportSchema, ExecutiveSummary
 # Importamos los prompts 
 from .prompts import EXECUTIVE_SUMMARY_PROMPT
+from ...prompts import SHARED_CONTEXT_HEADER
 
 # --- Inicialización del LLM (sin cambios) ---
 llm = ChatGoogleGenerativeAI(
@@ -51,6 +52,11 @@ def generate_executive_summary(state: GraphState) -> dict:
     # Concatenar objetivos para pasarlos como un solo bloque de texto
     objectives_text = f"General: {general_obj}\n\nSpecifics:\n{specific_objs}"
 
+    initial_schema = state.get("initial_schema") or "No se encontró el esquema inicial."
+    
+    header_prompt = SHARED_CONTEXT_HEADER.format(
+        initial_schema=initial_schema
+    )
     # 2. Formatear el prompt con el contexto completo
     prompt = EXECUTIVE_SUMMARY_PROMPT.format(
         project_title=project_title,
@@ -64,7 +70,8 @@ def generate_executive_summary(state: GraphState) -> dict:
     structured_llm = llm.with_structured_output(ExecutiveSummary)
 
     # 4. Invocar al LLM
-    summary_schema = structured_llm.invoke(prompt)
+    full_prompt = header_prompt + "\n" + prompt
+    summary_schema = structured_llm.invoke(full_prompt)
 
     # 5. Actualizar el esquema del reporte en el estado
     report_components.executive_summary = summary_schema

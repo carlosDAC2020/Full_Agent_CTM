@@ -8,6 +8,7 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from agents.tech_surveillance.state import GraphState, ReportSchema, ProjectObjectives
 # Importamos los prompts 
 from .prompts import SMART_OBJECTIVES_PROMPT
+from ...prompts import SHARED_CONTEXT_HEADER
 
 # --- Inicialización del LLM (sin cambios) ---
 llm = ChatGoogleGenerativeAI(
@@ -34,6 +35,10 @@ def generate_objectives(state: GraphState) -> dict:
     justification = report_components.problem_statement_justification or "No hay justificación disponible."
 
     # 2. Formatear el prompt
+    initial_schema = state.get("initial_schema") or "No se encontró el esquema inicial."
+    header_prompt = SHARED_CONTEXT_HEADER.format(
+        initial_schema=initial_schema
+    )
     prompt = SMART_OBJECTIVES_PROMPT.format(
         project_title=project_title,
         problem_statement_justification=justification
@@ -44,7 +49,8 @@ def generate_objectives(state: GraphState) -> dict:
 
     # 4. Invocar al LLM
     # El resultado ya será una instancia de ProjectObjectives
-    objectives_schema = structured_llm.invoke(prompt)
+    full_prompt = header_prompt + "\n" + prompt
+    objectives_schema = structured_llm.invoke(full_prompt)
 
     # 5. Actualizar el esquema del reporte en el estado
     report_components.objectives = objectives_schema

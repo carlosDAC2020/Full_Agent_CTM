@@ -73,24 +73,26 @@ if EXECUTION_SCOPE == "ALL":
         # 2. Investigación -> Esquema Y Imagen (Paralelo)
         # 3. Ambos -> Reporte (Convergencia)
         
+        # dividimos entre la investiagcion academica y genracion de la presentacion
         workflow.add_edge("ingest", "academic_research")
+        workflow.add_edge("ingest", "presentation_generator")
         
-        # Bifurcación después de la investigación
+        # unimospara la generacion del documento 
         workflow.add_edge("academic_research", "project_schemas")
-        workflow.add_edge("academic_research", "images_generator")
-        workflow.add_edge("academic_research", "presentation_generatior")
+        workflow.add_edge("presentation_generator", "project_schemas")
         
-        # Convergencia (El reporte se ejecutará dos veces, la segunda será la completa)
-        workflow.add_edge("project_schemas", "report")
+        # al generar el docukento genramos la portada y pasamos a genrar el reprote 
+        workflow.add_edge("project_schemas", "images_generator")
         workflow.add_edge("images_generator", "report")
-        workflow.add_edge("presentation_generator", "report")
         
     else:
         # Ejecución Secuencial (Default y Recomendada)
         workflow.add_edge("ingest", "academic_research")
-        workflow.add_edge("academic_research", "project_schemas")
+        workflow.add_edge("academic_research", "presentation_generator")
+        workflow.add_edge("presentation_generator", "project_schemas")
         workflow.add_edge("project_schemas", "images_generator")
         workflow.add_edge("images_generator", "report")
+
         # Presentación antes del reporte
         #workflow.add_edge("images_generator", "presentation_generator")
         #workflow.add_edge("presentation_generator", "report")

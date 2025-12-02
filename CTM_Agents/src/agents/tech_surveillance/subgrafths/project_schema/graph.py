@@ -8,6 +8,7 @@ from agents.tech_surveillance.state import GraphState
 
 
 # Importar los nodos 
+from .nodes.initial_schema.node import initial_schema_node
 from .nodes.justification.node import generate_justification
 from .nodes.objectives.node import generate_objectives
 from .nodes.methodology.node import generate_methodology
@@ -20,6 +21,7 @@ from .nodes.executive_summary.node import generate_executive_summary
 workflow = StateGraph(GraphState)
 
 # Añadir todos los nodos al workflow
+workflow.add_node("initial_schema", initial_schema_node)
 workflow.add_node("generate_justification", generate_justification)
 workflow.add_node("generate_objectives", generate_objectives)
 workflow.add_node("generate_methodology", generate_methodology)
@@ -29,7 +31,8 @@ workflow.add_node("generate_impacts", generate_impacts)
 workflow.add_node("generate_executive_summary", generate_executive_summary)
 
 # Definir el nuevo flujo de trabajo SECUENCIAL
-workflow.set_entry_point("generate_justification")
+workflow.set_entry_point("initial_schema")
+workflow.add_edge("initial_schema", "generate_justification")
 workflow.add_edge("generate_justification", "generate_objectives")
 workflow.add_edge("generate_objectives", "generate_methodology")
 workflow.add_edge("generate_methodology", "create_activity_schedule")
