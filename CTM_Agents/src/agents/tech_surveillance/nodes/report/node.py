@@ -11,7 +11,7 @@ from reportlab.lib.styles import ParagraphStyle
 from reportlab.lib.enums import TA_CENTER
 
 # Asumiendo importaciones existentes...
-from agents.tech_surveillance.state import GraphState, ReportSchema
+from agents.tech_surveillance.state import GraphState, ReportSchema, DocsPaths
 from .utils import get_custom_styles, PageTemplate, markdown_to_flowables, ReportDocTemplate, COTECMAR_BLUE, COTECMAR_DARK_BLUE
 
 
@@ -289,9 +289,15 @@ def report_node(state: GraphState):
         message = AIMessage(
             content=f"✓ Reporte PDF generado: {file_path}\n✓ Reporte Markdown generado: {markdown_file_path}"
         )
+
+        # actualizando rutas en el estado
+        docs_paths: DocsPaths = state.get("docs_paths") or DocsPaths()
+        docs_paths.proyect_proposal_pdf = file_path
+        docs_paths.proyect_proposal_md = markdown_file_path
+
         return {
             "messages": [message],
-            "final_report": file_path
+            "docs_paths": docs_paths
         }
 
     except Exception as e:

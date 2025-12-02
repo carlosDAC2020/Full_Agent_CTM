@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import os
 from langgraph.graph import END, StateGraph
-from agents.tech_surveillance.state import GraphState, ReportSchema
+
 from langchain_core.messages import AIMessage, HumanMessage
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.prompts import PromptTemplate
@@ -11,10 +11,11 @@ from google.genai import types
 from PIL import Image
 from io import BytesIO
 
+from agents.tech_surveillance.state import GraphState, ReportSchema, DocsPaths
 from .prompts import template_image_prompt
 
 # Cliente de Google Genai para generación de imágenes
-genai_client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
+genai_client = genai.Client(api_key=os.environ.get("NANO_BANANA_API_KEY"))
 
 # Modelo base para chat general
 chat_model = ChatGoogleGenerativeAI(
@@ -172,9 +173,14 @@ def generator_image_node(state: GraphState):
         
         if image_path:
             logo_msg = " (con logo Cotecmar)" if os.path.exists(logo_path) else " (sin logo)"
+
+            # Actualizando rutas de documentos en el estado
+            docs_paths: DocsPaths = state.get("docs_paths") or DocsPaths()
+            docs_paths.poster_image_path = image_path
             return {
                 "messages": [AIMessage(content=f"✓ Póster generado{logo_msg}: {image_path}")],
                 "generated_image_path": image_path,
+                "docs_paths": docs_paths
             }
         else:
             return {"messages": [AIMessage(content="⚠ La API respondió pero no se encontró imagen.")]}

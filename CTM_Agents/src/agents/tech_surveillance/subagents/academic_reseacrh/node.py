@@ -48,34 +48,41 @@ async def academic_research_node(state: GraphState):
         keywords=', '.join(keywords)
     )
     
-    # Invoke agent
-    result = await academic_research_agent.ainvoke(
-        {"messages": [HumanMessage(content=system_content)]}
-    )
     
-    
-    # Extrae el último mensaje (la respuesta del agente)
-    last_message = result["messages"][-1]
+    try:
+        # Invoke agent
+        result = await academic_research_agent.ainvoke(
+            {"messages": [HumanMessage(content=system_content)]}
+        )
+        print(f"Full Agent Result: \n {result}")
+        # Extrae el último mensaje (la respuesta del agente)
+        last_message = result["messages"][-1]
+        print(f"Last Message Content: \n {last_message}")
 
-    text_response = last_message.content[0]['text'] + last_message.content[-1]
-    
-    print(f"Raw Agent Response: \n {text_response}")
-    # Invoca el modelo estructurado solo con la respuesta final
-    theoretical_framework = await model_with_structure.ainvoke(
-        [HumanMessage(content=text_response)]
-    )
-    
-    print(f"Type: {type(theoretical_framework)}")  # TheoreticalFramework
-    print(f"Body: {theoretical_framework.body}")
-    print(f"References: {theoretical_framework.references_apa}")
-    
-    updated_report = current_report.model_copy(
-        update={"theoretical_framework": theoretical_framework}
-    )
-    
-    return { 
-        "messages": [AIMessage(content="He completado la investigación académica...")],
-        "report_components": updated_report,
-    }
+        text_response = f" {last_message.content[0]['text']} {last_message.content[-1]}"
+        
+        print(f"Raw Agent Response: \n {text_response}")
+        # Invoca el modelo estructurado solo con la respuesta final
+        theoretical_framework = await model_with_structure.ainvoke(
+            [HumanMessage(content=text_response)]
+        )
+        
+        print(f"Type: {type(theoretical_framework)}")  # TheoreticalFramework
+        print(f"Body: {theoretical_framework.body}")
+        print(f"References: {theoretical_framework.references_apa}")
+        
+        updated_report = current_report.model_copy(
+            update={"theoretical_framework": theoretical_framework}
+        )
+        
+        return { 
+            "messages": [AIMessage(content="He completado la investigación académica...")],
+            "report_components": updated_report,
+        }
+    except Exception as e:
+        message_error = f"Error during academic research node execution: {str(e)}"
+        return{
+            "messages": [AIMessage(content=message_error)],
+        }
 
 

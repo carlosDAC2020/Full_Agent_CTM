@@ -138,6 +138,39 @@ class CallInfo(BaseModel):
     benefits: Optional[List[str]] = Field(default=None, description="Beneficios listados")
     url: Optional[str] = Field(default=None, description="URL de más información")
 
+
+class DocsPaths(BaseModel):
+    """Rutas de documentos generados."""
+    # documentos referentes a la presentacion de la convoctaoria 
+    presentation_oath_md: Optional[str] = Field(
+        default=None, 
+        description="Ruta del documento de presentación en Markdown"
+    )
+    presentation_oath_pdf: Optional[str] = Field(
+        default=None, 
+        description="Ruta del documento de presentación en PDF"
+    )
+    presentation_oath_pptx: Optional[str] = Field(
+        default=None, 
+        description="Ruta del documento de presentación en PPTX"
+    )
+
+    # documentpos relevantes al documento de investigacion del proyecto 
+    proyect_proposal_md: Optional[str] = Field(
+        default=None, 
+        description="Ruta del documento de propuesta de proyecto en Markdown"
+    )
+    proyect_proposal_pdf: Optional[str] = Field(
+        default=None, 
+        description="Ruta del documento de propuesta de proyecto en PDF"
+    )
+
+    # documento de imagen generada
+    poster_image_path: Optional[str] = Field(
+        default=None, 
+        description="Ruta del poster del proyetco generado"
+    )
+
 # --- Estado Principal del Grafo (Híbrido: TypedDict + Pydantic) ---
 
 class GraphState(TypedDict):
@@ -157,5 +190,7 @@ class GraphState(TypedDict):
     # esquema incial de dpocumento 
     initial_schema: Optional[str]
 
+    # rutas de documentos generados
+    docs_paths: Optional[DocsPaths]
     
     randonm_response: Optional[Any]

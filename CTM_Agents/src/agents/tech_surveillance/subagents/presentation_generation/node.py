@@ -4,8 +4,9 @@ import datetime
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.messages import AIMessage, HumanMessage
 from langchain.agents import create_agent
-from agents.tech_surveillance.state import GraphState
-from .prompts import SYSTEM_PROMPT, CONTENT_PROMPT_TEMPLATE, MARP_HEADER
+
+from agents.tech_surveillance.state import GraphState, DocsPaths
+from .prompts import SYSTEM_PROMPT, CONTENT_PROMPT_TEMPLATE
 
 from .tools import research_tools
 from .utils import create_marp_from_text,  convert_marp_to_formats
@@ -89,14 +90,25 @@ async def presentation_generation_node(state: GraphState):
         else:
             msg_content += "\n⚠️ No se pudo exportar a PDF/PPTX (Verificar Node.js)."
 
+        # Actualizando rutas de documentos en el estado
+        docs_paths: DocsPaths = state.get("docs_paths") or DocsPaths()
+        docs_paths.presentation_oath_md = filename
+        docs_paths.presentation_oath_pdf = pdf_path
+        docs_paths.presentation_oath_pptx = pptx_path
+        
         return {
             "messages": [AIMessage(content=msg_content)],
             "random_response": final_marp,
-            "presentation_summary": text_response
+            "presentation_summary": text_response,
+            "docs_paths": docs_paths
         }
 
     except Exception as e:
         print(f"❌ Error crítico en nodo: {e}")
-        return {"random_response": f"Error: {e}"}
+        return {
+            "messages": [
+                AIMessage(content=f"❌ Error crítico en nodo: {e}")
+                ]
+            }
 
 
