@@ -41,4 +41,6 @@ def chat_node(state: GraphState) -> dict:
     # Invocar el modelo con el prompt formateado
     response = chat_model.invoke(prompt)
     
+    print(f"Respuesta del modelo: {response}")
+    
     return {"messages": [response]}

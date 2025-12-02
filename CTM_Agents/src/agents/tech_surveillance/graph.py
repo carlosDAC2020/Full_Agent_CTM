@@ -26,7 +26,7 @@ from agents.tech_surveillance.subgrafths.project_schema.graph import project_sch
 # Leemos las variables de entorno para controlar el flujo
 # CTM_EXECUTION_SCOPE: ALL, ACADEMIC, SCHEMA, IMAGE
 # CTM_EXECUTION_STRATEGY: SEQUENTIAL, PARALLEL (Solo aplica para ALL)
-EXECUTION_SCOPE = os.environ.get("CTM_EXECUTION_SCOPE", "ALL").upper()
+EXECUTION_SCOPE = "ALL" #os.environ.get("CTM_EXECUTION_SCOPE", "ALL").upper()
 EXECUTION_STRATEGY = os.environ.get("CTM_EXECUTION_STRATEGY", "SEQUENTIAL").upper()
 
 print(f"--- CONFIGURACIÓN DE GRAFO ---")

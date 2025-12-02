@@ -1,8 +1,8 @@
 import os
 import re
 from datetime import datetime
-
-from reportlab.platypus import SimpleDocTemplate, Spacer, Image, PageBreak, Paragraph, KeepTogether
+from langchain_core.messages import AIMessage
+from reportlab.platypus import Spacer, Image, PageBreak, Paragraph
 from reportlab.platypus.tableofcontents import TableOfContents
 from reportlab.lib.units import cm
 from reportlab.lib.pagesizes import letter
@@ -286,7 +286,13 @@ def report_node(state: GraphState):
         with open(markdown_file_path, 'w', encoding='utf-8') as f:
             f.write(full_markdown_report)
         
-        return {"final_report": file_path}
+        message = AIMessage(
+            content=f"✓ Reporte PDF generado: {file_path}\n✓ Reporte Markdown generado: {markdown_file_path}"
+        )
+        return {
+            "messages": [message],
+            "final_report": file_path
+        }
 
     except Exception as e:
         print(f"   ❌ Error generando PDF: {e}")

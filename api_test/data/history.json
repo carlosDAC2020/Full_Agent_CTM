@@ -1,0 +1,182 @@
+[
+    {
+        "thread_id": "3a9884f4-2ca6-4cd1-aa77-568a587fdd00",
+        "session_id": "3a9884f4-2ca6-4cd1-aa77-568a587fdd00",
+        "date": "2025-12-01 21:53",
+        "convocatoria": {
+            "categoria": "Convocatorias Nacionales",
+            "titulo": "CONVOCATORIA COLOMBIA INTELIGENTE: CIENCIA Y TECNOLOGÍAS CUÁNTICAS E INTELIGENCIA ARTIFICIAL PARA LOS TERRITORIOS | Convocatoria 966",
+            "entidad": "Minciencias",
+            "dirigido_a": "Grupos de investigación, academia. Financiamiento para proyectos de Investigación Aplicada, Desarrollo Tecnológico e Innovación (CTeI)",
+            "objetivo": "Impulsar proyectos de investigación aplicada y desarrollo tecnológico en Tecnologías Cuánticas e Inteligencia Artificial, generando impacto medible y fortaleciendo el ecosistema de innovación del país.",
+            "financiamiento": {
+                "monto": "No especificado",
+                "tipo": "Financiamiento para proyectos de Investigación Aplicada, Desarrollo Tecnológico e Innovación (CTeI)"
+            },
+            "fechas_importantes": {
+                "inicio": "No especificado",
+                "cierre": "No especificado"
+            },
+            "mas_informacion": "https://minciencias.gov.co/convocatorias/convocatoria-colombia-inteligente-ciencia-y-tecnologias-cuanticas-e-inteligencia",
+            "beneficios": [
+                "Promoción de la investigación aplicada y el desarrollo de soluciones disruptivas.",
+                "Fomento de la transferencia tecnológica.",
+                "Desarrollo de talento especializado.",
+                "Reducción de brechas tecnológicas en el país.",
+                "Fortalecimiento de la vinculación entre academia, industria y sector público."
+            ],
+            "id": "0"
+        },
+        "project_idea": "",
+        "initial_prompt": "Asunto: Intención de postulación - CONVOCATORIA COLOMBIA INTELIGENTE: CIENCIA Y TECNOLOGÍAS CUÁNTICAS E INTELIGENCIA ARTIFICIAL PARA LOS TERRITORIOS | Convocatoria 966\n\nHola,\n\nHe decidido que vamos a aplicar a la \"CONVOCATORIA COLOMBIA INTELIGENTE: CIENCIA Y TECNOLOGÍAS CUÁNTICAS E INTELIGENCIA ARTIFICIAL PARA LOS TERRITORIOS | Convocatoria 966\".\nEntidad: Minciencias\nObjetivo: Impulsar proyectos de investigación aplicada y desarrollo tecnológico en Tecnologías Cuánticas e Inteligencia Artificial, generando impacto medible y fortaleciendo el ecosistema de innovación del país.\nDirigido a: Grupos de investigación, academia. Financiamiento para proyectos de Investigación Aplicada, Desarrollo Tecnológico e Innovación (CTeI)\n\nEntre los beneficios que obtendríamos al participar están:\n- Promoción de la investigación aplicada y el desarrollo de soluciones disruptivas.\n- Fomento de la transferencia tecnológica.\n- Desarrollo de talento especializado.\n- Reducción de brechas tecnológicas en el país.\n- Fortalecimiento de la vinculación entre academia, industria y sector público.\n\nFechas: Inicio No especificado - Cierre No especificado\nFinanciamiento: No especificado\n\nLink oficial: https://minciencias.gov.co/convocatorias/convocatoria-colombia-inteligente-ciencia-y-tecnologias-cuanticas-e-inteligencia\n\n---\nIDEA DEL PROYECTO DEL USUARIO:\nNo tengo una idea definida, sugiéreme un proyecto innovador para esto.\n---\n\nPor favor analiza esta intención y ayúdame a estructurar el proyecto.\n",
+        "messages": [
+            {
+                "role": "user",
+                "content": "Asunto: Intención de postulación - CONVOCATORIA COLOMBIA INTELIGENTE: CIENCIA Y TECNOLOGÍAS CUÁNTICAS E INTELIGENCIA ARTIFICIAL PARA LOS TERRITORIOS | Convocatoria 966\n\nHola,\n\nHe decidido que vamos a aplicar a la \"CONVOCATORIA COLOMBIA INTELIGENTE: CIENCIA Y TECNOLOGÍAS CUÁNTICAS E INTELIGENCIA ARTIFICIAL PARA LOS TERRITORIOS | Convocatoria 966\".\nEntidad: Minciencias\nObjetivo: Impulsar proyectos de investigación aplicada y desarrollo tecnológico en Tecnologías Cuánticas e Inteligencia Artificial, generando impacto medible y fortaleciendo el ecosistema de innovación del país.\nDirigido a: Grupos de investigación, academia. Financiamiento para proyectos de Investigación Aplicada, Desarrollo Tecnológico e Innovación (CTeI)\n\nEntre los beneficios que obtendríamos al participar están:\n- Promoción de la investigación aplicada y el desarrollo de soluciones disruptivas.\n- Fomento de la transferencia tecnológica.\n- Desarrollo de talento especializado.\n- Reducción de brechas tecnológicas en el país.\n- Fortalecimiento de la vinculación entre academia, industria y sector público.\n\nFechas: Inicio No especificado - Cierre No especificado\nFinanciamiento: No especificado\n\nLink oficial: https://minciencias.gov.co/convocatorias/convocatoria-colombia-inteligente-ciencia-y-tecnologias-cuanticas-e-inteligencia\n\n---\nIDEA DEL PROYECTO DEL USUARIO:\nNo tengo una idea definida, sugiéreme un proyecto innovador para esto.\n---\n\nPor favor analiza esta intención y ayúdame a estructurar el proyecto.\n"
+            }
+        ]
+    },
+    {
+        "thread_id": "faf69ca8-9422-470c-8a08-2ce0673d994d",
+        "session_id": "faf69ca8-9422-470c-8a08-2ce0673d994d",
+        "date": "2025-12-01 21:47",
+        "convocatoria": {
+            "categoria": "Convocatorias Nacionales",
+            "titulo": "CONVOCATORIA COLOMBIA INTELIGENTE: CIENCIA Y TECNOLOGÍAS CUÁNTICAS E INTELIGENCIA ARTIFICIAL PARA LOS TERRITORIOS | Convocatoria 966",
+            "entidad": "Minciencias",
+            "dirigido_a": "Grupos de investigación, academia. Financiamiento para proyectos de Investigación Aplicada, Desarrollo Tecnológico e Innovación (CTeI)",
+            "objetivo": "Impulsar proyectos de investigación aplicada y desarrollo tecnológico en Tecnologías Cuánticas e Inteligencia Artificial, generando impacto medible y fortaleciendo el ecosistema de innovación del país.",
+            "financiamiento": {
+                "monto": "No especificado",
+                "tipo": "Financiamiento para proyectos de Investigación Aplicada, Desarrollo Tecnológico e Innovación (CTeI)"
+            },
+            "fechas_importantes": {
+                "inicio": "No especificado",
+                "cierre": "No especificado"
+            },
+            "mas_informacion": "https://minciencias.gov.co/convocatorias/convocatoria-colombia-inteligente-ciencia-y-tecnologias-cuanticas-e-inteligencia",
+            "beneficios": [
+                "Promoción de la investigación aplicada y el desarrollo de soluciones disruptivas.",
+                "Fomento de la transferencia tecnológica.",
+                "Desarrollo de talento especializado.",
+                "Reducción de brechas tecnológicas en el país.",
+                "Fortalecimiento de la vinculación entre academia, industria y sector público."
+            ],
+            "id": "0"
+        },
+        "project_idea": "",
+        "initial_prompt": "Asunto: Intención de postulación - CONVOCATORIA COLOMBIA INTELIGENTE: CIENCIA Y TECNOLOGÍAS CUÁNTICAS E INTELIGENCIA ARTIFICIAL PARA LOS TERRITORIOS | Convocatoria 966\n\nHola,\n\nHe decidido que vamos a aplicar a la \"CONVOCATORIA COLOMBIA INTELIGENTE: CIENCIA Y TECNOLOGÍAS CUÁNTICAS E INTELIGENCIA ARTIFICIAL PARA LOS TERRITORIOS | Convocatoria 966\".\nEntidad: Minciencias\nObjetivo: Impulsar proyectos de investigación aplicada y desarrollo tecnológico en Tecnologías Cuánticas e Inteligencia Artificial, generando impacto medible y fortaleciendo el ecosistema de innovación del país.\nDirigido a: Grupos de investigación, academia. Financiamiento para proyectos de Investigación Aplicada, Desarrollo Tecnológico e Innovación (CTeI)\n\nEntre los beneficios que obtendríamos al participar están:\n- Promoción de la investigación aplicada y el desarrollo de soluciones disruptivas.\n- Fomento de la transferencia tecnológica.\n- Desarrollo de talento especializado.\n- Reducción de brechas tecnológicas en el país.\n- Fortalecimiento de la vinculación entre academia, industria y sector público.\n\nFechas: Inicio No especificado - Cierre No especificado\nFinanciamiento: No especificado\n\nLink oficial: https://minciencias.gov.co/convocatorias/convocatoria-colombia-inteligente-ciencia-y-tecnologias-cuanticas-e-inteligencia\n\n---\nIDEA DEL PROYECTO DEL USUARIO:\nNo tengo una idea definida, sugiéreme un proyecto innovador para esto.\n---\n\nPor favor analiza esta intención y ayúdame a estructurar el proyecto.\n",
+        "messages": [
+            {
+                "role": "user",
+                "content": "Asunto: Intención de postulación - CONVOCATORIA COLOMBIA INTELIGENTE: CIENCIA Y TECNOLOGÍAS CUÁNTICAS E INTELIGENCIA ARTIFICIAL PARA LOS TERRITORIOS | Convocatoria 966\n\nHola,\n\nHe decidido que vamos a aplicar a la \"CONVOCATORIA COLOMBIA INTELIGENTE: CIENCIA Y TECNOLOGÍAS CUÁNTICAS E INTELIGENCIA ARTIFICIAL PARA LOS TERRITORIOS | Convocatoria 966\".\nEntidad: Minciencias\nObjetivo: Impulsar proyectos de investigación aplicada y desarrollo tecnológico en Tecnologías Cuánticas e Inteligencia Artificial, generando impacto medible y fortaleciendo el ecosistema de innovación del país.\nDirigido a: Grupos de investigación, academia. Financiamiento para proyectos de Investigación Aplicada, Desarrollo Tecnológico e Innovación (CTeI)\n\nEntre los beneficios que obtendríamos al participar están:\n- Promoción de la investigación aplicada y el desarrollo de soluciones disruptivas.\n- Fomento de la transferencia tecnológica.\n- Desarrollo de talento especializado.\n- Reducción de brechas tecnológicas en el país.\n- Fortalecimiento de la vinculación entre academia, industria y sector público.\n\nFechas: Inicio No especificado - Cierre No especificado\nFinanciamiento: No especificado\n\nLink oficial: https://minciencias.gov.co/convocatorias/convocatoria-colombia-inteligente-ciencia-y-tecnologias-cuanticas-e-inteligencia\n\n---\nIDEA DEL PROYECTO DEL USUARIO:\nNo tengo una idea definida, sugiéreme un proyecto innovador para esto.\n---\n\nPor favor analiza esta intención y ayúdame a estructurar el proyecto.\n"
+            }
+        ]
+    },
+    {
+        "session_id": "e7ef1219-1125-4c4b-9e60-52d06df42cd2",
+        "date": "2025-12-01 20:50",
+        "convocatoria": {
+            "categoria": "Eventos",
+            "titulo": "IA Expo Internacional® 2026: Liderando el Futuro de la Inteligencia Artificial",
+            "entidad": "IA Expo",
+            "dirigido_a": "Startups visionarias, inversionistas, socios clave",
+            "objetivo": "Evento para acceder a insights de líderes mundiales en IA y conectar con inversionistas para escalar la innovación.",
+            "fechas_importantes": {
+                "inicio": "2026-01-31",
+                "cierre": "No especificado"
+            },
+            "mas_informacion": "https://iaexpo.ai/",
+            "beneficios": [
+                "Acceso a insights de líderes mundiales en IA",
+                "Networking premium con decision-makers",
+                "Visión estratégica de tendencias tecnológicas",
+                "Casos de implementación con métricas reales"
+            ],
+            "id": "7"
+        },
+        "project_idea": "hyifgutgjfjgfvghdctzxgjugyfvgcfyfujuogtgjhfyckjfdyt",
+        "messages": [
+            {
+                "role": "user",
+                "content": "hyifgutgjfjgfvghdctzxgjugyfvgcfyfujuogtgjhfyckjfdyt"
+            },
+            {
+                "role": "agent",
+                "content": "Hola. He analizado tu idea: 'hyifgutgjfjgfvghdctzxgjugyfvgcfyfujuogtgjhfyckjfdyt' para la convocatoria 'IA Expo Internacional® 2026: Liderando el Futuro de la Inteligencia Artificial'.\n\nPuntos fuertes detectados:\n1. Alineación temática.\n2. Innovación potencial.\n\nSin embargo, necesito saber: ¿Cuentas con un equipo técnico para la fase de implementación?"
+            }
+        ]
+    },
+    {
+        "session_id": "cc8deb7f-c92d-4306-bad0-3837209dc419",
+        "date": "2025-12-01 20:50",
+        "convocatoria": {
+            "categoria": "Convocatorias Nacionales",
+            "titulo": "National consultant - Data Analyst (Tonga)",
+            "entidad": "UNDP",
+            "dirigido_a": "General, Contrato por servicios",
+            "objetivo": "Búsqueda de talento local (Tonga) experto en análisis de datos para impulsar proyectos clave y generar impacto significativo en su comunidad.",
+            "financiamiento": {
+                "monto": "No especificado",
+                "tipo": "Contrato por servicios"
+            },
+            "fechas_importantes": {
+                "inicio": "No especificado",
+                "cierre": "2025-11-24"
+            },
+            "mas_informacion": "https://procurement-notices.undp.org/",
+            "beneficios": [
+                "No especificado"
+            ],
+            "id": "1"
+        },
+        "project_idea": "nougjhvgfctxvjhgjftydrxhkghjcyxyxgcgfdyrhlgufytc",
+        "messages": [
+            {
+                "role": "user",
+                "content": "nougjhvgfctxvjhgjftydrxhkghjcyxyxgcgfdyrhlgufytc"
+            },
+            {
+                "role": "agent",
+                "content": "Hola. He analizado tu idea: 'nougjhvgfctxvjhgjftydrxhkghjcyxyxgcgfdyrhlgufytc' para la convocatoria 'National consultant - Data Analyst (Tonga)'.\n\nPuntos fuertes detectados:\n1. Alineación temática.\n2. Innovación potencial.\n\nSin embargo, necesito saber: ¿Cuentas con un equipo técnico para la fase de implementación?"
+            }
+        ]
+    },
+    {
+        "session_id": "3d645610-bf19-4e48-86e2-04992ac0b92a",
+        "date": "2025-12-01 20:49",
+        "convocatoria": {
+            "categoria": "Convocatorias Nacionales",
+            "titulo": "CONVOCATORIA EN INVESTIGACIÓN BÁSICA",
+            "entidad": "Minciencias",
+            "dirigido_a": "General, Financiamiento de proyectos de investigación",
+            "objetivo": "Financiamiento para proyectos de investigación básica en ciencias naturales, sociales o humanidades que desentrañen fenómenos complejos y generen conocimiento fundamental.",
+            "financiamiento": {
+                "monto": "$237.398.000.000 COP",
+                "tipo": "Financiamiento de proyectos de investigación"
+            },
+            "fechas_importantes": {
+                "inicio": "2025-10-14",
+                "cierre": "No especificado"
+            },
+            "mas_informacion": "https://www.minciencias.gov.co/convocatorias/todas",
+            "beneficios": [
+                "Financiamiento para proyectos de investigación básica",
+                "Aporte a la comprensión de fenómenos complejos",
+                "Contribución a la atención de problemas, necesidades u oportunidades"
+            ],
+            "id": "2"
+        },
+        "project_idea": "jbihvugvgvfufgcgfxchgccfcyj",
+        "messages": [
+            {
+                "role": "user",
+                "content": "jbihvugvgvfufgcgfxchgccfcyj"
+            },
+            {
+                "role": "agent",
+                "content": "Hola. He analizado tu idea: 'jbihvugvgvfufgcgfxchgccfcyj' para la convocatoria 'CONVOCATORIA EN INVESTIGACIÓN BÁSICA'.\n\nPuntos fuertes detectados:\n1. Alineación temática.\n2. Innovación potencial.\n\nSin embargo, necesito saber: ¿Cuentas con un equipo técnico para la fase de implementación?"
+            }
+        ]
+    }
+]
