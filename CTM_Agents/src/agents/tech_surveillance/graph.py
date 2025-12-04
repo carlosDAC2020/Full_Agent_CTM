@@ -12,6 +12,7 @@ from agents.tech_surveillance.routes.manager.route import router_node
 from agents.tech_surveillance.nodes.ingestion.node import ingestion_node
 from agents.tech_surveillance.nodes.chat.node import chat_node
 from agents.tech_surveillance.nodes.report.node import report_node
+from agents.tech_surveillance.nodes.proyect_idea.node import proyect_idea_node
 
 # importamos subagentes 
 from agents.tech_surveillance.subagents.academic_reseacrh.node import academic_research_node
@@ -40,6 +41,7 @@ workflow = StateGraph(GraphState)
 # Añadimos los nodos
 workflow.add_node("router", router_node)
 workflow.add_node("ingest", ingestion_node)
+workflow.add_node("proyect_idea", proyect_idea_node)
 workflow.add_node("chat", chat_node)
 workflow.add_node("report", report_node)
 
@@ -50,6 +52,30 @@ workflow.add_node("presentation_generator", presentation_generation_node)
 # Añadimos los subgrafos como nodos
 workflow.add_node("project_schemas", project_schema_subgraph)
 workflow.add_node("images_generator", Image_generator_subgraph)
+
+
+
+# --- Lógica de Conexión Estática ---
+workflow.set_entry_point("router")
+
+# Añadimos la arista condicional
+workflow.add_conditional_edges(
+    "router",
+    lambda state: state["route_decision"],
+    {
+        "ingest": "ingest",
+        "generate_proyect": "proyect_idea",
+    }
+)
+
+workflow.add_edge("ingest", END)
+workflow.add_edge("proyect_idea", END)
+
+#workflow.add_edge("ingest", "proyect_idea")
+#workflow.add_edge("proyect_idea", "presentation_generator")
+#workflow.add_edge("presentation_generator", END)
+
+"""
 
 # El punto de entrada es siempre el enrutador
 workflow.set_entry_point("router")
@@ -125,6 +151,8 @@ else:
 # Finalización
 workflow.add_edge("report", END)
 workflow.add_edge("chat", END)
+
+"""
 
 # Compilamos el grafo
 agent = workflow.compile()

@@ -177,7 +177,11 @@ class GraphState(TypedDict):
     """Estado del grafo con validación Pydantic."""
     messages: Annotated[list[BaseMessage], add_messages]
     document_urls: Optional[List[str]]
-    route_decision: Optional[str]
+
+    # decisión de ruta desde el enrutador solo tenga disponibles estas dos opciones
+    #"ingest": "ingest",
+    #"generate_proyect": "proyect_idea",
+    route_decision: Optional[str] = "ingest"  
     call_info: Optional[CallInfo] # Información de la convocatoria
     image_prompt: Optional[str]
     generated_image_path: Optional[str]
