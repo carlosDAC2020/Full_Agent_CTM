@@ -4,7 +4,7 @@ from __future__ import annotations
 from langgraph.graph import END, StateGraph
 
 # Importamos los nuevos esquemas del estado
-from agents.tech_surveillance.state import GraphState
+from src.agents.tech_surveillance.state import GraphState
 
 
 # Importar los nodos 

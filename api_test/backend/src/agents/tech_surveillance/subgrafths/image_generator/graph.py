@@ -11,7 +11,7 @@ from google.genai import types
 from PIL import Image
 from io import BytesIO
 
-from agents.tech_surveillance.state import GraphState, ReportSchema, DocsPaths
+from src.agents.tech_surveillance.state import GraphState, ReportSchema, DocsPaths
 from .prompts import template_image_prompt
 
 from src.services.storage import MinioService

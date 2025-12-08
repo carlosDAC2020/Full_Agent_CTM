@@ -10,8 +10,8 @@ from reportlab.lib import colors
 from reportlab.lib.styles import ParagraphStyle
 from reportlab.lib.enums import TA_CENTER
 
-from agents.tech_surveillance.state import GraphState, ReportSchema, DocsPaths
-from agents.tech_surveillance.utils.pdf_generation  import get_custom_styles, PageTemplate, markdown_to_flowables, ReportDocTemplate, COTECMAR_BLUE, COTECMAR_DARK_BLUE
+from src.agents.tech_surveillance.state import GraphState, ReportSchema, DocsPaths
+from src.agents.tech_surveillance.utils.pdf_generation  import get_custom_styles, PageTemplate, markdown_to_flowables, ReportDocTemplate, COTECMAR_BLUE, COTECMAR_DARK_BLUE
 
 
 from src.services.storage import MinioService

@@ -2,7 +2,7 @@ import os
 import re 
 import datetime
 
-from agents.tech_surveillance.state import GraphState, DocsPaths
+from src.agents.tech_surveillance.state import GraphState, DocsPaths
 from langchain_core.messages import AIMessage
 
 from .utils import create_marp_from_text,  convert_marp_to_formats
@@ -32,7 +32,7 @@ def presentation_generation_docs_node(state: GraphState):
     
     # 5. Guardar archivo
     title_safe = re.sub(r'[^a-zA-Z0-9_-]', '', call_info.title.replace(' ', '_')) if call_info.title else 'sin_titulo'
-    filename = os.path.join(OUTPUT_DIR, f"presentacion_{title_safe}_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.md"
+    filename = os.path.join(OUTPUT_DIR, f"presentacion_{title_safe}_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.md")
     
     with open(filename, "w", encoding="utf-8") as f:
         f.write(final_marp)
@@ -70,5 +70,4 @@ def presentation_generation_docs_node(state: GraphState):
         "random_response": final_marp,
         "docs_paths": docs_paths
     }
-    
     

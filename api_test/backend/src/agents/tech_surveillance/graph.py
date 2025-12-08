@@ -3,27 +3,27 @@ from __future__ import annotations
 
 import os
 from langgraph.graph import END, StateGraph
-from agents.tech_surveillance.state import GraphState
+from src.agents.tech_surveillance.state import GraphState
 
 # importamos rutas
-from agents.tech_surveillance.routes.manager.route import router_node
+from src.agents.tech_surveillance.routes.manager.route import router_node
 
 # importamos nodos 
-from agents.tech_surveillance.nodes.ingestion.node import ingestion_node
-from agents.tech_surveillance.nodes.chat.node import chat_node
-from agents.tech_surveillance.nodes.report.node import report_node
-from agents.tech_surveillance.nodes.initial_schema_proyect.node import initial_schema_node
-from agents.tech_surveillance.nodes.initial_schema_proyect_doc.node import initial_schema_proyect_doc_node
-from agents.tech_surveillance.nodes.ipropose_ides.node import propose_ides_node
-from agents.tech_surveillance.nodes.presentation.node import presentation_generation_docs_node
+from src.agents.tech_surveillance.nodes.ingestion.node import ingestion_node
+from src.agents.tech_surveillance.nodes.chat.node import chat_node
+from src.agents.tech_surveillance.nodes.report.node import report_node
+from src.agents.tech_surveillance.nodes.initial_schema_proyect.node import initial_schema_node
+from src.agents.tech_surveillance.nodes.initial_schema_proyect_doc.node import initial_schema_proyect_doc_node
+from src.agents.tech_surveillance.nodes.ipropose_ides.node import propose_ides_node
+from src.agents.tech_surveillance.nodes.presentation.node import presentation_generation_docs_node
 
 # importamos subagentes 
-from agents.tech_surveillance.subagents.academic_reseacrh.node import academic_research_node
-from agents.tech_surveillance.subagents.presentation_generation.node import presentation_generation_node
+from src.agents.tech_surveillance.subagents.academic_reseacrh.node import academic_research_node
+from src.agents.tech_surveillance.subagents.presentation_generation.node import presentation_generation_node
 
 # importamos subgrafos 
-from agents.tech_surveillance.subgrafths.image_generator.graph import Image_generator_subgraph
-from agents.tech_surveillance.subgrafths.project_schema.graph import project_schema_subgraph
+from src.agents.tech_surveillance.subgrafths.image_generator.graph import Image_generator_subgraph
+from src.agents.tech_surveillance.subgrafths.project_schema.graph import project_schema_subgraph
 
 
 # --- Configuración de Ejecución ---

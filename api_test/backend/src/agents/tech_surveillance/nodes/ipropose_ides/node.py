@@ -4,7 +4,7 @@ from langchain_core.prompts import PromptTemplate
 from langchain_core.messages import AIMessage
 
 # Importamos los esquemas y el estado
-from agents.tech_surveillance.state import GraphState, proposalIdeaResponse
+from src.agents.tech_surveillance.state import GraphState, proposalIdeaResponse
 
 from .prompts import propose_ideas_template
 

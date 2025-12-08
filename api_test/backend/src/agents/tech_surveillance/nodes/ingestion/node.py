@@ -7,7 +7,7 @@ from langchain_core.prompts import PromptTemplate
 from .prompts import template
 
 # Importamos los nuevos esquemas del estado
-from agents.tech_surveillance.state import GraphState, CallInfo
+from src.agents.tech_surveillance.state import GraphState, CallInfo
 
 # ... (definición de chat_model y extraction_llm sin cambios) ...
 chat_model = ChatGoogleGenerativeAI(
