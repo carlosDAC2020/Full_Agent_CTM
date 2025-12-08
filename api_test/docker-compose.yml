@@ -1,0 +1,85 @@
+
+services:
+  # 1. Base de datos temporal y cola de mensajes
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+  db:
+    image: postgres:15-alpine
+    restart: always
+    environment:
+      - POSTGRES_USER=agentuser
+      - POSTGRES_PASSWORD=agentpass
+      - POSTGRES_DB=agentdb
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  minio:
+    image: minio/minio
+    ports:
+      - "9000:9000"   # Puerto API S3
+      - "9001:9001"   # Consola Web (UI)
+    environment:
+      - MINIO_ROOT_USER=minioadmin
+      - MINIO_ROOT_PASSWORD=minioadmin
+    command: server /data --console-address ":9001"
+    volumes:
+      - minio_data:/data
+
+  # 2. La API (FastAPI)
+  api:
+    build: ./backend
+    volumes:
+      - ./backend/src:/app/src
+    ports:
+      - "8000:8000"
+    env_file: .env
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      # Config MinIO para la API (comunicación interna docker)
+      - MINIO_ENDPOINT=http://minio:9000
+      - MINIO_ACCESS_KEY=minioadmin
+      - MINIO_SECRET_KEY=minioadmin
+      - MINIO_BUCKET=agent-results
+      # Para generar URLs accesibles desde el navegador (localhost)
+      - MINIO_PUBLIC_ENDPOINT=http://localhost:9000 
+      # coneccion con base de datos 
+      - DATABASE_URL=postgresql://agentuser:agentpass@db:5432/agentdb
+    depends_on:
+      - redis
+      - minio
+      - db 
+
+  # 3. El Worker (Celery) - Ejecuta el Agente
+  worker:
+    build: ./backend
+    command: celery -A src.celery_worker.celery_app worker --loglevel=info
+    volumes:
+      - ./backend/src:/app/src
+      - ./backend/shared_data:/app/shared_data
+    env_file: .env
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - SHARED_DATA_PATH=/app/shared_data
+      # Config MinIO para el Worker
+      - MINIO_ENDPOINT=http://minio:9000
+      - MINIO_ACCESS_KEY=minioadmin
+      - MINIO_SECRET_KEY=minioadmin
+      - MINIO_BUCKET=agent-results
+      # coneccion con db 
+      - DATABASE_URL=postgresql://agentuser:agentpass@db:5432/agentdb
+    depends_on:
+      - redis
+      - minio
+      - db 
+
+
+      
+volumes:
+  minio_data:
+  postgres_data:
