@@ -12,7 +12,10 @@ from agents.tech_surveillance.routes.manager.route import router_node
 from agents.tech_surveillance.nodes.ingestion.node import ingestion_node
 from agents.tech_surveillance.nodes.chat.node import chat_node
 from agents.tech_surveillance.nodes.report.node import report_node
-from agents.tech_surveillance.nodes.proyect_idea.node import proyect_idea_node
+from agents.tech_surveillance.nodes.initial_schema_proyect.node import initial_schema_node
+from agents.tech_surveillance.nodes.initial_schema_proyect_doc.node import initial_schema_proyect_doc_node
+from agents.tech_surveillance.nodes.ipropose_ides.node import propose_ides_node
+from agents.tech_surveillance.nodes.presentation.node import presentation_generation_docs_node
 
 # importamos subagentes 
 from agents.tech_surveillance.subagents.academic_reseacrh.node import academic_research_node
@@ -40,20 +43,24 @@ workflow = StateGraph(GraphState)
 
 # Añadimos los nodos
 workflow.add_node("router", router_node)
+
+# seleccion de convocatoria 
 workflow.add_node("ingest", ingestion_node)
-workflow.add_node("proyect_idea", proyect_idea_node)
-workflow.add_node("chat", chat_node)
-workflow.add_node("report", report_node)
-
-# Añadimos sub agentes como nodos 
-workflow.add_node("academic_research", academic_research_node)
 workflow.add_node("presentation_generator", presentation_generation_node)
+workflow.add_node("presentation_generator_docs", presentation_generation_docs_node)
 
-# Añadimos los subgrafos como nodos
+# geenracion de ideas
+workflow.add_node("propose_ideas", propose_ides_node)
+
+# seleccion y generacionde idea del proyecto
+workflow.add_node("proyect_idea", initial_schema_node)
+workflow.add_node("project_idea_doc", initial_schema_proyect_doc_node)
+
+# investicacion y generacion de la propuesta de proyeto y documentos asociados 
+workflow.add_node("academic_research", academic_research_node)
 workflow.add_node("project_schemas", project_schema_subgraph)
 workflow.add_node("images_generator", Image_generator_subgraph)
-
-
+workflow.add_node("report", report_node)
 
 # --- Lógica de Conexión Estática ---
 workflow.set_entry_point("router")
@@ -64,95 +71,31 @@ workflow.add_conditional_edges(
     lambda state: state["route_decision"],
     {
         "ingest": "ingest",
-        "generate_proyect": "proyect_idea",
+        "proposal_ideas": "propose_ideas",
+        "project_idea": "proyect_idea",
+        "generate_proyect": "academic_research"
     }
 )
 
-workflow.add_edge("ingest", END)
-workflow.add_edge("proyect_idea", END)
+# flujo para invetsiagcion de convocatorias
+workflow.add_edge("ingest", "presentation_generator")
+workflow.add_edge("presentation_generator", "presentation_generator_docs")
+workflow.add_edge("presentation_generator_docs", END)
 
-#workflow.add_edge("ingest", "proyect_idea")
-#workflow.add_edge("proyect_idea", "presentation_generator")
-#workflow.add_edge("presentation_generator", END)
+# flujo para generacion de ideas de proyecto
+workflow.add_edge("propose_ideas", END)
 
-"""
+# flujo para definicion de esquema inicial del proyecto
+workflow.add_edge("proyect_idea", "project_idea_doc")
+workflow.add_edge("project_idea_doc", END)
 
-# El punto de entrada es siempre el enrutador
-workflow.set_entry_point("router")
-
-# Añadimos la arista condicional
-workflow.add_conditional_edges(
-    "router",
-    lambda state: state["route_decision"],
-    {
-        "PROYECTO": "ingest",
-        "CHAT": "chat",
-    }
-)
-
-# --- Lógica de Conexión Dinámica ---
-
-if EXECUTION_SCOPE == "ALL":
-    if EXECUTION_STRATEGY == "PARALLEL":
-        # Ejecución Semi-Paralela Optimizada:
-        # 1. Ingestión -> Investigación (Secuencial para contexto)
-        # 2. Investigación -> Esquema Y Imagen (Paralelo)
-        # 3. Ambos -> Reporte (Convergencia)
-        
-        # dividimos entre la investiagcion academica y genracion de la presentacion
-        workflow.add_edge("ingest", "academic_research")
-        workflow.add_edge("ingest", "presentation_generator")
-        
-        # unimospara la generacion del documento 
-        workflow.add_edge("academic_research", "project_schemas")
-        workflow.add_edge("presentation_generator", "project_schemas")
-        
-        # al generar el docukento genramos la portada y pasamos a genrar el reprote 
-        workflow.add_edge("project_schemas", "images_generator")
-        workflow.add_edge("images_generator", "report")
-        
-    else:
-        # Ejecución Secuencial (Default y Recomendada)
-        workflow.add_edge("ingest", "academic_research")
-        workflow.add_edge("academic_research", "presentation_generator")
-        workflow.add_edge("presentation_generator", "project_schemas")
-        workflow.add_edge("project_schemas", "images_generator")
-        workflow.add_edge("images_generator", "report")
-
-        # Presentación antes del reporte
-        #workflow.add_edge("images_generator", "presentation_generator")
-        #workflow.add_edge("presentation_generator", "report")
-
-elif EXECUTION_SCOPE == "ACADEMIC":
-    workflow.add_edge("ingest", "academic_research")
-    workflow.add_edge("academic_research", "report")
-
-elif EXECUTION_SCOPE == "SCHEMA":
-    workflow.add_edge("ingest", "project_schemas")
-    workflow.add_edge("project_schemas", "report")
-
-elif EXECUTION_SCOPE == "IMAGE":
-    workflow.add_edge("ingest", "presentation_generator")
-    workflow.add_edge("presentation_generator", "images_generator")
-    workflow.add_edge("images_generator", "report")
-
-elif EXECUTION_SCOPE == "PRESENTATION":
-    workflow.add_edge("ingest", "presentation_generator")
-    workflow.add_edge("presentation_generator", "report")
-else:
-    # Fallback seguro: Secuencial completa
-    print(f"⚠️ Scope desconocido '{EXECUTION_SCOPE}'. Usando configuración por defecto (ALL SEQUENTIAL).")
-    workflow.add_edge("ingest", "academic_research")
-    workflow.add_edge("academic_research", "project_schemas")
-    workflow.add_edge("project_schemas", "images_generator")
-    workflow.add_edge("images_generator", "presentation_generator")
-    workflow.add_edge("presentation_generator", "report")
-
-# Finalización
+# flujo para generacion del esquema del proyecto
+workflow.add_edge("academic_research", "project_schemas")
+workflow.add_edge("project_schemas", "images_generator")
+workflow.add_edge("images_generator", "report")
 workflow.add_edge("report", END)
-workflow.add_edge("chat", END)
 
-"""
+
 
 # Compilamos el grafo
 agent = workflow.compile()

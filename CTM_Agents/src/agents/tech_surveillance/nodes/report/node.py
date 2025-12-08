@@ -10,9 +10,8 @@ from reportlab.lib import colors
 from reportlab.lib.styles import ParagraphStyle
 from reportlab.lib.enums import TA_CENTER
 
-# Asumiendo importaciones existentes...
 from agents.tech_surveillance.state import GraphState, ReportSchema, DocsPaths
-from .utils import get_custom_styles, PageTemplate, markdown_to_flowables, ReportDocTemplate, COTECMAR_BLUE, COTECMAR_DARK_BLUE
+from agents.tech_surveillance.utils.pdf_generation  import get_custom_styles, PageTemplate, markdown_to_flowables, ReportDocTemplate, COTECMAR_BLUE, COTECMAR_DARK_BLUE
 
 
 # --- Carpeta de Reportes ---
@@ -43,8 +42,10 @@ def report_node(state: GraphState):
     
     def get_field(obj, field, default=None):
         if isinstance(obj, dict):
-            return obj.get(field, default)
-        return getattr(obj, field, default)
+            val = obj.get(field, default)
+        else:
+            val = getattr(obj, field, default)
+        return val if val is not None else default
 
     def get_section_content(section_obj, field='content'):
         if not section_obj:

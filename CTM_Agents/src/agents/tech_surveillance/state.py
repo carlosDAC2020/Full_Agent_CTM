@@ -9,13 +9,27 @@ from typing_extensions import TypedDict
 
 class GeneralInfo(BaseModel):
     """Sección 2: Generalidades del Proyecto."""
-    project_title: Optional[str] = Field(default=None, description="Título del proyecto")
-    project_description: Optional[str] = Field(default=None, description="Descripción del proyecto")
-    duration_months: Optional[int] = Field(default=None, description="Duración en meses")
-    thematic_line: Optional[str] = Field(default=None, description="Línea temática")
-    keywords: Optional[List[str]] = Field(default=None, description="Palabras clave")
-    main_entity: Optional[str] = Field(default=None, description="Entidad principal")
-    collaborating_entities: Optional[List[str]] = Field(default=None, description="Entidades colaboradoras")
+    project_title: Optional[str] = Field(
+        default=None, 
+        description="Title of the project")
+    project_description: Optional[str] = Field(
+        default=None, 
+        description="Project description")
+    duration_months: Optional[int] = Field(
+        default=None, 
+        description="Duration in months")
+    thematic_line: Optional[str] = Field(
+        default=None, 
+        description="Thematic line")
+    keywords: Optional[List[str]] = Field(
+        default=None, 
+        description="Keywords separated by commas")
+    main_entity: Optional[str] = Field(
+        default=None, 
+        description="Main entity")
+    collaborating_entities: Optional[List[str]] = Field(
+        default=None, 
+        description="Collaborating entities separated by commas")
 
 class TheoreticalFramework(BaseModel):
     """Schema for the Theoretical Framework and State of the Art section."""
@@ -138,6 +152,17 @@ class CallInfo(BaseModel):
     benefits: Optional[List[str]] = Field(default=None, description="Beneficios listados")
     url: Optional[str] = Field(default=None, description="URL de más información")
 
+class ProposalIdea(BaseModel):
+    """Idea de proyecto propuesta por el usuario."""
+    idea_title: Optional[str] = Field(default=None, description="Título de la idea de proyecto")
+    idea_description: Optional[str] = Field(default=None, description="Descripción de la idea de proyecto") 
+    idea_objectives: Optional[List[str]] = Field(default=None, description="5 objetivos de la idea de proyecto basadas en en la metodologia smart ")
+
+class proposalIdeaResponse(BaseModel):
+    ideas: Optional[List[ProposalIdea]] = Field(
+        default=None,
+        description="Lista de ideas de proyecto propuestas"
+    )
 
 class DocsPaths(BaseModel):
     """Rutas de documentos generados."""
@@ -156,6 +181,14 @@ class DocsPaths(BaseModel):
     )
 
     # documentpos relevantes al documento de investigacion del proyecto 
+    proyect_proposal_initial_schema_md: Optional[str] = Field(
+        default=None, 
+        description="Ruta del documento de esquema inicial de propuesta de proyecto en Markdown"
+    )
+    proyect_proposal_initial_schema_pdf: Optional[str] = Field(
+        default=None, 
+        description="Ruta del documento de esquema inicial de propuesta de proyecto en PDF"
+    )
     proyect_proposal_md: Optional[str] = Field(
         default=None, 
         description="Ruta del documento de propuesta de proyecto en Markdown"
@@ -187,6 +220,10 @@ class GraphState(TypedDict):
     generated_image_path: Optional[str]
     report_components: Optional[ReportSchema]  # Ahora Pydantic
     final_report: Optional[str]
+
+    # ideas de proyecto propuestas
+    proposal_ideas: Optional[proposalIdeaResponse]
+    selected_idea: Optional[ProposalIdea]
 
     # resumen de presentacion
     presentation_summary : Optional[str]

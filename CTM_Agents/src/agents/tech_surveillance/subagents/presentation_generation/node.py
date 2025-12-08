@@ -9,7 +9,6 @@ from agents.tech_surveillance.state import GraphState, DocsPaths
 from .prompts import SYSTEM_PROMPT, CONTENT_PROMPT_TEMPLATE
 
 from .tools import research_tools
-from .utils import create_marp_from_text,  convert_marp_to_formats
 
 
 # --- 1. CONFIGURACIÓN DEL MODELO ---
@@ -29,6 +28,9 @@ academic_research_agent = create_agent(
 
 # --- NODO PRINCIPAL ---
 async def presentation_generation_node(state: GraphState):
+    """
+    Nodo para la generacion de los documentos de presentacion
+    """
     print("🎨 INICIANDO AGENTE DE INVESTIGACIÓN Y PRESENTACIÓN...")
     
     call_info = state.get("call_info")
@@ -58,49 +60,37 @@ async def presentation_generation_node(state: GraphState):
         result = await academic_research_agent.ainvoke(
             {"messages": [HumanMessage(content=prompt_content)]}
         )
-    
-        # 3. Extraer texto final
-        last_message = result["messages"][-1]
 
-        text_response = last_message.content[0]['text'] + last_message.content[-1]
+        last_message = result["messages"][-1]
+        print(f"📝 Mensaje final del agente recibido. Procesando...")
+
+        # 3. Extraer texto final
+        # Lógica de extracción segura para Gemini/LangChain
+        text_response = ""
+        
+        if isinstance(last_message.content, str):
+            # Caso A: Respuesta es texto plano
+            text_response = last_message.content
+        elif isinstance(last_message.content, list):
+            # Caso B: Respuesta es lista de bloques (Multimodal)
+            # Iteramos y unimos todos los bloques que sean de tipo 'text'
+            parts = []
+            for block in last_message.content:
+                if isinstance(block, dict) and block.get("type") == "text":
+                    parts.append(block.get("text", ""))
+            text_response = "\n".join(parts)
+        else:
+            # Caso C: Fallback
+            text_response = str(last_message.content)
+        
         
         print(f"✅ Agente finalizado. Longitud respuesta: {len(text_response)} caracteres")
-        print(text_response)
-        # 4. Ensamblaje seguro en Python (Marp)
-        final_marp = create_marp_from_text(text_response, call_info.title or "Presentación")
         
-        # 5. Guardar archivo
-        os.makedirs("generated_presentations", exist_ok=True)
-        title_safe = re.sub(r'[^a-zA-Z0-9_-]', '', call_info.title.replace(' ', '_')) if call_info.title else 'sin_titulo'
-        filename = f"generated_presentations/presentacion_{title_safe}_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.md"
-        
-        with open(filename, "w", encoding="utf-8") as f:
-            f.write(final_marp)
-             
-        
-        print(f"💾 Archivo Markdown guardado: {filename}")
-        
-        # --- NUEVO PASO: CONVERSIÓN AUTOMÁTICA ---
-        pdf_path, pptx_path = convert_marp_to_formats(filename)
-        
-        msg_content = "Presentación generada en Markdown."
-        if pdf_path and pptx_path:
-            msg_content += f"\n✅ Exportada a PDF: {os.path.basename(pdf_path)}"
-            msg_content += f"\n✅ Exportada a PPTX: {os.path.basename(pptx_path)}"
-        else:
-            msg_content += "\n⚠️ No se pudo exportar a PDF/PPTX (Verificar Node.js)."
-
-        # Actualizando rutas de documentos en el estado
-        docs_paths: DocsPaths = state.get("docs_paths") or DocsPaths()
-        docs_paths.presentation_oath_md = filename
-        docs_paths.presentation_oath_pdf = pdf_path
-        docs_paths.presentation_oath_pptx = pptx_path
+        message = AIMessage(content="✅ Resumen de presentación generado correctamente.")
         
         return {
-            "messages": [AIMessage(content=msg_content)],
-            "random_response": final_marp,
+            "messages": [message],
             "presentation_summary": text_response,
-            "docs_paths": docs_paths
         }
 
     except Exception as e:

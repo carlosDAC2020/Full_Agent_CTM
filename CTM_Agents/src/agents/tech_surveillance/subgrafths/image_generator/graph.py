@@ -30,6 +30,7 @@ def prompt_generator_image_node(state: GraphState):
     Genera un prompt optimizado para la creación de imágenes basándose
     en el título y descripción del proyecto.
     """
+    print(" genrnado propmt para la portada del proyetco")
     # --- LEER DESDE report_components ---
     report_components = state.get("report_components") or ReportSchema()
     
@@ -79,8 +80,9 @@ def prompt_generator_image_node(state: GraphState):
 
 def generator_image_node(state: GraphState):
     """
-    Genera un póster vertical usando Gemini 2.5 Flash (capacidad nativa de imagen).
+    Genera un póster vertical usando Gemini 3  (capacidad nativa de imagen).
     """
+    print(" generando poster del proyetco")
     image_prompt = state.get("image_prompt")
     report_components = state.get("report_components") or ReportSchema()
     
