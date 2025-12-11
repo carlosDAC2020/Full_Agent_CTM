@@ -28,6 +28,7 @@ def initial_schema_proyect_doc_node(state: GraphState) -> dict:
 
     # Obtenemos el esquema inicial del proyecto
     initial_schema = state.get("initial_schema") or "No se encontró el esquema inicial."
+    session_id = state.get("session_id", "default_session")
     
     # Obtenemos el título del proyecto desde selected_idea o report_components
     selected_idea = state.get("selected_idea")

@@ -39,15 +39,3 @@ https://minciencias.gov.co/convocatorias/convocatoria-colombia-inteligente-cienc
 
 ------------------------------------------------------------------------
 
-buenas tardes
-Cordial saludo.
-
-Atendiendo a su solicitud y recomendaciones sobre la forma de pago estipulada en la Orden de Compra 41076365, procedo a adjuntar nuevamente los documentos y soportes ajustados.
-Entiendo que la facturación se rige por entregables recibidos y no por periodos de tiempo. Por lo tanto, hago entrega formal de los siguientes productos correspondientes a los dos primeros hitos de la tabla:
-
-- Entregable N°1 (Asociado a Septiembre): Documento de Plan de Desarrollo y Ejecución (Análisis, viabilidad de APIs y arquitectura).
-- Entregable N°2 (Asociado a Octubre): Módulo funcional de recolección de datos y conexiones con APIs (Avance del desarrollo del sistema de investigación).
-
-Quedo atento a cualquier inquietud adicional o revisión por su parte.
-
-Carlos Daniel Agamez Palomino

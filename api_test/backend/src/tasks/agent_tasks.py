@@ -1,117 +1,209 @@
 import asyncio
 import json
+import redis
+from datetime import datetime
+from langchain_core.messages import HumanMessage, AIMessage
+
 from src.core.celery_app import celery_app
 from src.agents.tech_surveillance.graph import agent 
-from langchain_core.messages import HumanMessage
-import redis
 
+# --- IMPORTACIONES DE TU AGENTE ---
+from src.agents.tech_surveillance.state import (
+    CallInfo, 
+    ReportSchema, 
+    DocsPaths, 
+    proposalIdeaResponse, 
+    ProposalIdea
+)
+
+# --- IMPORTACIONES DE BASE DE DATOS ---
 from src.core.database import SessionLocal
 from src.models.history import AgentSession, AgentStep
-from datetime import datetime
 
-# Cliente Redis para guardar el estado intermedio del agente
+# Cliente Redis
 redis_client = redis.Redis(host='redis', port=6379, db=0)
 
+# --- MAPEO DE NODOS A MENSAJES DE USUARIO ---
+# Estos keys coinciden exactamente con los definidos en tu graph.py
+NODE_MESSAGES = {
+    "ingest": "📥 Analizando convocatoria y extrayendo datos clave...",
+    "presentation_generator": "📝 Generando resumen ejecutivo para la presentación...",
+    "presentation_generator_docs": "📊 Diseñando diapositivas y documentos base...",
+    "propose_ideas": "💡 Brainstorming: Generando ideas de proyectos innovadores...",
+    "proyect_idea": "📐 Estructurando el esquema conceptual del proyecto...",
+    "project_idea_doc": "📄 Generando documento PDF del esquema preliminar...",
+    "academic_research": "🔍 Realizando investigación académica y estado del arte...",
+    "project_schemas": "✍️ Redactando contenido técnico (Metodología, Justificación, Riesgos)...",
+    "images_generator": "🎨 Diseñando póster promocional con IA Generativa...",
+    "report": "📑 Ensamblando reporte final y propuesta técnica..."
+}
+
 def json_serializer(obj):
-    """Tu serializador del script original"""
+    """Serializador maestro para Redis/DB"""
     if hasattr(obj, 'model_dump'):
         return obj.model_dump()
     if hasattr(obj, 'dict'):
         return obj.dict()
+    if hasattr(obj, 'content'):
+        return obj.content
     return str(obj)
 
-async def run_agent_step(input_state: dict):
-    """Ejecuta un paso del grafo"""
-    result = await agent.ainvoke(input_state)
-    return result
-
-@celery_app.task(name="process_agent_step")
-def task_process_agent_step(session_id: str, input_data: dict, step_type: str):
+async def run_agent_stream(input_state: dict, task_instance):
     """
-    Tarea de Celery que maneja la lógica asíncrona del agente.
-    Recupera el estado anterior de Redis (si existe), lo actualiza y corre el agente.
+    Ejecuta el agente paso a paso (Streaming) y actualiza el estado de Celery.
     """
-    # 1. Crear sesión de DB (SQLAlchemy)
-    db = SessionLocal()
+    # Copia del estado inicial para ir acumulando cambios
+    final_state = input_state.copy()
     
-    # Verificar si la "Session" existe en DB, si no, crearla (Caso primer paso: ingest)
-    try:
-        if step_type == "ingest":
-            # Verificar si ya existe para evitar duplicados en reintentos
-            existing_session = db.query(AgentSession).filter(AgentSession.id == session_id).first()
-            if not existing_session:
+    # Usamos astream para recibir eventos por cada nodo que termina
+    print(f"--- Iniciando Streaming del Agente ---")
+    
+    async for event in agent.astream(input_state):
+        for node_name, node_output in event.items():
+            # 1. Actualizar nuestro estado local con la salida del nodo
+            if isinstance(node_output, dict):
+                final_state.update(node_output)
+            
+            # 2. Buscar mensaje amigable para el usuario
+            # Si el nodo es un subgrafo, a veces el nombre viene distinto, pero capturamos los principales
+            status_msg = NODE_MESSAGES.get(node_name, f"Procesando: {node_name}...")
+            
+            # 3. Log para depuración
+            print(f"--> Nodo terminado: {node_name}")
+            
+            # 4. Actualizar estado en Celery (PROGRESS)
+            # Esto permite al frontend leer 'info.message'
+            if task_instance:
+                task_instance.update_state(
+                    state='PROGRESS', 
+                    meta={'message': status_msg}
+                )
+
+    return final_state
+
+@celery_app.task(bind=True, name="src.tasks.agent_tasks.process_agent_step")
+def task_process_agent_step(self, session_id: str, input_data: dict, step_type: str):
+    """
+    Tarea Celery principal.
+    bind=True permite acceder a 'self' para actualizar el estado.
+    """
+    
+    # ==========================================
+    # 1. GESTIÓN DE BASE DE DATOS (SESIÓN)
+    # ==========================================
+    db = SessionLocal()
+    if step_type == "ingest":
+        try:
+            existing = db.query(AgentSession).filter(AgentSession.id == session_id).first()
+            if not existing:
                 new_session = AgentSession(id=session_id, status="active")
                 db.add(new_session)
                 db.commit()
-    except Exception as e:
-        print(f"Error DB creando sesión: {e}")
-        db.rollback()
+        except Exception as e:
+            print(f"⚠️ Error creando sesión en DB: {e}")
+            db.rollback()
     
-    # 2. Recuperar estado previo si existe
+    # ==========================================
+    # 2. RECUPERAR Y REHIDRATAR ESTADO (REDIS)
+    # ==========================================
     current_state = {}
     stored_state = redis_client.get(f"agent_state:{session_id}")
+    
     if stored_state:
         current_state = json.loads(stored_state)
-    
-    # 3. Preparar el input según el paso (Ingesta, Selección, etc.)
-    # Fusionamos el input nuevo con el estado actual
+        
+        # --- REHIDRATACIÓN PYDANTIC ---
+        if "call_info" in current_state and isinstance(current_state["call_info"], dict):
+            try: current_state["call_info"] = CallInfo(**current_state["call_info"])
+            except: pass
+
+        if "report_components" in current_state and isinstance(current_state["report_components"], dict):
+            try: current_state["report_components"] = ReportSchema(**current_state["report_components"])
+            except: pass
+
+        if "docs_paths" in current_state and isinstance(current_state["docs_paths"], dict):
+            try: current_state["docs_paths"] = DocsPaths(**current_state["docs_paths"])
+            except: pass
+        
+        if "proposal_ideas" in current_state and isinstance(current_state["proposal_ideas"], dict):
+            try: current_state["proposal_ideas"] = proposalIdeaResponse(**current_state["proposal_ideas"])
+            except: pass
+
+        if "selected_idea" in current_state and isinstance(current_state["selected_idea"], dict):
+            try: current_state["selected_idea"] = ProposalIdea(**current_state["selected_idea"])
+            except: pass
+
+    # Inyectar Session ID
+    current_state["session_id"] = session_id
+
+    # ==========================================
+    # 3. PREPARAR INPUT
+    # ==========================================
     if step_type == "ingest":
         current_state["messages"] = [HumanMessage(content=input_data["text"])]
         current_state["route_decision"] = "ingest"
-        current_state["session_id"] = session_id 
+    
     elif step_type == "proposal_ideas":
         current_state["route_decision"] = "proposal_ideas"
+    
     elif step_type == "project_idea":
         current_state["route_decision"] = "project_idea"
-        # Asumimos que input_data trae el índice o la idea seleccionada
-        current_state["selected_idea"] = input_data.get("selected_idea")
+        if "selected_idea" in input_data:
+            current_state["selected_idea"] = ProposalIdea(**input_data["selected_idea"])
+            
     elif step_type == "generate_project":
-        current_state["route_decision"] = "generate_proyect"
+        current_state["route_decision"] = "generate_proyect" # Typo intencional según tu grafo
 
-    # 4. Ejecutar el agente (wrapper asíncrono)
+    # ==========================================
+    # 4. EJECUTAR AGENTE (STREAMING)
+    # ==========================================
     try:
-        new_state = asyncio.run(run_agent_step(current_state))
+        # CAMBIO: Usamos run_agent_stream en lugar de invoke directo
+        # Pasamos 'self' para que pueda actualizar el estado de la tarea
+        new_state = asyncio.run(run_agent_stream(current_state, self))
     except Exception as e:
+        print(f"❌ Error ejecutando agente: {e}")
+        # Importante: devolvemos error para que el frontend lo sepa
         return {"status": "error", "error": str(e)}
 
-    # 5. Serializar y guardar estado nuevo en Redis
+    # ==========================================
+    # 5. GUARDAR ESTADO (REDIS)
+    # ==========================================
     serialized_state = json.dumps(new_state, default=json_serializer)
     redis_client.set(f"agent_state:{session_id}", serialized_state)
 
-    # 6. Retornar una versión limpia para el Frontend
-    # (No retornes todo el estado gigante, solo lo necesario para la UI)
+    # ==========================================
+    # 6. GUARDAR HISTORIAL (POSTGRES)
+    # ==========================================
     try:
-        # Preparamos los datos para guardar (cuidado con guardar JSONs gigantes)
-        # Podrías filtrar el serialized_state para guardar solo lo importante
+        clean_output_dict = json.loads(serialized_state)
         
         step_record = AgentStep(
             session_id=session_id,
             step_type=step_type,
-            input_data=input_data,     # JSONB en Postgres
-            output_data=new_state,     # SQLAlchemy convierte dict a JSON automáticamente
+            input_data=input_data,
+            output_data=clean_output_dict,
             created_at=datetime.utcnow()
         )
         db.add(step_record)
         
-        # Si es el último paso, marcamos la sesión como completada
         if step_type == "generate_project":
-            session_record = db.query(AgentSession).filter(AgentSession.id == session_id).first()
-            if session_record:
-                session_record.status = "completed"
-        
-        db.commit()
-        print(f"💾 Paso '{step_type}' guardado en DB para sesión {session_id}")
+             session_record = db.query(AgentSession).filter(AgentSession.id == session_id).first()
+             if session_record:
+                 session_record.status = "completed"
 
+        db.commit()
     except Exception as e:
-        print(f"❌ Error guardando historial en DB: {e}")
+        print(f"⚠️ Error guardando en DB: {e}")
         db.rollback()
     finally:
-        db.close() # Importante cerrar la sesión
+        db.close()
 
-    # 3. Retornar respuesta al Frontend
-    response = {
-        "status": "completed",
-        "step": step_type,
+    # ==========================================
+    # 7. RETORNO FINAL
+    # ==========================================
+    return {
+        "status": "completed", 
+        "step": step_type, 
         "data": serialized_state 
     }
-    return response

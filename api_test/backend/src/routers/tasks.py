@@ -9,17 +9,28 @@ storage_service = MinioService()
 @router.get("/{task_id}")
 async def get_task_status(task_id: str):
     task_result = AsyncResult(task_id)
+    
+    # Estructura base de la respuesta
     response = {
         "task_id": task_id,
         "status": task_result.status,
+        "info": None # <--- NUEVO: Aquí vendrán los mensajes de streaming
     }
     
-    if task_result.ready():
+    # CASO 1: EN PROGRESO (Streaming)
+    # Cuando el worker hace self.update_state(state='PROGRESS', meta={'message': '...'})
+    # esos datos quedan disponibles en task_result.info
+    if task_result.status == 'PROGRESS':
+        response["info"] = task_result.info
+
+    # CASO 2: COMPLETADO (SUCCESS / FAILURE)
+    elif task_result.ready():
         result_data = task_result.result # Dict {status, step, data}
         
-        # Lógica de procesamiento de URLs de MinIO
+        # Lógica de procesamiento de URLs de MinIO (Tu código original intacto)
         if isinstance(result_data, dict) and "data" in result_data:
             try:
+                # Deserializamos para inyectar URLs firmadas
                 state_dict = json.loads(result_data["data"])
                 
                 # Búscamos si hay 'docs_paths' en el estado
@@ -32,7 +43,7 @@ async def get_task_status(task_id: str):
                         if val and isinstance(val, str) and "/" in val: 
                             docs[key] = storage_service.get_presigned_url(val)
                     
-                    # Actualizar data
+                    # Actualizar data y volver a serializar
                     state_dict["docs_paths"] = docs
                     result_data["data"] = json.dumps(state_dict)
                     

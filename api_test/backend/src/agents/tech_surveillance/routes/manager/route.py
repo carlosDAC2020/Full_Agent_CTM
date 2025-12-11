@@ -1,6 +1,6 @@
 import os
 
-from agents.tech_surveillance.state import GraphState
+from src.agents.tech_surveillance.state import GraphState
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.prompts import PromptTemplate
 
