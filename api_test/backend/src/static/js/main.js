@@ -89,37 +89,64 @@ function switchPanel(panelId) {
         }
     }
 
-    // 4. Actualizar Timeline
+    // 4. Actualizar Timeline (Sidebar Derecha)
     updateTimeline(panelId);
 
-    // 5. Actualizar estado global
+    // 5. Actualizar Wizard Central
+    updateWizardStatus(panelId);
+
+    // 6. Actualizar estado global
     appState.currentStep = panelId;
 }
 
 /**
- * Actualiza la línea de tiempo visual
+ * Actualiza el encabezado del Wizard Central
  */
-function updateTimeline(activeStep) {
-    const stepMap = { 'ingest': 1, 'ideas': 2, 'schema': 3, 'final': 4 };
-    const activeIdx = stepMap[activeStep] || 1;
+function updateWizardStatus(step) {
+    const titleEl = document.getElementById('wizard-step-title');
+    const descEl = document.getElementById('wizard-step-desc');
+    const iconEl = document.getElementById('wizard-step-icon');
 
-    for (let i = 1; i <= 4; i++) {
-        const el = document.getElementById(`step-indicator-${i}`);
-        if (!el) continue;
+    if (!titleEl || !descEl || !iconEl) return;
 
-        if (i < activeIdx) {
-            el.className = 'timeline-step completed';
-            el.querySelector('.timeline-icon').innerHTML = '<i class="bi bi-check-lg"></i>';
-        } else if (i === activeIdx) {
-            el.className = 'timeline-step active';
-            const icons = ['1-circle', 'lightbulb', 'layout-text-window-reverse', 'file-earmark-pdf'];
-            el.querySelector('.timeline-icon').innerHTML = `<i class="bi bi-${icons[i - 1]}"></i>`;
-        } else {
-            el.className = 'timeline-step';
-            const icons = ['1-circle', 'lightbulb', 'layout-text-window-reverse', 'file-earmark-pdf'];
-            el.querySelector('.timeline-icon').innerHTML = `<i class="bi bi-${icons[i - 1]}"></i>`;
+    const config = {
+        'ingest': {
+            title: 'Ingesta de Información',
+            desc: 'Analizando convocatoria y extrayendo datos clave.',
+            icon: '<i class="bi bi-robot"></i>',
+            bg: 'bg-primary'
+        },
+        'ideas': {
+            title: 'Generación de Ideas',
+            desc: 'Propuestas de valor basadas en la convocatoria.',
+            icon: '<i class="bi bi-lightbulb"></i>',
+            bg: 'bg-warning'
+        },
+        'schema': {
+            title: 'Estructuración del Proyecto',
+            desc: 'Definiendo esquema preliminar y validación.',
+            icon: '<i class="bi bi-layout-text-window-reverse"></i>',
+            bg: 'bg-info'
+        },
+        'final': {
+            title: 'Finalización y Entregables',
+            desc: 'Investigación profunda y documentos finales.',
+            icon: '<i class="bi bi-check-circle-fill"></i>',
+            bg: 'bg-success'
         }
-    }
+    };
+
+    const current = config[step] || config['ingest'];
+
+    titleEl.textContent = current.title;
+    descEl.textContent = current.desc;
+    iconEl.innerHTML = current.icon;
+
+    // Reset classes
+    iconEl.className = `rounded-circle text-white d-flex align-items-center justify-content-center me-3 shadow-sm ${current.bg}`;
+    iconEl.style.width = '48px';
+    iconEl.style.height = '48px';
+    iconEl.style.fontSize = '1.5rem';
 }
 
 /**
@@ -133,26 +160,29 @@ function logToTerminal(message, type = 'info') {
         }
     }
 
-    const terminal = document.getElementById('loading-text');
+    const terminal = document.getElementById('wizard-activity-log');
     if (!terminal) return;
 
     const now = new Date().toLocaleTimeString('es-CO', { hour12: false });
-    let colorClass = 'text-white';
-    let icon = '>';
+    let colorClass = 'text-dark';
+    let icon = '<i class="bi bi-info-circle text-muted"></i>';
 
-    if (type === 'error') { colorClass = 'text-danger'; icon = 'x'; }
-    if (type === 'success') { colorClass = 'text-success'; icon = '✓'; }
-    if (type === 'progress') { colorClass = 'text-warning'; icon = '⚡'; }
+    if (type === 'error') { colorClass = 'text-danger'; icon = '<i class="bi bi-exclamation-circle-fill text-danger"></i>'; }
+    if (type === 'success') { colorClass = 'text-success'; icon = '<i class="bi bi-check-circle-fill text-success"></i>'; }
+    if (type === 'progress') { colorClass = 'text-primary'; icon = '<span class="spinner-border spinner-border-sm text-primary"></span>'; }
 
-    const line = `<div class="mb-1"><span class="text-secondary small">[${now}]</span> <span class="${colorClass} fw-bold">${icon}</span> ${message}</div>`;
+    const entryId = 'log-' + Date.now();
+    const line = `
+        <div id="${entryId}" class="wizard-log-entry d-flex align-items-start mb-2 fade-in-up">
+            <div class="me-2 mt-1">${icon}</div>
+            <div>
+                <span class="text-muted small me-2">[${now}]</span>
+                <span class="${colorClass}">${message}</span>
+            </div>
+        </div>
+    `;
 
-    // Insertar antes del cursor blink
-    const cursor = terminal.querySelector('.blink');
-    if (cursor) {
-        cursor.insertAdjacentHTML('beforebegin', line);
-    } else {
-        terminal.innerHTML += line;
-    }
+    terminal.insertAdjacentHTML('beforeend', line);
 
     // Auto-scroll
     terminal.scrollTop = terminal.scrollHeight;
@@ -161,10 +191,17 @@ function logToTerminal(message, type = 'info') {
 /**
  * Limpia la terminal
  */
+/**
+ * Limpia el log del wizard
+ */
 function clearTerminal() {
-    const terminal = document.getElementById('loading-text');
+    const terminal = document.getElementById('wizard-activity-log');
     if (terminal) {
-        terminal.innerHTML = '> Sistema listo.<br>> Esperando entrada del usuario...<span class="blink">_</span>';
+        terminal.innerHTML = `
+            <div class="d-flex align-items-start mb-2 text-muted">
+                <i class="bi bi-info-circle me-2 mt-1"></i>
+                <div>Esperando instrucciones...</div>
+            </div>`;
     }
 }
 
@@ -188,18 +225,20 @@ function setButtonLoading(loading) {
  * Actualiza indicador de estado (badge ONLINE/PROCESSING)
  */
 function setStatusBadge(status) {
-    const badge = document.querySelector('.sidebar-right .badge');
+    const badge = document.getElementById('wizard-status-badge');
     if (!badge) return;
 
     const configs = {
-        'online': { text: 'ONLINE', class: 'bg-success text-success' },
-        'processing': { text: 'PROCESSING', class: 'bg-warning text-warning progress-pulse' },
-        'error': { text: 'ERROR', class: 'bg-danger text-danger' }
+        'online': { text: 'En Espera', class: 'bg-soft-secondary text-secondary border-secondary', icon: 'bi-pause-circle' },
+        'processing': { text: 'Procesando', class: 'bg-soft-primary text-primary border-primary progress-pulse', icon: 'bi-cpu-fill' },
+        'error': { text: 'Error', class: 'bg-soft-danger text-danger border-danger', icon: 'bi-exclamation-octagon' }
     };
 
     const config = configs[status] || configs['online'];
-    badge.className = `badge bg-opacity-10 border border-opacity-25 ${config.class}`;
-    badge.innerText = config.text;
+
+    // Limpiar clases anteriores (manteniendo base)
+    badge.className = `badge px-3 py-2 rounded-pill border border-opacity-25 ${config.class}`;
+    badge.innerHTML = `<i class="bi ${config.icon} me-1 small"></i> ${config.text}`;
 }
 
 /**
