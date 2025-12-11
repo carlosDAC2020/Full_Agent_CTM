@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import os 
+import time
+
 from langchain_core.messages import AIMessage
 from langchain_google_genai import ChatGoogleGenerativeAI
 
@@ -25,7 +27,7 @@ def generate_impacts(state: GraphState) -> dict:
     Nodo 6: Genera los Resultados e Impactos Esperados usando Structured Output.
     """
     print("---SUBGRAPH: Generando Impactos (Structured)---")
-
+    time.sleep(10) 
     # 1. Leer de forma segura el estado actual
     report_components = state.get("report_components") or ReportSchema()
     

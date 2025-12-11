@@ -178,6 +178,18 @@ async function confirmIdeaSelection() {
         if (modal) modal.hide();
     }
 
+    // 3.1 Actualizar visualmente la tarjeta de la idea en el listado
+    if (appState.selectedIdea && appState.ideas) {
+        // Encontrar índice de la idea seleccionada
+        const index = appState.ideas.indexOf(appState.selectedIdea);
+        if (index !== -1) {
+            appState.ideas[index] = finalIdea;
+            // Renderizar de nuevo para reflejar cambios
+            renderIdeas(appState.ideas);
+        }
+    }
+    appState.selectedIdea = finalIdea;
+
     // 4. Enviar a API (función definida en main.js)
     if (typeof submitSelectedIdea === 'function') {
         await submitSelectedIdea(finalIdea);

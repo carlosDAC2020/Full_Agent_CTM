@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 import os 
+import time
+
 from langchain_core.messages import AIMessage
 from langchain_google_genai import ChatGoogleGenerativeAI
 from pydantic import BaseModel, Field
@@ -30,6 +32,7 @@ def create_activity_schedule(state: GraphState) -> dict:
     Nodo 4: Crea el Cronograma de Actividades usando Structured Output.
     """
     print("---SUBGRAPH: Creando Cronograma (Structured)---")
+    time.sleep(10)
 
     # 1. Leer de forma segura el estado actual
     report_components = state.get("report_components") or ReportSchema()

@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import os 
+import time
+
 from langchain_core.messages import AIMessage
 from langchain_google_genai import ChatGoogleGenerativeAI
 
@@ -23,7 +25,8 @@ def generate_objectives(state: GraphState) -> dict:
     Nodo 2: Genera los Objetivos del Proyecto usando Structured Output.
     """
     print("---SUBGRAPH: Generando Objetivos (Structured)---")
-
+    time.sleep(10) 
+    
     # 1. Leer de forma segura el estado actual
     report_components = state.get("report_components") or ReportSchema()
     

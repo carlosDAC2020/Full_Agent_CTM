@@ -20,6 +20,51 @@ const appState = {
 // 1.1 UTILIDADES UI (Integradas para evitar cache issues)
 // ==========================================
 
+// ==========================================
+// 1.1 UTILIDADES UI (Integradas para evitar cache issues)
+// ==========================================
+
+/**
+ * Mostrar notificación flotante central
+ */
+function showToast(message, type = 'info') {
+    const container = document.getElementById('central-toast-container');
+    if (!container) return;
+
+    // Colores por tipo
+    const colors = {
+        'success': 'alert-success border-success text-success',
+        'error': 'alert-danger border-danger text-danger',
+        'progress': 'alert-info border-info text-primary bg-white shadow-lg',
+        'info': 'alert-secondary bg-white text-muted'
+    };
+
+    const cssClass = colors[type] || colors['info'];
+    const icon = type === 'progress' ? '<span class="spinner-border spinner-border-sm me-2"></span>' :
+        (type === 'success' ? '<i class="bi bi-check-circle-fill me-2"></i>' :
+            (type === 'error' ? '<i class="bi bi-exclamation-triangle-fill me-2"></i>' : ''));
+
+    const toastId = 'toast-' + Date.now();
+    const html = `
+        <div id="${toastId}" class="alert ${cssClass} d-flex align-items-center mb-2 fade-in-up" role="alert">
+            ${icon}
+            <div class="fw-medium">${message}</div>
+        </div>
+    `;
+
+    // Si es mensaje de progreso, limpiar anteriores de progreso para no acumular
+    if (type === 'progress') {
+        container.innerHTML = html;
+    } else {
+        container.insertAdjacentHTML('beforeend', html);
+        // Auto-eliminar mensajes de éxito/error tras 4s
+        setTimeout(() => {
+            const el = document.getElementById(toastId);
+            if (el) el.remove();
+        }, 4000);
+    }
+}
+
 /**
  * Cambia el panel visible en el área central
  */
@@ -34,10 +79,20 @@ function switchPanel(panelId) {
         target.classList.add('fade-in-up');
     }
 
-    // 3. Actualizar Timeline
+    // 3. Manejo del Input Flotante
+    const inputWrapper = document.querySelector('.input-area-wrapper');
+    if (inputWrapper) {
+        if (panelId === 'ingest') {
+            inputWrapper.style.display = 'flex';
+        } else {
+            inputWrapper.style.display = 'none';
+        }
+    }
+
+    // 4. Actualizar Timeline
     updateTimeline(panelId);
 
-    // 4. Actualizar estado global
+    // 5. Actualizar estado global
     appState.currentStep = panelId;
 }
 
@@ -68,9 +123,16 @@ function updateTimeline(activeStep) {
 }
 
 /**
- * Escribe mensajes en la terminal de logs
+ * Escribe mensajes en la terminal de logs Y en toasts
  */
 function logToTerminal(message, type = 'info') {
+    // 1. Mostrar en Toast Central si es relevante
+    if (typeof showToast === 'function') {
+        if (['progress', 'success', 'error'].includes(type) || message.length > 20) {
+            showToast(message, type);
+        }
+    }
+
     const terminal = document.getElementById('loading-text');
     if (!terminal) return;
 

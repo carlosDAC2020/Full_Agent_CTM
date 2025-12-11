@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import os 
+import time
+
 from langchain_core.messages import AIMessage
 from langchain_google_genai import ChatGoogleGenerativeAI
 
@@ -25,7 +27,8 @@ def generate_methodology(state: GraphState) -> dict:
     Nodo 3: Genera la Metodología Propuesta usando Structured Output.
     """
     print("---SUBGRAPH: Generando Metodología (Structured)---")
-
+    time.sleep(10) 
+    
     # 1. Leer de forma segura el estado actual
     report_components = state.get("report_components") or ReportSchema()
     

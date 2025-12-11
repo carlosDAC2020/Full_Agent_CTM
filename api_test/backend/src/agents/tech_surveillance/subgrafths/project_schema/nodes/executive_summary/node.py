@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os 
+import time
 from langchain_core.messages import AIMessage
 from langchain_google_genai import ChatGoogleGenerativeAI
 
@@ -23,7 +24,8 @@ def generate_executive_summary(state: GraphState) -> dict:
     Nodo 7 (Final): Genera el Resumen Ejecutivo usando Structured Output.
     """
     print("---SUBGRAPH: Generando Resumen Ejecutivo (Structured)---")
-
+    time.sleep(10) 
+    
     # 1. Leer TODAS las secciones generadas hasta ahora
     report_components = state.get("report_components") or ReportSchema()
     
