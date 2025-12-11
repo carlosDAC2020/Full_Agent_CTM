@@ -17,6 +17,149 @@ const appState = {
 };
 
 // ==========================================
+// 1.1 UTILIDADES UI (Integradas para evitar cache issues)
+// ==========================================
+
+/**
+ * Cambia el panel visible en el área central
+ */
+function switchPanel(panelId) {
+    // 1. Ocultar todos los paneles
+    document.querySelectorAll('.panel-view').forEach(el => el.classList.add('d-none'));
+
+    // 2. Mostrar el seleccionado
+    const target = document.getElementById(`panel-${panelId}`);
+    if (target) {
+        target.classList.remove('d-none');
+        target.classList.add('fade-in-up');
+    }
+
+    // 3. Actualizar Timeline
+    updateTimeline(panelId);
+
+    // 4. Actualizar estado global
+    appState.currentStep = panelId;
+}
+
+/**
+ * Actualiza la línea de tiempo visual
+ */
+function updateTimeline(activeStep) {
+    const stepMap = { 'ingest': 1, 'ideas': 2, 'schema': 3, 'final': 4 };
+    const activeIdx = stepMap[activeStep] || 1;
+
+    for (let i = 1; i <= 4; i++) {
+        const el = document.getElementById(`step-indicator-${i}`);
+        if (!el) continue;
+
+        if (i < activeIdx) {
+            el.className = 'timeline-step completed';
+            el.querySelector('.timeline-icon').innerHTML = '<i class="bi bi-check-lg"></i>';
+        } else if (i === activeIdx) {
+            el.className = 'timeline-step active';
+            const icons = ['1-circle', 'lightbulb', 'layout-text-window-reverse', 'file-earmark-pdf'];
+            el.querySelector('.timeline-icon').innerHTML = `<i class="bi bi-${icons[i - 1]}"></i>`;
+        } else {
+            el.className = 'timeline-step';
+            const icons = ['1-circle', 'lightbulb', 'layout-text-window-reverse', 'file-earmark-pdf'];
+            el.querySelector('.timeline-icon').innerHTML = `<i class="bi bi-${icons[i - 1]}"></i>`;
+        }
+    }
+}
+
+/**
+ * Escribe mensajes en la terminal de logs
+ */
+function logToTerminal(message, type = 'info') {
+    const terminal = document.getElementById('loading-text');
+    if (!terminal) return;
+
+    const now = new Date().toLocaleTimeString('es-CO', { hour12: false });
+    let colorClass = 'text-white';
+    let icon = '>';
+
+    if (type === 'error') { colorClass = 'text-danger'; icon = 'x'; }
+    if (type === 'success') { colorClass = 'text-success'; icon = '✓'; }
+    if (type === 'progress') { colorClass = 'text-warning'; icon = '⚡'; }
+
+    const line = `<div class="mb-1"><span class="text-secondary small">[${now}]</span> <span class="${colorClass} fw-bold">${icon}</span> ${message}</div>`;
+
+    // Insertar antes del cursor blink
+    const cursor = terminal.querySelector('.blink');
+    if (cursor) {
+        cursor.insertAdjacentHTML('beforebegin', line);
+    } else {
+        terminal.innerHTML += line;
+    }
+
+    // Auto-scroll
+    terminal.scrollTop = terminal.scrollHeight;
+}
+
+/**
+ * Limpia la terminal
+ */
+function clearTerminal() {
+    const terminal = document.getElementById('loading-text');
+    if (terminal) {
+        terminal.innerHTML = '> Sistema listo.<br>> Esperando entrada del usuario...<span class="blink">_</span>';
+    }
+}
+
+/**
+ * Actualiza el estado visual del botón de envío
+ */
+function setButtonLoading(loading) {
+    const btn = document.getElementById('btnSendIngest');
+    if (!btn) return;
+
+    if (loading) {
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+    } else {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-arrow-up"></i>';
+    }
+}
+
+/**
+ * Actualiza indicador de estado (badge ONLINE/PROCESSING)
+ */
+function setStatusBadge(status) {
+    const badge = document.querySelector('.sidebar-right .badge');
+    if (!badge) return;
+
+    const configs = {
+        'online': { text: 'ONLINE', class: 'bg-success text-success' },
+        'processing': { text: 'PROCESSING', class: 'bg-warning text-warning progress-pulse' },
+        'error': { text: 'ERROR', class: 'bg-danger text-danger' }
+    };
+
+    const config = configs[status] || configs['online'];
+    badge.className = `badge bg-opacity-10 border border-opacity-25 ${config.class}`;
+    badge.innerText = config.text;
+}
+
+/**
+ * Rellena el input con texto sugerido
+ */
+function fillInput(text) {
+    const input = document.getElementById('mainInput');
+    if (input) {
+        input.value = text + " ";
+        input.focus();
+        input.dispatchEvent(new Event('input'));
+    }
+}
+
+// Exportar globalmente por si acaso
+window.switchPanel = switchPanel;
+window.setButtonLoading = setButtonLoading;
+window.setStatusBadge = setStatusBadge;
+window.logToTerminal = logToTerminal;
+
+
+// ==========================================
 // 2. INICIALIZACIÓN
 // ==========================================
 document.addEventListener('DOMContentLoaded', async () => {
