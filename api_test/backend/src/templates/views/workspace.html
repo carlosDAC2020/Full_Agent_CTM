@@ -2,154 +2,221 @@
 
 <!-- === COLUMNA IZQUIERDA: HISTORIAL === -->
 {% block sidebar_left %}
-    <div class="mb-5 px-2 mt-2">
-        <img src="/static/CotecmarLogo_white.png" alt="Cotecmar" style="height: 38px; opacity: 0.95;">
-    </div>
-    
-    <button class="btn btn-new-chat w-100 mb-4 text-start p-3 rounded-3 d-flex align-items-center">
-        <i class="bi bi-plus-lg me-3 fs-5"></i> 
-        <span class="fw-semibold">Nueva Evaluación</span>
-    </button>
+<div class="mb-5 px-2 mt-2">
+    <img src="/static/images/cotecmar_logo_white.png" alt="Cotecmar" style="height: 38px; opacity: 0.95;"
+        onerror="this.style.display='none'">
+</div>
 
-    <div class="flex-grow-1 overflow-auto px-1">
-        <small class="text-uppercase text-white-50 fw-bold px-2 mb-2 d-block" style="font-size: 0.7em; letter-spacing: 1px;">Historial Reciente</small>
-        <div class="list-group list-group-flush" id="history-list-container">
-            <!-- Ejemplo estático (luego será dinámico) -->
-            <a href="#" class="list-group-item list-group-item-action bg-transparent text-white border-0 px-2 rounded mb-1 py-2 d-flex align-items-center">
-                <i class="bi bi-file-text me-3 opacity-50"></i> 
-                <span class="text-truncate">Convocatoria MinCiencias</span>
-            </a>
+<button class="btn btn-new-chat w-100 mb-4 text-start p-3 rounded-3 d-flex align-items-center"
+    onclick="startNewSession()">
+    <i class="bi bi-plus-lg me-3 fs-5"></i>
+    <span class="fw-semibold">Nueva Evaluación</span>
+</button>
+
+<div class="flex-grow-1 overflow-auto px-1">
+    <small class="text-uppercase text-white-50 fw-bold px-2 mb-2 d-block"
+        style="font-size: 0.7em; letter-spacing: 1px;">Historial Reciente</small>
+    <div class="list-group list-group-flush" id="history-list-container">
+        <!-- Cargado dinámicamente por JS -->
+        <div class="text-center py-3 text-white-50" id="history-loading">
+            <span class="spinner-border spinner-border-sm"></span>
+            <div class="small mt-2">Cargando...</div>
         </div>
     </div>
-    
-    <div class="mt-auto pt-3 border-top border-secondary border-opacity-25">
-        <div class="d-flex align-items-center px-2 py-2 rounded hover-bg-white-10">
-            <div class="rounded-circle bg-white text-primary d-flex align-items-center justify-content-center fw-bold" style="width: 32px; height: 32px;">
-                UC
-            </div>
-            <div class="ms-3 text-white">
-                <div class="fw-bold small">Usuario Cotecmar</div>
-                <div class="small opacity-50" style="font-size: 0.7rem;">Investigador I+D+i</div>
-            </div>
+</div>
+
+<div class="mt-auto pt-3 border-top border-secondary border-opacity-25">
+    <div class="d-flex align-items-center px-2 py-2 rounded hover-bg-white-10">
+        <div class="rounded-circle bg-white text-primary d-flex align-items-center justify-content-center fw-bold"
+            style="width: 32px; height: 32px;">
+            UC
+        </div>
+        <div class="ms-3 text-white">
+            <div class="fw-bold small">Usuario Cotecmar</div>
+            <div class="small opacity-50" style="font-size: 0.7rem;">Investigador I+D+i</div>
         </div>
     </div>
+</div>
 {% endblock %}
 
 
 <!-- === COLUMNA CENTRAL: CONTENIDO === -->
 {% block content %}
-    <!-- Agregamos la clase center-view inicialmente para centrar el saludo -->
-    <div id="panel-ingest" class="panel-view w-100 center-view" style="max-width: 800px;">
-        
-        <div class="text-center mb-5 fade-in-up">
-            <div class="mb-4">
-                <!-- Icono Central (Robot Cotecmar Style) -->
-                <div class="bg-white p-4 rounded-circle shadow-sm d-inline-block position-relative">
-                    <i class="bi bi-robot text-primary" style="font-size: 3rem;"></i>
-                    <!-- Puntito de estado -->
-                    <span class="position-absolute top-0 start-100 translate-middle p-2 bg-success border border-light rounded-circle"></span>
-                </div>
+
+<!-- ========== PANEL INGEST (PASO 1) ========== -->
+<div id="panel-ingest" class="panel-view w-100" style="max-width: 800px;">
+
+    <!-- Saludo Inicial -->
+    <div class="text-center mb-5 fade-in-up" id="ingest-welcome">
+        <div class="mb-4">
+            <div class="bg-white p-4 rounded-circle shadow-sm d-inline-block position-relative">
+                <i class="bi bi-robot text-primary" style="font-size: 3rem;"></i>
+                <span
+                    class="position-absolute top-0 start-100 translate-middle p-2 bg-success border border-light rounded-circle"></span>
             </div>
-            <h2 class="fw-bold " style="color: var(--cotecmar-navy);">Agente de vigilancia tecnologica</h2>
         </div>
-
-    {% include 'panels/panel_ideas.html' %}
-    {% include 'panels/panel_schema.html' %}
-    {% include 'panels/panel_final.html' %}
-      
-    
-    <!-- Otros paneles (ocultos inicialmente) -->
-    <div id="panel-ideas" class="panel-view d-none w-100" style="max-width: 900px;">
-        <h4 class="mb-4 text-cotecmar fw-bold"><i class="bi bi-stars me-2"></i>Ideas Propuestas</h4>
-        <div id="ideas-container" class="row g-4"></div>
+        <h2 class="fw-bold" style="color: var(--cotecmar-navy);">Agente de Vigilancia Tecnológica</h2>
+        <p class="text-muted">Pega el texto de la convocatoria para comenzar el análisis.</p>
     </div>
 
-    <div id="panel-schema" class="panel-view d-none w-100" style="max-width: 800px;">
-        <h4 class="mb-4 text-cotecmar fw-bold"><i class="bi bi-file-earmark-richtext me-2"></i>Esquema Preliminar</h4>
-        <div class="card border-0 shadow-sm p-4" id="schema-preview-container">
-            <!-- Aquí irán los links o iframe -->
+    <!-- Resultado de Ingesta (oculto inicialmente) -->
+    <div id="ingest-result" class="d-none fade-in-up">
+        <div class="card border-0 shadow-sm call-info-card">
+            <div class="card-header bg-success bg-opacity-10 text-success border-0 py-3">
+                <i class="bi bi-check-circle-fill me-2"></i>
+                <strong>Convocatoria Analizada</strong>
+            </div>
+            <div class="card-body p-4">
+                <h5 class="fw-bold text-cotecmar mb-3" id="call-title">Título de la Convocatoria</h5>
+                <p class="text-muted mb-3" id="call-entity"></p>
+                <div id="call-requirements" class="small"></div>
+            </div>
         </div>
+    </div>
+</div>
+
+<!-- ========== PANEL IDEAS (PASO 2) ========== -->
+<div id="panel-ideas" class="panel-view d-none w-100" style="max-width: 950px;">
+    <div class="mb-4">
+        <h3 class="text-cotecmar fw-bold"><i class="bi bi-stars text-warning me-2"></i>Ideas de Proyecto</h3>
+        <p class="text-muted">Selecciona una idea para refinarla y generar el esquema inicial.</p>
+    </div>
+    <div id="ideas-container" class="row g-4">
+        <!-- Renderizado dinámicamente por ui.js -->
+    </div>
+</div>
+
+<!-- ========== PANEL SCHEMA (PASO 3) ========== -->
+<div id="panel-schema" class="panel-view d-none w-100" style="max-width: 850px;">
+    <div class="mb-4 d-flex justify-content-between align-items-center">
+        <div>
+            <h3 class="text-cotecmar fw-bold"><i class="bi bi-file-earmark-richtext text-primary me-2"></i>Esquema
+                Preliminar</h3>
+            <p class="text-muted mb-0">Revisa la estructura antes de iniciar la investigación profunda.</p>
+        </div>
+        <span class="badge bg-success bg-opacity-10 text-success border border-success px-3 py-2">Listo para
+            Aprobar</span>
     </div>
 
-    <div id="panel-final" class="panel-view d-none w-100" style="max-width: 800px;">
-        <div class="text-center py-5">
-            <div class="mb-4"><i class="bi bi-check-circle-fill text-success" style="font-size: 4rem;"></i></div>
-            <h2 class="fw-bold text-cotecmar">¡Proceso Finalizado!</h2>
-            <p class="text-muted">Todos los entregables han sido generados exitosamente.</p>
-            <div id="final-docs-list" class="list-group w-75 mx-auto mt-4 text-start"></div>
+    <!-- Lista de Documentos Generados -->
+    <div id="schema-docs-list" class="list-group mb-4">
+        <!-- Renderizado dinámicamente -->
+    </div>
+
+    <!-- Botón de Acción -->
+    <div class="text-center mt-5">
+        <button class="btn btn-cotecmar btn-lg px-5 shadow hover-scale" onclick="runFinalization()">
+            <i class="bi bi-check-circle me-2"></i> Aprobar y Generar Documentos Finales
+        </button>
+        <p class="text-muted small mt-2">Esto iniciará la investigación académica y generación de entregables.</p>
+    </div>
+</div>
+
+<!-- ========== PANEL FINAL (PASO 4) ========== -->
+<div id="panel-final" class="panel-view d-none w-100" style="max-width: 800px;">
+    <div class="text-center py-5 fade-in-up">
+        <div class="mb-4">
+            <div class="bg-success bg-opacity-10 p-4 rounded-circle d-inline-block">
+                <i class="bi bi-check-lg text-success" style="font-size: 3rem;"></i>
+            </div>
+        </div>
+        <h2 class="fw-bold text-cotecmar mb-3">¡Misión Cumplida!</h2>
+        <p class="text-muted fs-5 mb-5">El agente ha completado todas las tareas de investigación y diseño.</p>
+
+        <div class="card border-0 shadow-sm text-start overflow-hidden">
+            <div class="card-header bg-white border-bottom p-3 fw-bold text-secondary">
+                <i class="bi bi-folder2-open me-2"></i>ENTREGABLES GENERADOS
+            </div>
+            <div class="list-group list-group-flush" id="final-docs-list">
+                <!-- Renderizado dinámicamente -->
+            </div>
+        </div>
+
+        <div class="mt-5">
+            <button class="btn btn-outline-secondary me-2" onclick="startNewSession()">
+                <i class="bi bi-plus-circle me-1"></i>Nueva Evaluación
+            </button>
         </div>
     </div>
+</div>
+
 {% endblock %}
 
 
 <!-- === INPUT AREA FLOTANTE === -->
 {% block input_area %}
-    <div class="input-box-container">
-        <textarea id="mainInput" class="form-control chat-textarea" rows="1" 
-                  placeholder="Escribe un mensaje o pega tu texto aquí..." autofocus></textarea>
-        
-        <button class="btn send-btn" id="btnSendIngest" onclick="runIngest()" title="Enviar">
-            <i class="bi bi-arrow-up"></i>
-        </button>
-    </div>
-   
+<div class="input-box-container">
+    <textarea id="mainInput" class="form-control chat-textarea" rows="1"
+        placeholder="Pega aquí el texto de la convocatoria..." autofocus></textarea>
+
+    <button class="btn send-btn" id="btnSendIngest" onclick="runIngest()" title="Enviar">
+        <i class="bi bi-arrow-up"></i>
+    </button>
+</div>
 {% endblock %}
 
 
 <!-- === COLUMNA DERECHA: TIMELINE === -->
 {% block sidebar_right %}
-    <h6 class="fw-bold text-cotecmar mb-1">Estado de Ejecución</h6>
-    <small class="text-muted d-block mb-4">Seguimiento en tiempo real</small>
-    
-    <div class="timeline">
-        
-        <!-- Paso 1 -->
-        <div class="timeline-step active" id="step-indicator-1" onclick="switchPanel('ingest')">
-            <div class="timeline-icon"><i class="bi bi-1-circle"></i></div>
-            <div class="timeline-content">
-                <div class="timeline-title">Ingesta</div>
-                <div class="timeline-desc">Análisis de convocatoria y extracción de datos.</div>
-            </div>
-        </div>
+<h6 class="fw-bold text-cotecmar mb-1">Estado de Ejecución</h6>
+<small class="text-muted d-block mb-4">Seguimiento en tiempo real</small>
 
-        <!-- Paso 2 -->
-        <div class="timeline-step" id="step-indicator-2" onclick="switchPanel('ideas')">
-            <div class="timeline-icon"><i class="bi bi-lightbulb"></i></div>
-            <div class="timeline-content">
-                <div class="timeline-title">Ideación</div>
-                <div class="timeline-desc">Generación de propuestas de valor innovadoras.</div>
-            </div>
-        </div>
+<div class="timeline">
 
-        <!-- Paso 3 -->
-        <div class="timeline-step" id="step-indicator-3" onclick="switchPanel('schema')">
-            <div class="timeline-icon"><i class="bi bi-layout-text-window-reverse"></i></div>
-            <div class="timeline-content">
-                <div class="timeline-title">Esquema</div>
-                <div class="timeline-desc">Estructuración preliminar y validación.</div>
-            </div>
+    <!-- Paso 1 -->
+    <div class="timeline-step active" id="step-indicator-1" onclick="switchPanel('ingest')">
+        <div class="timeline-icon"><i class="bi bi-1-circle"></i></div>
+        <div class="timeline-content">
+            <div class="timeline-title">Ingesta</div>
+            <div class="timeline-desc">Análisis de convocatoria y extracción de datos.</div>
         </div>
-
-        <!-- Paso 4 -->
-        <div class="timeline-step" id="step-indicator-4" onclick="switchPanel('final')">
-            <div class="timeline-icon"><i class="bi bi-file-earmark-pdf"></i></div>
-            <div class="timeline-content">
-                <div class="timeline-title">Finalización</div>
-                <div class="timeline-desc">Investigación profunda y generación de entregables.</div>
-            </div>
-        </div>
-
     </div>
 
-    <!-- Terminal de Logs (Estilo Hacker/Dev) -->
-    <div class="mt-auto">
-        <div class="d-flex justify-content-between align-items-end mb-1 px-1">
-            <small class="fw-bold text-muted" style="font-size: 0.7em;">SYSTEM LOGS</small>
-            <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25" style="font-size: 0.6em;">ONLINE</span>
-        </div>
-        <div class="logs-terminal" id="loading-text">
-            > Sistema iniciado.<br>
-            > Esperando entrada del usuario...<span class="blink">_</span>
+    <!-- Paso 2 -->
+    <div class="timeline-step" id="step-indicator-2" onclick="switchPanel('ideas')">
+        <div class="timeline-icon"><i class="bi bi-lightbulb"></i></div>
+        <div class="timeline-content">
+            <div class="timeline-title">Ideación</div>
+            <div class="timeline-desc">Generación de propuestas de valor innovadoras.</div>
         </div>
     </div>
+
+    <!-- Paso 3 -->
+    <div class="timeline-step" id="step-indicator-3" onclick="switchPanel('schema')">
+        <div class="timeline-icon"><i class="bi bi-layout-text-window-reverse"></i></div>
+        <div class="timeline-content">
+            <div class="timeline-title">Esquema</div>
+            <div class="timeline-desc">Estructuración preliminar y validación.</div>
+        </div>
+    </div>
+
+    <!-- Paso 4 -->
+    <div class="timeline-step" id="step-indicator-4" onclick="switchPanel('final')">
+        <div class="timeline-icon"><i class="bi bi-file-earmark-pdf"></i></div>
+        <div class="timeline-content">
+            <div class="timeline-title">Finalización</div>
+            <div class="timeline-desc">Investigación profunda y generación de entregables.</div>
+        </div>
+    </div>
+
+</div>
+
+<!-- Terminal de Logs -->
+<div class="mt-auto">
+    <div class="d-flex justify-content-between align-items-end mb-1 px-1">
+        <small class="fw-bold text-muted" style="font-size: 0.7em;">SYSTEM LOGS</small>
+        <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25"
+            style="font-size: 0.6em;">ONLINE</span>
+    </div>
+    <div class="logs-terminal" id="loading-text">
+        > Sistema listo.<br>
+        > Esperando entrada del usuario...<span class="blink">_</span>
+    </div>
+</div>
+{% endblock %}
+
+
+<!-- === MODALES === -->
+{% block modals %}
+{% include 'modals/edit_idea.html' %}
 {% endblock %}

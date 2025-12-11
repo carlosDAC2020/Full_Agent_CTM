@@ -1,0 +1,71 @@
+"""
+Router para gestionar sesiones del agente.
+Proporciona endpoints para listar el historial de sesiones.
+"""
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
+from sqlalchemy import desc
+
+from src.core.database import get_db
+from src.models.history import AgentSession, AgentStep
+
+router = APIRouter(prefix="/api/sessions", tags=["Sessions"])
+
+
+@router.get("")
+async def list_sessions(db: Session = Depends(get_db)):
+    """
+    Lista todas las sesiones ordenadas por fecha de creación (más recientes primero).
+    Incluye un preview del título basado en los datos de ingesta.
+    """
+    sessions = db.query(AgentSession).order_by(desc(AgentSession.created_at)).limit(50).all()
+    
+    result = []
+    for session in sessions:
+        # Intentar extraer un título preview de los datos de ingesta
+        title_preview = "Nueva Evaluación"
+        
+        ingest_step = db.query(AgentStep).filter(
+            AgentStep.session_id == session.id,
+            AgentStep.step_type == "ingest"
+        ).first()
+        
+        if ingest_step and ingest_step.output_data:
+            try:
+                # Extraer título de la convocatoria si existe
+                call_info = ingest_step.output_data.get("call_info", {})
+                if isinstance(call_info, dict):
+                    title_preview = call_info.get("title", "Convocatoria")[:50]
+                    if len(call_info.get("title", "")) > 50:
+                        title_preview += "..."
+            except Exception:
+                pass
+        
+        result.append({
+            "id": session.id,
+            "status": session.status,
+            "created_at": session.created_at.isoformat() if session.created_at else None,
+            "title_preview": title_preview
+        })
+    
+    return result
+
+
+@router.get("/{session_id}/steps")
+async def get_session_steps(session_id: str, db: Session = Depends(get_db)):
+    """
+    Obtiene los pasos ejecutados de una sesión con sus datos de salida.
+    Útil para mostrar qué pasos están completados y permitir navegación.
+    """
+    steps = db.query(AgentStep).filter(
+        AgentStep.session_id == session_id
+    ).order_by(AgentStep.created_at).all()
+    
+    return [
+        {
+            "step_type": step.step_type,
+            "created_at": step.created_at.isoformat() if step.created_at else None,
+            "has_output": step.output_data is not None
+        }
+        for step in steps
+    ]

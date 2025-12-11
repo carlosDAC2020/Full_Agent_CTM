@@ -7,7 +7,7 @@ from src.core.database import engine, Base
 from src.models import history 
 
 # Importar los routers nuevos
-from src.routers import agent, tasks, views
+from src.routers import agent, tasks, views, sessions
 
 # Crear tablas en DB si no existen
 Base.metadata.create_all(bind=engine)
@@ -24,6 +24,7 @@ if os.path.exists(static_path):
 app.include_router(views.router)      # Frontend "/"
 app.include_router(agent.router)      # API Agente "/api/agent/..."
 app.include_router(tasks.router)      # API Tasks "/api/tasks/..."
+app.include_router(sessions.router)   # API Sessions "/api/sessions/..."
 
 # Mensaje de inicio
 @app.on_event("startup")

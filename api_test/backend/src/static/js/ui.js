@@ -1,31 +1,54 @@
 /**
  * ui.js
- * Manejo de renderizado de tarjetas y lógica del Modal.
+ * Manejo de renderizado de tarjetas de ideas y lógica del Modal de edición.
  */
 
-// Renderiza las tarjetas de ideas en el Paso 2
+// ==========================================
+// RENDERIZADO DE IDEAS
+// ==========================================
+
+/**
+ * Renderiza las tarjetas de ideas en el panel de Ideas (Paso 2)
+ * @param {Array} ideas - Lista de ideas del agente
+ */
 function renderIdeas(ideas) {
     const container = document.getElementById('ideas-container');
-    if (!container) return; // Protección por si no existe el elemento
-    
+    if (!container) return;
+
     container.innerHTML = '';
-    
+
+    if (!ideas || ideas.length === 0) {
+        container.innerHTML = `
+            <div class="col-12">
+                <div class="alert alert-info text-center">
+                    <i class="bi bi-info-circle me-2"></i>
+                    No se generaron ideas. Intenta con una convocatoria más detallada.
+                </div>
+            </div>`;
+        return;
+    }
+
     ideas.forEach((idea, index) => {
         const card = document.createElement('div');
-        card.className = 'col-md-6 mb-4';
-        
-        // CORRECCIÓN: Quitamos el onclick del div padre para evitar conflictos 
-        // y lo dejamos solo en el botón, o manejamos mejor el evento.
-        // Aquí lo dejamos en el botón para ser más explícitos.
+        card.className = 'col-md-6 col-lg-4 mb-4';
+
+        // Truncar descripción para preview
+        const descPreview = idea.idea_description
+            ? (idea.idea_description.length > 120
+                ? idea.idea_description.substring(0, 120) + '...'
+                : idea.idea_description)
+            : 'Sin descripción disponible';
+
         card.innerHTML = `
-            <div class="card h-100 card-cotecmar idea-card border-0 shadow-sm">
-                <div class="card-body d-flex flex-column">
-                    <h5 class="card-title text-cotecmar fw-bold mb-3">${idea.idea_title}</h5>
-                    <p class="card-text text-muted small flex-grow-1">
-                        ${idea.idea_description ? idea.idea_description.substring(0, 120) + '...' : 'Sin descripción'}
-                    </p>
+            <div class="card h-100 idea-card border-0 shadow-sm">
+                <div class="card-body d-flex flex-column p-4">
+                    <div class="d-flex align-items-start mb-3">
+                        <span class="badge bg-primary bg-opacity-10 text-primary me-2">#${index + 1}</span>
+                    </div>
+                    <h5 class="card-title text-cotecmar fw-bold mb-3">${idea.idea_title || 'Idea sin título'}</h5>
+                    <p class="card-text text-muted small flex-grow-1">${descPreview}</p>
                     <button class="btn btn-outline-primary w-100 mt-3" onclick="openEditModal(${index})">
-                        Seleccionar y Editar
+                        <i class="bi bi-pencil me-1"></i> Seleccionar y Editar
                     </button>
                 </div>
             </div>
@@ -34,47 +57,68 @@ function renderIdeas(ideas) {
     });
 }
 
-// Abrir Modal con datos pre-cargados
+// ==========================================
+// MODAL DE EDICIÓN
+// ==========================================
+
+/**
+ * Abre el modal de edición con los datos de la idea seleccionada
+ * @param {number} index - Índice de la idea en appState.ideas
+ */
 function openEditModal(index) {
-    // CORRECCIÓN 1: Usar 'appState' en lugar de 'state'
-    if (!appState.ideas || !appState.ideas[index]) return;
+    // Verificar que existe la idea
+    if (!appState.ideas || !appState.ideas[index]) {
+        console.error('Idea no encontrada en el índice:', index);
+        return;
+    }
 
     const idea = appState.ideas[index];
-    appState.selectedIdea = idea; // Guardar referencia en el estado global
-    
-    document.getElementById('modalIdeaTitle').value = idea.idea_title || "";
-    document.getElementById('modalIdeaDesc').value = idea.idea_description || "";
-    
+    appState.selectedIdea = idea;
+
+    // Llenar campos del formulario
+    const titleInput = document.getElementById('modalIdeaTitle');
+    const descInput = document.getElementById('modalIdeaDesc');
+
+    if (titleInput) titleInput.value = idea.idea_title || '';
+    if (descInput) descInput.value = idea.idea_description || '';
+
     // Renderizar objetivos
     const objContainer = document.getElementById('modalIdeaObjectives');
-    objContainer.innerHTML = '';
-    
-    // CORRECCIÓN 3: Validar que existan objetivos
-    if (idea.idea_objectives && Array.isArray(idea.idea_objectives)) {
-        idea.idea_objectives.forEach(obj => {
-            addObjectiveInput(obj); // Usamos la función auxiliar
-        });
-    } else {
-        // Si no hay, agregamos uno vacío por defecto
-        addObjectiveInput("");
+    if (objContainer) {
+        objContainer.innerHTML = '';
+
+        if (idea.idea_objectives && Array.isArray(idea.idea_objectives) && idea.idea_objectives.length > 0) {
+            idea.idea_objectives.forEach(obj => {
+                addObjectiveInput(obj);
+            });
+        } else {
+            // Si no hay objetivos, agregar uno vacío
+            addObjectiveInput('');
+        }
     }
-    
-    // CORRECCIÓN 4: Manejo seguro de la instancia de Bootstrap
+
+    // Mostrar modal
     const modalEl = document.getElementById('editIdeaModal');
-    let modal = bootstrap.Modal.getInstance(modalEl);
-    if (!modal) {
-        modal = new bootstrap.Modal(modalEl);
+    if (modalEl) {
+        let modal = bootstrap.Modal.getInstance(modalEl);
+        if (!modal) {
+            modal = new bootstrap.Modal(modalEl);
+        }
+        modal.show();
     }
-    modal.show();
 }
 
-// CORRECCIÓN 2: AGREGAR ESTA FUNCIÓN FALTANTE
-// Función auxiliar para agregar inputs de objetivos al modal
-function addObjectiveInput(value = "") {
+/**
+ * Agrega un input de objetivo al modal
+ * @param {string} value - Valor inicial del objetivo
+ */
+function addObjectiveInput(value = '') {
     const container = document.getElementById('modalIdeaObjectives');
+    if (!container) return;
+
     const div = document.createElement('div');
     div.className = 'input-group mb-2';
-    
+
     div.innerHTML = `
         <span class="input-group-text input-group-text-icon bg-white border-end-0">
             <i class="bi bi-check-circle text-success"></i>
@@ -87,37 +131,125 @@ function addObjectiveInput(value = "") {
             <i class="bi bi-trash"></i>
         </button>
     `;
-    
+
     container.appendChild(div);
 }
 
-// Capturar datos del modal y confirmar
+/**
+ * Recoge los datos del modal y confirma la selección
+ */
 async function confirmIdeaSelection() {
     // 1. Recolectar datos del formulario
-    const newTitle = document.getElementById('modalIdeaTitle').value;
-    const newDesc = document.getElementById('modalIdeaDesc').value;
-    
+    const titleInput = document.getElementById('modalIdeaTitle');
+    const descInput = document.getElementById('modalIdeaDesc');
+
+    const newTitle = titleInput ? titleInput.value.trim() : '';
+    const newDesc = descInput ? descInput.value.trim() : '';
+
+    // Validar campos requeridos
+    if (!newTitle) {
+        alert('El título del proyecto es requerido.');
+        return;
+    }
+
+    // Recolectar objetivos
     const newObjs = [];
     document.querySelectorAll('.obj-input').forEach(input => {
-        if(input.value.trim()) newObjs.push(input.value.trim());
+        const val = input.value.trim();
+        if (val) newObjs.push(val);
     });
-    
-    // 2. Crear objeto limpio
+
+    if (newObjs.length === 0) {
+        alert('Debe agregar al menos un objetivo.');
+        return;
+    }
+
+    // 2. Crear objeto de idea final
     const finalIdea = {
         idea_title: newTitle,
         idea_description: newDesc,
         idea_objectives: newObjs
     };
-    
+
     // 3. Cerrar modal
     const modalEl = document.getElementById('editIdeaModal');
-    const modal = bootstrap.Modal.getInstance(modalEl);
-    if (modal) modal.hide();
-    
-    // 4. Enviar a API (Llama a la función definida en main.js)
+    if (modalEl) {
+        const modal = bootstrap.Modal.getInstance(modalEl);
+        if (modal) modal.hide();
+    }
+
+    // 4. Enviar a API (función definida en main.js)
     if (typeof submitSelectedIdea === 'function') {
         await submitSelectedIdea(finalIdea);
     } else {
-        console.error("Error: submitSelectedIdea no está definido en main.js");
+        console.error('Error: submitSelectedIdea no está definida en main.js');
     }
 }
+
+// ==========================================
+// ESTILOS ADICIONALES PARA MODAL
+// ==========================================
+
+// Inyectar estilos CSS adicionales si no existen
+(function () {
+    if (document.getElementById('ui-js-styles')) return;
+
+    const style = document.createElement('style');
+    style.id = 'ui-js-styles';
+    style.textContent = `
+        /* Modal Header Cotecmar */
+        .modal-header-cotecmar {
+            background: linear-gradient(135deg, var(--cotecmar-navy, #002D62) 0%, var(--cotecmar-blue, #005691) 100%);
+            color: white;
+            border: none;
+        }
+        
+        /* Form Controls Modernos */
+        .form-control-modern {
+            border-radius: 8px;
+            border: 1px solid #e1e5eb;
+            transition: all 0.2s;
+        }
+        
+        .form-control-modern:focus {
+            border-color: var(--cotecmar-blue, #005691);
+            box-shadow: 0 0 0 3px rgba(0, 86, 145, 0.1);
+        }
+        
+        /* Input Group Icon */
+        .input-group-text-icon {
+            background: white;
+            border-right: none;
+            color: var(--cotecmar-navy, #002D62);
+        }
+        
+        /* SMART Badge */
+        .smart-badge {
+            font-size: 0.65rem;
+            background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%);
+            color: #333;
+            padding: 2px 8px;
+            border-radius: 12px;
+            margin-left: 8px;
+            font-weight: 600;
+            cursor: help;
+        }
+        
+        /* Objectives Container */
+        .objectives-container {
+            max-height: 300px;
+            overflow-y: auto;
+            padding-right: 5px;
+        }
+        
+        .objectives-container::-webkit-scrollbar {
+            width: 4px;
+        }
+        
+        .objectives-container::-webkit-scrollbar-thumb {
+            background: #ccc;
+            border-radius: 2px;
+        }
+    `;
+    document.head.appendChild(style);
+})();

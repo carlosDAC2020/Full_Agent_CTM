@@ -1,7 +1,7 @@
 /**
  * main.js
- * Orquestador principal de la lógica del Frontend.
- * Maneja el estado global, la navegación del Wizard y la restauración de sesiones.
+ * Orquestador principal del flujo del agente.
+ * Maneja estado global, ejecución de pasos, y restauración de sesiones.
  */
 
 // ==========================================
@@ -9,361 +9,531 @@
 // ==========================================
 const appState = {
     sessionId: null,
-    currentStep: 1,
-    ideas: []
+    currentStep: 'ingest',
+    ideas: [],
+    selectedIdea: null,
+    stepsData: {}, // Datos de salida de cada paso
+    pollInterval: null // Para poder cancelar polling si es necesario
 };
 
 // ==========================================
 // 2. INICIALIZACIÓN
 // ==========================================
-document.addEventListener('DOMContentLoaded', () => {
-    // Verificar si hay un ID de sesión en la URL para restaurar el estado
+document.addEventListener('DOMContentLoaded', async () => {
+    // 1. Cargar historial de sesiones en sidebar
+    await loadSessionsList();
+
+    // 2. Verificar si hay sesión en la URL para restaurar
     const params = new URLSearchParams(window.location.search);
     if (params.has('session')) {
         const sessionId = params.get('session');
-        loadSession(sessionId);
+        await loadSession(sessionId);
+    } else {
+        // Iniciar en panel de ingesta
+        switchPanel('ingest');
+    }
+
+    // 3. Configurar botón de nueva evaluación
+    const newChatBtn = document.querySelector('.btn-new-chat');
+    if (newChatBtn) {
+        newChatBtn.addEventListener('click', startNewSession);
     }
 });
 
 // ==========================================
-// 3. UTILIDADES DE INTERFAZ (UI)
+// 3. GESTIÓN DE HISTORIAL (SIDEBAR)
 // ==========================================
 
-function updateStepperUI(step) {
-    // Actualiza los círculos numerados arriba
-    for (let i = 1; i <= 4; i++) {
-        const el = document.getElementById(`step-indicator-${i}`);
-        if (el) {
-            el.classList.remove('active', 'completed');
-            if (i < step) el.classList.add('completed');
-            if (i === step) el.classList.add('active');
-        }
-    }
-}
+/**
+ * Carga la lista de sesiones en el sidebar izquierdo
+ */
+async function loadSessionsList() {
+    const container = document.getElementById('history-list-container');
+    if (!container) return;
 
-function switchView(stepNumber) {
-    // Ocultar todas las vistas de pasos
-    document.querySelectorAll('.step-view').forEach(el => el.classList.add('d-none'));
-    
-    // Mostrar la vista actual
-    const view = document.getElementById(`view-step-${stepNumber}`);
-    if (view) view.classList.remove('d-none');
-    
-    // Actualizar la barra de progreso
-    updateStepperUI(stepNumber);
-    appState.currentStep = stepNumber;
-}
-
-function toggleLoading(show, msg="Procesando...") {
-    const overlay = document.getElementById('loading-overlay');
-    const label = document.getElementById('loading-text');
-    
-    if (show) {
-        if (label) label.innerText = msg;
-        if (overlay) overlay.classList.remove('d-none');
-    } else {
-        if (overlay) overlay.classList.add('d-none');
-    }
-}
-
-// ==========================================
-// 4. LÓGICA DE RESTAURACIÓN DE SESIÓN
-// ==========================================
-
-async function loadSession(sessionId) {
-    toggleLoading(true, "Restaurando sesión...");
-    
     try {
-        const history = await apiGetSessionHistory(sessionId);
-        appState.sessionId = sessionId;
-        
-        const idDisplay = document.getElementById('session-id-display');
-        if (idDisplay) idDisplay.innerText = `ID: ${sessionId}`;
+        const sessions = await apiListSessions();
 
-        const steps = history.steps_data;
+        if (sessions.length === 0) {
+            container.innerHTML = `
+                <div class="text-center py-3 text-white-50 small">
+                    <i class="bi bi-inbox"></i><br>
+                    Sin historial
+                </div>`;
+            return;
+        }
 
-        // CASO 1: FINALIZADO (Paso 4)
-        if (steps['generate_project'] || history.status === 'completed') {
-            let finalData = steps['generate_project'];
-            // A veces steps['generate_project'] es el objeto directo, a veces tiene 'output_data'
-            // Depende de tu endpoint history. Asumimos estructura standard.
-            
-            // Parsear docs
-            let docs = finalData.docs_paths;
-            // Si docs_paths no está directo, buscar en data
-            if (!docs && finalData.data) {
-                 let innerData = typeof finalData.data === 'string' ? JSON.parse(finalData.data) : finalData.data;
-                 docs = innerData.docs_paths;
-            }
+        container.innerHTML = sessions.map(session => {
+            const statusIcon = session.status === 'completed'
+                ? '<i class="bi bi-check-circle-fill text-success me-2"></i>'
+                : '<i class="bi bi-clock-history text-warning me-2"></i>';
 
-            renderFinalDocs(docs); 
-            switchView(4);
-        }
-        // CASO 2: ESQUEMA GENERADO (Paso 3 - Esperando confirmación)
-        else if (steps['project_idea']) {
-            let schemaData = steps['project_idea'];
-            
-            // Intentar extraer docs
-            let docs = schemaData.docs_paths;
-            if (!docs && schemaData.data) {
-                 let innerData = typeof schemaData.data === 'string' ? JSON.parse(schemaData.data) : schemaData.data;
-                 docs = innerData.docs_paths;
-            }
+            const isActive = appState.sessionId === session.id;
+            const activeClass = isActive ? 'active' : '';
 
-            renderSchemaDocs(docs);
-            switchView(3); // Vamos al paso intermedio
-        }
-        // CASO 3: IDEAS GENERADAS (Paso 2)
-        else if (steps['proposal_ideas']) {
-            let ideasData = steps['proposal_ideas'];
-            // Lógica de restauración de ideas (restoreIdeasView ya la tienes)
-            restoreIdeasView(ideasData);
-            switchView(2);
-        }
-        // CASO 4: INGESTA (Paso 1 completado)
-        else if (steps['ingest']) {
-            switchView(2);
-        }
-        else {
-            switchView(1);
-        }
+            return `
+                <a href="javascript:void(0)" 
+                   class="session-item list-group-item list-group-item-action bg-transparent text-white border-0 px-2 rounded mb-1 py-2 d-flex align-items-center ${activeClass}"
+                   onclick="loadSession('${session.id}')">
+                    ${statusIcon}
+                    <span class="text-truncate small">${session.title_preview}</span>
+                </a>`;
+        }).join('');
 
     } catch (e) {
-        console.error(e);
-        alert("Error al cargar la sesión.");
-        switchView(1);
-    } finally {
-        toggleLoading(false);
+        console.error('Error cargando historial:', e);
+        container.innerHTML = `
+            <div class="text-center py-3 text-danger small">
+                Error cargando historial
+            </div>`;
     }
 }
 
-// Helper para restaurar la vista de ideas desde el historial
-function restoreIdeasView(ideasData) {
-    let ideasPayload = ideasData;
-    if (typeof ideasPayload === 'string') ideasPayload = JSON.parse(ideasPayload);
-    
-    // Extraer lista de ideas (ajustar según estructura exacta de respuesta)
-    // Normalmente es: obj.proposal_ideas.ideas
-    const ideasList = (ideasPayload.proposal_ideas && ideasPayload.proposal_ideas.ideas) 
-                      ? ideasPayload.proposal_ideas.ideas 
-                      : [];
-    
-    if (ideasList && ideasList.length > 0) {
-        appState.ideas = ideasList;
-        // renderIdeas viene de ui.js
-        if (typeof renderIdeas === 'function') {
-            renderIdeas(ideasList);
+/**
+ * Inicia una nueva sesión limpia
+ */
+function startNewSession() {
+    // Limpiar estado
+    appState.sessionId = null;
+    appState.currentStep = 'ingest';
+    appState.ideas = [];
+    appState.selectedIdea = null;
+    appState.stepsData = {};
+
+    // Limpiar URL
+    window.history.pushState({}, '', '/');
+
+    // Limpiar UI
+    document.getElementById('mainInput').value = '';
+    clearTerminal();
+
+    // Ir a panel de ingesta
+    switchPanel('ingest');
+
+    // Actualizar historial para quitar clase active
+    loadSessionsList();
+}
+
+// ==========================================
+// 4. RESTAURACIÓN DE SESIÓN
+// ==========================================
+
+/**
+ * Carga y restaura una sesión existente
+ */
+async function loadSession(sessionId) {
+    logToTerminal(`Cargando sesión ${sessionId.substring(0, 8)}...`, 'info');
+    setStatusBadge('processing');
+
+    try {
+        const history = await apiGetSessionHistory(sessionId);
+
+        appState.sessionId = sessionId;
+        appState.stepsData = history.steps_data || {};
+
+        // Actualizar URL sin recargar
+        window.history.pushState({}, '', `?session=${sessionId}`);
+
+        // Determinar el paso actual basado en el historial
+        const steps = history.steps_data;
+
+        // CASO 1: COMPLETADO
+        if (steps['generate_project'] || history.status === 'completed') {
+            logToTerminal('Sesión completada. Mostrando documentos finales.', 'success');
+            displayFinalResults(steps['generate_project']);
+            switchPanel('final');
         }
-        
-        // Ocultar botón de generar porque ya están generadas
-        const btn = document.getElementById('btnGenerateIdeas');
-        if(btn) btn.classList.add('d-none');
+        // CASO 2: ESQUEMA GENERADO
+        else if (steps['project_idea']) {
+            logToTerminal('Sesión en paso 3. Mostrando esquema.', 'info');
+            displaySchemaResults(steps['project_idea']);
+            switchPanel('schema');
+        }
+        // CASO 3: IDEAS GENERADAS
+        else if (steps['proposal_ideas']) {
+            logToTerminal('Sesión en paso 2. Mostrando ideas.', 'info');
+            displayIdeasResults(steps['proposal_ideas']);
+            switchPanel('ideas');
+        }
+        // CASO 4: INGESTA COMPLETADA
+        else if (steps['ingest']) {
+            logToTerminal('Ingesta completada. Mostrando información.', 'info');
+            displayIngestResults(steps['ingest']);
+            // Mostrar botón para generar ideas
+            showGenerateIdeasButton();
+            switchPanel('ingest');
+        }
+        // CASO 5: SESIÓN VACÍA
+        else {
+            switchPanel('ingest');
+        }
+
+        // Actualizar historial para marcar sesión activa
+        await loadSessionsList();
+        setStatusBadge('online');
+
+    } catch (e) {
+        console.error('Error cargando sesión:', e);
+        logToTerminal('Error al cargar la sesión.', 'error');
+        setStatusBadge('error');
+        switchPanel('ingest');
     }
 }
 
 // ==========================================
-// 5. LÓGICA DE EJECUCIÓN (PASO A PASO)
+// 5. EJECUCIÓN DE PASOS
 // ==========================================
 
-// --- PASO 1: INGESTA ---
+/**
+ * PASO 1: Ejecutar Ingesta
+ */
 async function runIngest() {
-    const textInput = document.getElementById('inputIngest');
-    const text = textInput ? textInput.value : "";
-    
-    if (!text.trim()) return alert("Por favor ingresa el texto de la convocatoria.");
+    const input = document.getElementById('mainInput');
+    const text = input ? input.value.trim() : '';
 
-    toggleLoading(true, "Analizando convocatoria con IA...");
+    if (!text) {
+        alert('Por favor ingresa el texto de la convocatoria.');
+        return;
+    }
+
+    setButtonLoading(true);
+    setStatusBadge('processing');
+    logToTerminal('Iniciando análisis de convocatoria...', 'progress');
 
     try {
         const resp = await apiStartIngest(text);
         appState.sessionId = resp.session_id;
-        
-        const idDisplay = document.getElementById('session-id-display');
-        if (idDisplay) idDisplay.innerText = `ID: ${resp.session_id}`;
 
-        pollTask(resp.task_id, (result) => {
-            toggleLoading(false);
-            console.log("Ingesta completada:", result);
-            switchView(2);
-        });
+        // Actualizar URL
+        window.history.pushState({}, '', `?session=${resp.session_id}`);
+
+        logToTerminal(`Sesión iniciada: ${resp.session_id.substring(0, 8)}...`, 'info');
+
+        // Iniciar polling con callback de progreso
+        pollTask(
+            resp.task_id,
+            // onSuccess
+            (result) => {
+                setButtonLoading(false);
+                setStatusBadge('online');
+                logToTerminal('Ingesta completada exitosamente.', 'success');
+
+                appState.stepsData['ingest'] = result.data;
+                displayIngestResults(result.data);
+                showGenerateIdeasButton();
+
+                // Actualizar historial
+                loadSessionsList();
+            },
+            // onError
+            (error) => {
+                setButtonLoading(false);
+                setStatusBadge('error');
+                logToTerminal('Error en la ingesta: ' + (error.error || 'Desconocido'), 'error');
+            },
+            // onProgress
+            (message) => {
+                logToTerminal(message, 'progress');
+            }
+        );
+
     } catch (e) {
-        console.error(e);
-        alert("Error al iniciar ingesta");
-        toggleLoading(false);
+        console.error('Error en ingesta:', e);
+        setButtonLoading(false);
+        setStatusBadge('error');
+        logToTerminal('Error de comunicación con el servidor.', 'error');
     }
 }
 
-// --- PASO 2: GENERAR IDEAS ---
+/**
+ * PASO 2: Generar Ideas
+ */
 async function generateIdeasAction() {
-    if (!appState.sessionId) return alert("No hay sesión activa.");
-    
-    toggleLoading(true, "Brainstorming de ideas con Gemini...");
-    
+    if (!appState.sessionId) {
+        alert('No hay sesión activa.');
+        return;
+    }
+
+    setStatusBadge('processing');
+    logToTerminal('Generando ideas de proyecto con IA...', 'progress');
+
+    // Ocultar botón de generar
+    const btn = document.getElementById('btnGenerateIdeas');
+    if (btn) btn.disabled = true;
+
     try {
         const resp = await apiGenerateIdeas(appState.sessionId);
-        
-        pollTask(resp.task_id, (result) => {
-            toggleLoading(false);
-            
-            // result.data es el objeto de estado del grafo
-            // Accedemos a proposal_ideas -> ideas
-            const ideas = result.data.proposal_ideas.ideas;
-            appState.ideas = ideas;
-            
-            // Renderizar (ui.js)
-            if (typeof renderIdeas === 'function') {
-                renderIdeas(ideas);
+
+        pollTask(
+            resp.task_id,
+            // onSuccess
+            (result) => {
+                setStatusBadge('online');
+                logToTerminal('Ideas generadas exitosamente.', 'success');
+
+                appState.stepsData['proposal_ideas'] = result.data;
+                displayIdeasResults(result.data);
+                switchPanel('ideas');
+            },
+            // onError
+            (error) => {
+                setStatusBadge('error');
+                logToTerminal('Error generando ideas: ' + (error.error || 'Desconocido'), 'error');
+                if (btn) btn.disabled = false;
+            },
+            // onProgress
+            (message) => {
+                logToTerminal(message, 'progress');
             }
-            
-            // Ocultar botón
-            const btn = document.getElementById('btnGenerateIdeas');
-            if(btn) btn.classList.add('d-none');
-        });
+        );
+
     } catch (e) {
-        console.error(e);
-        toggleLoading(false);
-        alert("Error generando ideas.");
+        console.error('Error generando ideas:', e);
+        setStatusBadge('error');
+        logToTerminal('Error de comunicación.', 'error');
+        if (btn) btn.disabled = false;
     }
 }
 
-// --- PASO 3: SELECCIONAR Y CONFIRMAR ---
-// Esta función se llama desde el Modal de Edición en ui.js
+/**
+ * PASO 3: Seleccionar Idea y Generar Esquema
+ */
 async function submitSelectedIdea(ideaData) {
     if (!appState.sessionId) return;
 
-    toggleLoading(true, "Generando esquema inicial y validando viabilidad...");
-    
+    setStatusBadge('processing');
+    logToTerminal('Generando esquema inicial del proyecto...', 'progress');
+
     try {
         const resp = await apiSelectIdea(appState.sessionId, ideaData);
-        
-        pollTask(resp.task_id, (result) => {
-            toggleLoading(false);
-            console.log("Esquema generado:", result);
-            
-            // 1. Obtener los datos del estado
-            // Celery devuelve el estado como string en 'data', hay que parsearlo
-            let stateData = result.data;
-            if (typeof stateData === 'string') {
-                stateData = JSON.parse(stateData);
+
+        pollTask(
+            resp.task_id,
+            // onSuccess
+            (result) => {
+                setStatusBadge('online');
+                logToTerminal('Esquema generado exitosamente.', 'success');
+
+                appState.stepsData['project_idea'] = result.data;
+                appState.selectedIdea = ideaData;
+
+                displaySchemaResults(result.data);
+                switchPanel('schema');
+            },
+            // onError
+            (error) => {
+                setStatusBadge('error');
+                logToTerminal('Error generando esquema: ' + (error.error || 'Desconocido'), 'error');
+            },
+            // onProgress
+            (message) => {
+                logToTerminal(message, 'progress');
             }
+        );
 
-            // 2. Renderizar los documentos del esquema (PDF/MD)
-            if (stateData.docs_paths) {
-                renderSchemaDocs(stateData.docs_paths);
-            }
-
-            // 3. CAMBIO CLAVE: Mostrar la vista del Paso 3 y ESPERAR
-            // Ya NO llamamos a runFinalization() aquí.
-            switchView(3);
-
-        }, (error) => {
-            toggleLoading(false);
-            console.error(error);
-            alert("Error generando el esquema inicial.");
-        });
     } catch (e) {
-        console.error(e);
-        toggleLoading(false);
-        alert("Error de comunicación al seleccionar la idea.");
+        console.error('Error seleccionando idea:', e);
+        setStatusBadge('error');
+        logToTerminal('Error de comunicación.', 'error');
     }
 }
 
-// --- PASO 4: FINALIZAR (DOCS) ---
+/**
+ * PASO 4: Finalizar - Investigación y Documentos
+ */
 async function runFinalization() {
-    // Actualizamos mensaje de carga sin ocultarlo
-    const loadingLabel = document.getElementById('loading-text');
-    if(loadingLabel) {
-        loadingLabel.innerText = "Redactando reporte, investigando y diseñando póster...";
-        loadingLabel.classList.add('text-blink');
+    if (!appState.sessionId) return;
+
+    setStatusBadge('processing');
+    logToTerminal('Iniciando investigación académica y generación de documentos...', 'progress');
+
+    // Deshabilitar botón
+    const btn = document.querySelector('#panel-schema button.btn-cotecmar');
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Procesando...';
     }
-    
+
     try {
         const resp = await apiFinalize(appState.sessionId);
-        
-        pollTask(resp.task_id, (result) => {
-            toggleLoading(false);
-            if(loadingLabel) loadingLabel.classList.remove('text-blink');
-            
-            // Obtener rutas de docs
-            const docs = result.data.docs_paths;
-            
-            // Renderizar links
-            renderFinalDocs(docs);
-            
-            // Mostrar vista final
-            switchView(4);
-            
-            // Feedback usuario
-            alert("¡Proceso finalizado con éxito!");
-        });
+
+        pollTask(
+            resp.task_id,
+            // onSuccess
+            (result) => {
+                setStatusBadge('online');
+                logToTerminal('¡Proceso completado exitosamente!', 'success');
+
+                appState.stepsData['generate_project'] = result.data;
+                displayFinalResults(result.data);
+                switchPanel('final');
+
+                // Actualizar historial
+                loadSessionsList();
+            },
+            // onError
+            (error) => {
+                setStatusBadge('error');
+                logToTerminal('Error en finalización: ' + (error.error || 'Desconocido'), 'error');
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="bi bi-check-circle me-2"></i>Aprobar y Generar Final';
+                }
+            },
+            // onProgress
+            (message) => {
+                logToTerminal(message, 'progress');
+            }
+        );
+
     } catch (e) {
-        console.error(e);
-        toggleLoading(false);
-        alert("Error en la generación final de documentos.");
+        console.error('Error en finalización:', e);
+        setStatusBadge('error');
+        logToTerminal('Error de comunicación.', 'error');
     }
 }
 
 // ==========================================
-// 6. HELPER DE RENDERIZADO COMÚN
+// 6. FUNCIONES DE DISPLAY
 // ==========================================
 
-function renderFinalDocs(docs) {
-    const list = document.getElementById('final-docs-list');
-    if (!list) return;
-    
-    list.innerHTML = '';
+/**
+ * Muestra los resultados de la ingesta
+ */
+function displayIngestResults(data) {
+    const container = document.getElementById('ingest-result');
+    if (!container) return;
 
-    if (!docs) {
-        list.innerHTML = '<div class="alert alert-warning">No se encontraron documentos.</div>';
-        return;
+    // Extraer call_info
+    let callInfo = data?.call_info || data;
+    if (typeof callInfo === 'string') {
+        try { callInfo = JSON.parse(callInfo); } catch (e) { }
     }
 
-    // Helper interno para crear items de lista
-    const addLink = (label, url, icon, color='primary') => {
-        if (url) {
-            list.innerHTML += `
-                <a href="${url}" target="_blank" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center mb-2 border rounded">
-                    <div><span class="fs-4 me-2">${icon}</span> <strong>${label}</strong></div>
-                    <span class="badge bg-${color} rounded-pill p-2">Descargar <i class="bi bi-download"></i></span>
-                </a>`;
+    // Actualizar contenido
+    const titleEl = document.getElementById('call-title');
+    const entityEl = document.getElementById('call-entity');
+    const reqsEl = document.getElementById('call-requirements');
+
+    if (titleEl && callInfo.title) {
+        titleEl.textContent = callInfo.title;
+    }
+
+    if (entityEl && callInfo.entity) {
+        entityEl.innerHTML = `<strong>Entidad:</strong> ${callInfo.entity}`;
+    }
+
+    if (reqsEl && callInfo.requirements && Array.isArray(callInfo.requirements)) {
+        reqsEl.innerHTML = `
+            <strong>Requisitos principales:</strong>
+            <ul class="mb-0 mt-2">
+                ${callInfo.requirements.slice(0, 5).map(r => `<li class="small">${r}</li>`).join('')}
+            </ul>`;
+    }
+
+    container.classList.remove('d-none');
+}
+
+/**
+ * Muestra el botón para generar ideas
+ */
+function showGenerateIdeasButton() {
+    let btn = document.getElementById('btnGenerateIdeas');
+
+    if (!btn) {
+        // Crear el botón si no existe
+        const container = document.getElementById('ingest-result');
+        if (container) {
+            const btnDiv = document.createElement('div');
+            btnDiv.className = 'text-center mt-4';
+            btnDiv.innerHTML = `
+                <button class="btn btn-cotecmar btn-lg px-5 shadow" id="btnGenerateIdeas" onclick="generateIdeasAction()">
+                    <i class="bi bi-lightbulb me-2"></i>Generar Ideas de Proyecto
+                </button>`;
+            container.appendChild(btnDiv);
         }
-    };
-
-    // Renderizar los documentos disponibles
-    addLink("Propuesta Técnica (PDF)", docs.proyect_proposal_pdf, "📄", "danger");
-    addLink("Presentación Ejecutiva (PDF)", docs.presentation_oath_pdf, "📊", "warning");
-    addLink("Póster Promocional", docs.poster_image_path, "🖼️", "info");
-    addLink("Borrador Markdown", docs.proyect_proposal_md, "📝", "secondary");
+    } else {
+        btn.classList.remove('d-none');
+        btn.disabled = false;
+    }
 }
 
+/**
+ * Muestra las ideas generadas
+ */
+function displayIdeasResults(data) {
+    // Extraer lista de ideas
+    let ideas = [];
+    if (data?.proposal_ideas?.ideas) {
+        ideas = data.proposal_ideas.ideas;
+    } else if (Array.isArray(data)) {
+        ideas = data;
+    }
 
-// Función para mostrar los documentos del Paso 3 (Esquema Inicial)
-function renderSchemaDocs(docs) {
+    appState.ideas = ideas;
+
+    // Usar la función de ui.js para renderizar
+    if (typeof renderIdeas === 'function') {
+        renderIdeas(ideas);
+    }
+}
+
+/**
+ * Muestra los documentos del esquema
+ */
+function displaySchemaResults(data) {
     const list = document.getElementById('schema-docs-list');
     if (!list) return;
-    
-    list.innerHTML = ''; // Limpiar lista anterior
 
-    if (!docs || (!docs.proyect_proposal_initial_schema_pdf && !docs.proyect_proposal_initial_schema_md)) {
-        list.innerHTML = '<div class="alert alert-warning">No se encontraron documentos de esquema preliminar.</div>';
+    list.innerHTML = '';
+
+    const docs = data?.docs_paths || {};
+
+    if (!docs.proyect_proposal_initial_schema_pdf && !docs.proyect_proposal_initial_schema_md) {
+        list.innerHTML = '<div class="alert alert-info">Documentos en preparación...</div>';
         return;
     }
 
-    // Helper para crear el HTML del link
     const createLink = (label, url, icon) => {
-        if (url) {
-            return `
-                <a href="${url}" target="_blank" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                    <div><span class="fs-5 me-2">${icon}</span> ${label}</div>
-                    <span class="badge bg-secondary rounded-pill">Ver Documento</span>
-                </a>`;
-        }
-        return '';
+        if (!url) return '';
+        return `
+            <a href="${url}" target="_blank" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                <div><span class="fs-5 me-2">${icon}</span> ${label}</div>
+                <span class="badge bg-secondary rounded-pill">Ver</span>
+            </a>`;
     };
 
-    let html = '';
-    html += createLink("Esquema Preliminar (PDF)", docs.proyect_proposal_initial_schema_pdf, "📄");
-    html += createLink("Esquema Preliminar (Markdown)", docs.proyect_proposal_initial_schema_md, "📝");
-    
-    list.innerHTML = html;
+    list.innerHTML =
+        createLink('Esquema Preliminar (PDF)', docs.proyect_proposal_initial_schema_pdf, '📄') +
+        createLink('Esquema Preliminar (MD)', docs.proyect_proposal_initial_schema_md, '📝');
+}
+
+/**
+ * Muestra los documentos finales
+ */
+function displayFinalResults(data) {
+    const list = document.getElementById('final-docs-list');
+    if (!list) return;
+
+    list.innerHTML = '';
+
+    const docs = data?.docs_paths || {};
+
+    const addLink = (label, url, icon, color = 'primary') => {
+        if (!url) return;
+        list.innerHTML += `
+            <a href="${url}" target="_blank" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center mb-2 border rounded">
+                <div><span class="fs-4 me-2">${icon}</span> <strong>${label}</strong></div>
+                <span class="badge bg-${color} rounded-pill p-2">Descargar <i class="bi bi-download"></i></span>
+            </a>`;
+    };
+
+    addLink('Propuesta Técnica (PDF)', docs.proyect_proposal_pdf, '📄', 'danger');
+    addLink('Presentación Ejecutiva (PDF)', docs.presentation_oath_pdf, '📊', 'warning');
+    addLink('Póster Promocional', docs.poster_image_path, '🖼️', 'info');
+    addLink('Borrador Markdown', docs.proyect_proposal_md, '📝', 'secondary');
+
+    if (list.innerHTML === '') {
+        list.innerHTML = '<div class="alert alert-warning">No se encontraron documentos.</div>';
+    }
 }
