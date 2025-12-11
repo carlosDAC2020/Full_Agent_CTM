@@ -34,7 +34,7 @@ async function pollTask(taskId, onSuccess, onError, onProgress) {
             // CASO 2: COMPLETADO EXITOSAMENTE
             else if (data.status === 'SUCCESS') {
                 clearInterval(interval);
-                
+
                 // Parsear datos internos si vienen como string
                 let resultPayload = data.result;
                 if (resultPayload && typeof resultPayload.data === 'string') {
@@ -44,17 +44,57 @@ async function pollTask(taskId, onSuccess, onError, onProgress) {
                         console.warn("No se pudo parsear data:", e);
                     }
                 }
-                
+
                 if (onSuccess) onSuccess(resultPayload);
             }
             // CASO 3: ERROR
             else if (data.status === 'FAILURE' || data.status === 'REVOKED') {
                 clearInterval(interval);
+
+                // Extraer información detallada del error
+                let errorInfo = {
+                    type: 'general',
+                    message: 'Error desconocido en la ejecución',
+                    retryAfter: null,
+                    rawError: data
+                };
+
+                // Intentar extraer el mensaje de error del resultado
+                if (data.result) {
+                    const errorText = data.result.error || data.result.message || JSON.stringify(data.result);
+
+                    // Detectar error de cuota (429)
+                    if (errorText.includes('429') || errorText.includes('RESOURCE_EXHAUSTED') || errorText.includes('quota')) {
+                        errorInfo.type = 'quota';
+                        errorInfo.message = 'Se ha excedido el límite de la API de Gemini. Por favor espera unos minutos antes de intentar nuevamente.';
+
+                        // Intentar extraer tiempo de reintento
+                        const retryMatch = errorText.match(/retry in (\d+\.?\d*)/i);
+                        if (retryMatch) {
+                            errorInfo.retryAfter = Math.ceil(parseFloat(retryMatch[1]));
+                        }
+                    }
+                    // Detectar error de timeout
+                    else if (errorText.includes('timeout') || errorText.includes('timed out')) {
+                        errorInfo.type = 'timeout';
+                        errorInfo.message = 'La operación tardó demasiado tiempo. Por favor intenta nuevamente.';
+                    }
+                    // Error general
+                    else {
+                        errorInfo.message = errorText.length > 200 ? errorText.substring(0, 200) + '...' : errorText;
+                    }
+                }
+                // Si no hay result, intentar con info
+                else if (data.info && data.info.message) {
+                    errorInfo.message = data.info.message;
+                }
+
+                console.error("Error en tarea:", errorInfo);
+
                 if (onError) {
-                    onError(data);
+                    onError(errorInfo);
                 } else {
-                    console.error("Error en tarea:", data);
-                    alert("Error crítico en la ejecución del agente.");
+                    alert(`Error: ${errorInfo.message}`);
                 }
             }
         } catch (e) {
@@ -63,7 +103,7 @@ async function pollTask(taskId, onSuccess, onError, onProgress) {
             if (onError) onError({ error: e.message });
         }
     }, 1500); // Consultar cada 1.5 segundos
-    
+
     return interval; // Retornar para poder cancelar si es necesario
 }
 
@@ -77,7 +117,7 @@ async function pollTask(taskId, onSuccess, onError, onProgress) {
 async function apiStartIngest(text) {
     const res = await fetch(`${API_BASE}/ingest`, {
         method: 'POST',
-        headers: {'Content-Type': 'application/json'},
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text: text })
     });
     return await res.json();
@@ -89,7 +129,7 @@ async function apiStartIngest(text) {
 async function apiGenerateIdeas(sessionId) {
     const res = await fetch(`${API_BASE}/generate-ideas`, {
         method: 'POST',
-        headers: {'Content-Type': 'application/json'},
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ session_id: sessionId })
     });
     return await res.json();
@@ -101,7 +141,7 @@ async function apiGenerateIdeas(sessionId) {
 async function apiSelectIdea(sessionId, ideaObj) {
     const res = await fetch(`${API_BASE}/select-idea`, {
         method: 'POST',
-        headers: {'Content-Type': 'application/json'},
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
             session_id: sessionId,
             selected_idea: ideaObj
@@ -116,7 +156,7 @@ async function apiSelectIdea(sessionId, ideaObj) {
 async function apiFinalize(sessionId) {
     const res = await fetch(`${API_BASE}/finalize`, {
         method: 'POST',
-        headers: {'Content-Type': 'application/json'},
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ session_id: sessionId })
     });
     return await res.json();
@@ -128,7 +168,7 @@ async function apiFinalize(sessionId) {
 async function apiGetSessionHistory(sessionId) {
     const res = await fetch(`${API_BASE}/history/${sessionId}`, {
         method: 'GET',
-        headers: {'Content-Type': 'application/json'}
+        headers: { 'Content-Type': 'application/json' }
     });
     if (!res.ok) throw new Error("No se pudo cargar la sesión");
     return await res.json();

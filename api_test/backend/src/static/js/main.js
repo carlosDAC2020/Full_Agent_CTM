@@ -473,7 +473,23 @@ async function runIngest() {
             (error) => {
                 setButtonLoading(false);
                 setStatusBadge('error');
-                logToTerminal('Error en la ingesta: ' + (error.error || 'Desconocido'), 'error');
+
+                // Manejar tipos específicos de error
+                if (error.type === 'quota') {
+                    const retryMsg = error.retryAfter
+                        ? ` Intenta nuevamente en ${error.retryAfter} segundos.`
+                        : ' Intenta nuevamente en unos minutos.';
+                    logToTerminal('⚠️ Límite de API excedido.' + retryMsg, 'error');
+                    showToast('Límite de API de Gemini excedido. Por favor espera antes de reintentar.', 'error');
+                } else if (error.type === 'timeout') {
+                    logToTerminal('⏱️ ' + error.message, 'error');
+                    showToast(error.message, 'error');
+                } else {
+                    logToTerminal('❌ Error: ' + error.message, 'error');
+                    showToast('Error en la ingesta: ' + error.message, 'error');
+                }
+
+                console.error('Error detallado:', error);
             },
             // onProgress
             (message) => {
@@ -522,8 +538,24 @@ async function generateIdeasAction() {
             // onError
             (error) => {
                 setStatusBadge('error');
-                logToTerminal('Error generando ideas: ' + (error.error || 'Desconocido'), 'error');
+
+                // Manejar tipos específicos de error
+                if (error.type === 'quota') {
+                    const retryMsg = error.retryAfter
+                        ? ` Intenta nuevamente en ${error.retryAfter} segundos.`
+                        : ' Intenta nuevamente en unos minutos.';
+                    logToTerminal('⚠️ Límite de API excedido.' + retryMsg, 'error');
+                    showToast('Límite de API de Gemini excedido. Por favor espera antes de reintentar.', 'error');
+                } else if (error.type === 'timeout') {
+                    logToTerminal('⏱️ ' + error.message, 'error');
+                    showToast(error.message, 'error');
+                } else {
+                    logToTerminal('❌ Error: ' + error.message, 'error');
+                    showToast('Error generando ideas: ' + error.message, 'error');
+                }
+
                 if (btn) btn.disabled = false;
+                console.error('Error detallado:', error);
             },
             // onProgress
             (message) => {
@@ -567,7 +599,23 @@ async function submitSelectedIdea(ideaData) {
             // onError
             (error) => {
                 setStatusBadge('error');
-                logToTerminal('Error generando esquema: ' + (error.error || 'Desconocido'), 'error');
+
+                // Manejar tipos específicos de error
+                if (error.type === 'quota') {
+                    const retryMsg = error.retryAfter
+                        ? ` Intenta nuevamente en ${error.retryAfter} segundos.`
+                        : ' Intenta nuevamente en unos minutos.';
+                    logToTerminal('⚠️ Límite de API excedido.' + retryMsg, 'error');
+                    showToast('Límite de API de Gemini excedido. Por favor espera antes de reintentar.', 'error');
+                } else if (error.type === 'timeout') {
+                    logToTerminal('⏱️ ' + error.message, 'error');
+                    showToast(error.message, 'error');
+                } else {
+                    logToTerminal('❌ Error: ' + error.message, 'error');
+                    showToast('Error generando esquema: ' + error.message, 'error');
+                }
+
+                console.error('Error detallado:', error);
             },
             // onProgress
             (message) => {
@@ -618,11 +666,27 @@ async function runFinalization() {
             // onError
             (error) => {
                 setStatusBadge('error');
-                logToTerminal('Error en finalización: ' + (error.error || 'Desconocido'), 'error');
+
+                // Manejar tipos específicos de error
+                if (error.type === 'quota') {
+                    const retryMsg = error.retryAfter
+                        ? ` Intenta nuevamente en ${error.retryAfter} segundos.`
+                        : ' Intenta nuevamente en unos minutos.';
+                    logToTerminal('⚠️ Límite de API excedido.' + retryMsg, 'error');
+                    showToast('Límite de API de Gemini excedido. Por favor espera antes de reintentar.', 'error');
+                } else if (error.type === 'timeout') {
+                    logToTerminal('⏱️ ' + error.message, 'error');
+                    showToast(error.message, 'error');
+                } else {
+                    logToTerminal('❌ Error: ' + error.message, 'error');
+                    showToast('Error en finalización: ' + error.message, 'error');
+                }
+
                 if (btn) {
                     btn.disabled = false;
                     btn.innerHTML = '<i class="bi bi-check-circle me-2"></i>Aprobar y Generar Final';
                 }
+                console.error('Error detallado:', error);
             },
             // onProgress
             (message) => {
