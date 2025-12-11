@@ -207,3 +207,15 @@ function fillInput(text) {
         input.dispatchEvent(new Event('input'));
     }
 }
+
+// ==========================================
+// EXPORTAR FUNCIONES AL SCOPE GLOBAL
+// ==========================================
+// Necesario para que main.js pueda acceder a estas funciones
+window.switchPanel = switchPanel;
+window.updateTimeline = updateTimeline;
+window.logToTerminal = logToTerminal;
+window.clearTerminal = clearTerminal;
+window.setButtonLoading = setButtonLoading;
+window.setStatusBadge = setStatusBadge;
+window.fillInput = fillInput;
