@@ -20,6 +20,9 @@ export function filterOptions() {
 
 export function selectOption(val) {
     store.selectedValue = val;
+    // Usamos el fullText del mock si existe, o un fallback
+    store.selectedCallText = mockDB[val].fullText || mockDB[val].objective;
+
     document.getElementById('search-input').value = mockDB[val].title;
     document.getElementById('dropdown-options').classList.add('hidden');
 

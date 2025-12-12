@@ -5,6 +5,24 @@ export const mockDB = {
         funding: "No especificado",
         dates: "Cierre: Pendiente",
         tags: ["IA", "Cuántica", "Territorio"],
+        fullText: `Asunto: Intención de postulación - Convocatoria 966 Colombia Inteligente
+
+He decidido que vamos a aplicar a la "CONVOCATORIA COLOMBIA INTELIGENTE: CIENCIA Y TECNOLOGÍAS CUÁNTICAS E INTELIGENCIA ARTIFICIAL PARA LOS TERRITORIOS | Convocatoria 966". Esta es una excelente oportunidad para financiar nuestro proyecto de Investigación Aplicada, Desarrollo Tecnológico e Innovación (CTeI).
+
+La convocatoria está dirigida específicamente a grupos de investigación, academia y startups como la nuestra que estén desarrollando soluciones disruptivas. El objetivo principal es impulsar proyectos en tecnologías cuánticas e Inteligencia Artificial que generen un impacto medible y ayuden a cerrar brechas tecnológicas en los territorios del país.
+
+Entre los beneficios que obtendríamos al participar están:
+
+El fomento de la transferencia tecnológica.
+
+El desarrollo de talento especializado.
+
+El fortalecimiento de nuestra vinculación con la industria y el sector público.
+
+Aunque las fechas de inicio y cierre, así como el monto exacto de financiamiento, aún aparecen como "No especificados", debemos estar atentos y tener lista la propuesta.
+
+Puedes consultar más detalles directamente en el enlace oficial:
+https://minciencias.gov.co/convocatorias/convocatoria-colombia-inteligente-ciencia-y-tecnologias-cuanticas-e-inteligencia`
     }
 };
 
