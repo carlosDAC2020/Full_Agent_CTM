@@ -191,7 +191,7 @@ export async function restoreSession(sessionId) {
             if (stepsMap['proposal_ideas']) {
                 // TODO: Render real ideas from 'proposal_ideas' output. 
                 // For now, using mocks or check if data matches structure.
-                renderIdeas();
+                renderIdeas(stepsMap['proposal_ideas']); // Pass the data to renderIdeas
             }
         }
         // Add more steps logic as we implement them...
@@ -205,33 +205,82 @@ export async function restoreSession(sessionId) {
 
 
 // Paso 2
-export function goToStep2() {
+export async function goToStep2() {
     const { step1, loader, loaderText, step2 } = getElements();
+
+    // UI Transition
     step1.classList.add('hidden');
     loader.classList.remove('hidden');
     loaderText.innerText = "Analizando oportunidades y generando ideas innovadoras...";
     updateStepper(2);
 
-    setTimeout(() => {
-        loader.classList.add('hidden');
-        step2.classList.remove('hidden');
-        renderIdeas();
-    }, 2000);
+    try {
+        // 1. Start Generate Ideas Task
+        const { task_id } = await generateIdeas(store.sessionId);
+
+        // 2. Poll Task Progress
+        pollTask(
+            task_id,
+            (message) => {
+                loaderText.innerText = message || "Generando ideas...";
+            },
+            (result) => {
+                // On Complete
+                let data;
+                try { data = typeof result.data === 'string' ? JSON.parse(result.data) : result.data; }
+                catch (e) { console.error("Error parsing JSON", e); return; }
+
+                renderIdeas(data);
+                loader.classList.add('hidden');
+                step2.classList.remove('hidden');
+            },
+            (error) => {
+                loaderText.innerText = "Error: " + error;
+                loaderText.classList.add('text-red-500');
+            }
+        );
+
+    } catch (err) {
+        loaderText.innerText = "Error de conexión: " + err.message;
+        loaderText.classList.add('text-red-500');
+    }
 }
 
-function renderIdeas() {
+function renderIdeas(data) {
     const { ideasContainer } = getElements();
     ideasContainer.innerHTML = '';
-    mockIdeas.forEach(idea => {
+
+    // Data structure from backend: data.proposal_ideas.ideas (Array)
+    const ideas = data?.proposal_ideas?.ideas || [];
+
+    if (ideas.length === 0) {
+        ideasContainer.innerHTML = '<p class="text-gray-500 italic col-span-2 text-center">No se generaron ideas. Intenta de nuevo.</p>';
+        return;
+    }
+
+    ideas.forEach(idea => {
+        // Map backend keys (idea_title) to internal if needed, or use directly
+        // Backend: { idea_title, idea_description, idea_objectives: [] }
+
         const card = document.createElement('div');
         card.className = "bg-white p-5 rounded-xl border border-gray-200 hover:border-cotecmar-mid hover:shadow-lg transition-all cursor-pointer group relative";
-        card.onclick = () => openEditIdea(idea);
+
+        // Store for editing
+        // Adapter for frontend structure expectation in openEditIdea
+        const ideaObj = {
+            title: idea.idea_title,
+            desc: idea.idea_description,
+            objectives: idea.idea_objectives || []
+        };
+
+        card.onclick = () => openEditIdea(ideaObj);
+
         card.innerHTML = `
             <div class="flex justify-between items-start mb-2">
-                <div class="font-bold text-gray-800 group-hover:text-cotecmar-mid transition-colors">${idea.title}</div>
+                <div class="font-bold text-gray-800 group-hover:text-cotecmar-mid transition-colors">${idea.idea_title}</div>
                 <i class="ph ph-pencil-simple text-gray-300 group-hover:text-cotecmar-mid"></i>
             </div>
-            <p class="text-xs text-gray-500 line-clamp-2">${idea.desc}</p>
+            <p class="text-xs text-gray-500 line-clamp-3">${idea.idea_description}</p>
         `;
         ideasContainer.appendChild(card);
     });

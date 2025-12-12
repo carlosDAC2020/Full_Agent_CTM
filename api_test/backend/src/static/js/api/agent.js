@@ -26,6 +26,26 @@ export async function ingestCall(text, title = "") {
     }
 }
 
+export async function generateIdeas(sessionId) {
+    try {
+        const response = await fetch('/api/agent/generate-ideas', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ session_id: sessionId })
+        });
+
+        if (!response.ok) {
+            const err = await response.json();
+            throw new Error(err.detail || 'Error generating ideas');
+        }
+
+        return await response.json(); // { task_id, session_id }
+    } catch (error) {
+        console.error('API Gen Ideas Error:', error);
+        throw error;
+    }
+}
+
 export async function getSessionHistory(sessionId) {
     try {
         const response = await fetch(`/api/agent/history/${sessionId}`);
