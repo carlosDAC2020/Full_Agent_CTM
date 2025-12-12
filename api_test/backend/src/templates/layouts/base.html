@@ -1,14 +1,15 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Cotecmar AI{% endblock %}</title>
-    
+
     <!-- Librerías Externas -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
-    
+
     <!-- Configuración Tailwind (Inline para funcionar con CDN) -->
     <script>
         tailwind.config = {
@@ -17,7 +18,7 @@
                     colors: {
                         cotecmar: {
                             dark: '#002B49',
-                            mid: '#004B78', 
+                            mid: '#004B78',
                             light: '#005A8D',
                             gray: '#F4F6F8',
                         }
@@ -25,6 +26,7 @@
                     animation: {
                         'fade-out': 'fadeOut 0.5s ease-out forwards',
                         'slide-up': 'slideUp 0.6s ease-out forwards',
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
                     },
                     keyframes: {
                         fadeOut: {
@@ -40,35 +42,41 @@
             }
         }
     </script>
-    
+
     <!-- CSS Personalizado -->
     <link rel="stylesheet" href="{{ url_for('static', path='/css/main.css') }}">
 </head>
+
 <body class="bg-cotecmar-gray h-screen flex overflow-hidden font-sans text-slate-800">
 
     <!-- SIDEBAR (Común para toda la app) -->
-    <aside id="sidebar" class="bg-cotecmar-dark text-white w-64 flex-shrink-0 flex flex-col transition-all duration-300 relative z-30 overflow-hidden whitespace-nowrap">
+    <aside id="sidebar"
+        class="bg-cotecmar-dark text-white w-64 flex-shrink-0 flex flex-col transition-all duration-300 relative z-30 overflow-hidden whitespace-nowrap">
         <div class="p-5 flex items-center gap-3 border-b border-blue-900/50 min-w-[16rem]">
             <!-- Uso dinámico del logo que tienes en carpeta -->
             <img src="{{ url_for('static', path='/images/CotecmarLogo_white.png') }}" alt="Cotecmar" class="h-8 w-auto">
             <span class="font-bold tracking-wider text-sm ml-2">AI AGENT</span>
         </div>
-        
+
         <div class="p-4 min-w-[16rem]">
-            <button onclick="resetInterface()" class="w-full flex items-center gap-2 bg-blue-900/40 hover:bg-blue-800 border border-blue-700/50 rounded-lg p-3 transition-all text-sm group">
+            <button onclick="resetInterface()"
+                class="w-full flex items-center gap-2 bg-blue-900/40 hover:bg-blue-800 border border-blue-700/50 rounded-lg p-3 transition-all text-sm group">
                 <i class="ph ph-plus-circle text-lg text-blue-300 group-hover:text-white"></i>
                 <span>Nueva Convocatoria</span>
             </button>
         </div>
 
         <div class="flex-1 overflow-y-auto px-3 py-2 space-y-1 min-w-[16rem]">
-            <div class="text-[10px] font-bold text-blue-400 uppercase tracking-widest mb-2 px-2 mt-2">Historial Reciente</div>
+            <div class="text-[10px] font-bold text-blue-400 uppercase tracking-widest mb-2 px-2 mt-2">Historial Reciente
+            </div>
             <!-- Aquí podrías inyectar historial real desde FastAPI -->
             <div id="history-list" class="space-y-1"></div>
         </div>
 
         <div class="p-4 bg-black/20 flex items-center gap-3 text-sm min-w-[16rem]">
-            <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-blue-500 to-cyan-400 flex items-center justify-center font-bold text-xs flex-shrink-0">JP</div>
+            <div
+                class="w-8 h-8 rounded-full bg-gradient-to-tr from-blue-500 to-cyan-400 flex items-center justify-center font-bold text-xs flex-shrink-0">
+                JP</div>
             <div class="leading-tight">
                 <div class="font-medium">Jefe de Proyectos</div>
                 <div class="text-[10px] text-blue-300 opacity-80">Gerencia de Diseño</div>
@@ -78,15 +86,17 @@
 
     <!-- MAIN AREA -->
     <main class="flex-1 flex flex-col relative w-full h-full bg-white/50 backdrop-blur-sm transition-all duration-300">
-        
+
         <!-- HEADER COMÚN -->
         <header class="absolute top-0 w-full p-4 flex justify-between items-center z-20">
-            <button onclick="toggleSidebar()" class="text-cotecmar-dark hover:bg-gray-200 p-2 rounded-lg transition" title="Alternar Menú">
+            <button onclick="toggleSidebar()" class="text-cotecmar-dark hover:bg-gray-200 p-2 rounded-lg transition"
+                title="Alternar Menú">
                 <i class="ph ph-sidebar-simple text-xl"></i>
             </button>
             <div class="ml-auto flex items-center gap-3">
                 <!-- Indicador de pasos global -->
-                <div id="global-stepper" class="hidden flex items-center gap-2 text-xs font-bold text-gray-400 bg-white px-3 py-1 rounded-full shadow-sm border border-gray-100">
+                <div id="global-stepper"
+                    class="hidden flex items-center gap-2 text-xs font-bold text-gray-400 bg-white px-3 py-1 rounded-full shadow-sm border border-gray-100">
                     <span id="step-dot-1" class="text-cotecmar-mid">Evaluación</span> <i class="ph ph-caret-right"></i>
                     <span id="step-dot-2">Ideas</span> <i class="ph ph-caret-right"></i>
                     <span id="step-dot-3">Esquema</span> <i class="ph ph-caret-right"></i>
@@ -103,6 +113,7 @@
     </main>
 
     <!-- JS de la App -->
-    <script src="static/js/dashboard.js"></script>
+    <script src="{{ url_for('static', path='/js/dashboard.js') }}"></script>
 </body>
+
 </html>

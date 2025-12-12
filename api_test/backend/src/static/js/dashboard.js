@@ -1,5 +1,3 @@
-/* src/static/js/dashboard.js */
-
 // --- DATOS MOCK ---
 const mockDB = {
     'minciencias': {
@@ -23,21 +21,30 @@ const mockIdeas = [
         title: "Optimización Energética Cuántica Naval",
         desc: "Uso de algoritmos cuánticos para optimizar la distribución de carga y consumo de combustible en buques OPV.",
         objectives: ["Simular escenarios de carga con Qiskit.", "Comparar eficiencia vs algoritmos clásicos.", "Proponer arquitectura híbrida."]
+    },
+        {
+        id: 3,
+        title: "Gemelos Digitales para Astilleros 4.0",
+        desc: "Creación de un entorno virtual para simular procesos de soldadura robótica utilizando aprendizaje por refuerzo.",
+        objectives: ["Escanear planta física.", "Entrenar agentes de RL.", "Reducir desperdicio de material en un 15%."]
     }
 ];
 
 let selectedValue = "";
 let currentSelectedIdea = null;
 
-// Referencias DOM se inicializan cuando carga la página
-document.addEventListener('DOMContentLoaded', () => {
-    // Inicializaciones si fueran necesarias
-});
+// --- DOM Elements Generales ---
+const initialView = document.getElementById('initial-view');
+const resultsView = document.getElementById('results-view');
+const previewPanel = document.getElementById('preview-panel');
+const globalStepper = document.getElementById('global-stepper');
+const loader = document.getElementById('generic-loader');
+const loaderText = document.getElementById('loader-text');
 
+// --- Funciones de Búsqueda (Heredadas y simplificadas) ---
 function openDropdown() { document.getElementById('dropdown-options').classList.remove('hidden'); }
-
 function filterOptions() {
-    // Lógica simplificada para el ejemplo
+    const input = document.getElementById('search-input');
     const opts = document.getElementById('dropdown-options');
     opts.innerHTML = `
         <div onclick="selectOption('minciencias')" class="px-4 py-3 hover:bg-blue-50 cursor-pointer flex items-center gap-3 border-l-4 border-transparent hover:border-cotecmar-light">
@@ -53,9 +60,10 @@ function selectOption(val) {
     document.getElementById('search-input').value = mockDB[val].title;
     document.getElementById('dropdown-options').classList.add('hidden');
     
+    // Show preview
     document.getElementById('prev-title').innerText = mockDB[val].title;
     document.getElementById('prev-desc').innerText = mockDB[val].objective;
-    document.getElementById('preview-panel').classList.remove('hidden');
+    previewPanel.classList.remove('hidden');
 }
 
 function updateFileStatus() {
@@ -68,11 +76,10 @@ function updateFileStatus() {
 }
 
 // --- FLUJO DE PROCESO ---
+
+// 1. Iniciar Análisis (Paso 1)
 function startAnalysis() {
     if (!selectedValue) return;
-    const initialView = document.getElementById('initial-view');
-    const resultsView = document.getElementById('results-view');
-    const globalStepper = document.getElementById('global-stepper');
     
     initialView.classList.add('animate-fade-out');
     setTimeout(() => {
@@ -87,15 +94,15 @@ function startAnalysis() {
 }
 
 function runStep1() {
-    const loader = document.getElementById('generic-loader');
     loader.classList.remove('hidden');
-    document.getElementById('loader-text').innerText = "Ingestando Convocatoria y Generando Evaluación...";
+    loaderText.innerText = "Ingestando Convocatoria y Generando Evaluación...";
     updateStepper(1);
 
     setTimeout(() => {
         loader.classList.add('hidden');
         const data = mockDB[selectedValue];
         
+        // Poblar datos Paso 1
         document.getElementById('res-title').innerText = data.title;
         document.getElementById('res-objective').innerText = data.objective;
         document.getElementById('res-funding').innerText = data.funding;
@@ -108,11 +115,11 @@ function runStep1() {
     }, 2000); 
 }
 
+// 2. Generar Ideas (Paso 2)
 function goToStep2() {
     document.getElementById('step-1-ingest').classList.add('hidden');
-    const loader = document.getElementById('generic-loader');
     loader.classList.remove('hidden');
-    document.getElementById('loader-text').innerText = "Analizando oportunidades y generando ideas innovadoras...";
+    loaderText.innerText = "Analizando oportunidades y generando ideas innovadoras...";
     updateStepper(2);
 
     setTimeout(() => {
@@ -142,8 +149,10 @@ function renderIdeas() {
 
 function openEditIdea(idea) {
     currentSelectedIdea = idea;
+    // Ocultar grid, mostrar editor
     document.getElementById('ideas-container').classList.add('hidden');
-    document.getElementById('idea-editor').classList.remove('hidden');
+    const editor = document.getElementById('idea-editor');
+    editor.classList.remove('hidden');
 
     document.getElementById('edit-title').value = idea.title;
     document.getElementById('edit-desc').value = idea.desc;
@@ -155,24 +164,26 @@ function cancelEdit() {
     document.getElementById('ideas-container').classList.remove('hidden');
 }
 
+// 3. Confirmar Idea y Generar Esquema (Paso 3)
 function confirmIdea() {
+    // Guardar cambios (simulado)
     currentSelectedIdea.title = document.getElementById('edit-title').value;
     currentSelectedIdea.desc = document.getElementById('edit-desc').value;
     const objsRaw = document.getElementById('edit-objectives').value;
     currentSelectedIdea.objectives = objsRaw.split('\n');
 
     document.getElementById('step-2-ideas').classList.add('hidden');
-    const loader = document.getElementById('generic-loader');
     loader.classList.remove('hidden');
-    document.getElementById('loader-text').innerText = "Estructurando esquema inicial del proyecto...";
+    loaderText.innerText = "Estructurando esquema inicial del proyecto...";
     updateStepper(3);
 
     setTimeout(() => {
         loader.classList.add('hidden');
         document.getElementById('step-3-schema').classList.remove('hidden');
         
+        // Poblar Documento Mock
         document.getElementById('schema-title').innerText = currentSelectedIdea.title;
-        document.getElementById('schema-desc').innerText = currentSelectedIdea.desc;
+        document.getElementById('schema-desc').innerText = currentSelectedIdea.desc + " Este proyecto busca alinearse con los objetivos estratégicos de la convocatoria mediante la implementación de tecnología de vanguardia...";
         const ul = document.getElementById('schema-objs');
         ul.innerHTML = '';
         currentSelectedIdea.objectives.forEach(o => {
@@ -181,19 +192,20 @@ function confirmIdea() {
     }, 2000);
 }
 
+// 4. Generación Final (Paso 4)
 function generateFinal() {
     document.getElementById('step-3-schema').classList.add('hidden');
-    const loader = document.getElementById('generic-loader');
     loader.classList.remove('hidden');
-    document.getElementById('loader-text').innerText = "Realizando investigación profunda...";
+    loaderText.innerText = "Realizando investigación profunda y redactando documentos finales...";
     updateStepper(4);
 
     setTimeout(() => {
         loader.classList.add('hidden');
         document.getElementById('step-4-final').classList.remove('hidden');
-    }, 3000);
+    }, 3000); // Un poco más largo para simular trabajo pesado
 }
 
+// --- Utilidades ---
 function updateStepper(step) {
     for(let i=1; i<=4; i++) {
         const el = document.getElementById(`step-dot-${i}`);
@@ -204,7 +216,7 @@ function updateStepper(step) {
 }
 
 function resetInterface() {
-    location.reload();
+    location.reload(); // Simple reset
 }
 
 function toggleSidebar() {
