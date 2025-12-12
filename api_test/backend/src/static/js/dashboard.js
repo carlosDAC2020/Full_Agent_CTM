@@ -22,7 +22,7 @@ const mockIdeas = [
         desc: "Uso de algoritmos cuánticos para optimizar la distribución de carga y consumo de combustible en buques OPV.",
         objectives: ["Simular escenarios de carga con Qiskit.", "Comparar eficiencia vs algoritmos clásicos.", "Proponer arquitectura híbrida."]
     },
-        {
+    {
         id: 3,
         title: "Gemelos Digitales para Astilleros 4.0",
         desc: "Creación de un entorno virtual para simular procesos de soldadura robótica utilizando aprendizaje por refuerzo.",
@@ -59,7 +59,7 @@ function selectOption(val) {
     selectedValue = val;
     document.getElementById('search-input').value = mockDB[val].title;
     document.getElementById('dropdown-options').classList.add('hidden');
-    
+
     // Show preview
     document.getElementById('prev-title').innerText = mockDB[val].title;
     document.getElementById('prev-desc').innerText = mockDB[val].objective;
@@ -69,7 +69,7 @@ function selectOption(val) {
 function updateFileStatus() {
     const input = document.getElementById('file-upload');
     const dropZone = document.getElementById('drop-zone');
-    if(input.files.length > 0) {
+    if (input.files.length > 0) {
         dropZone.classList.add('border-green-400', 'bg-green-50/50');
         document.getElementById('upload-text-main').innerText = input.files.length + " Archivo(s)";
     }
@@ -80,14 +80,14 @@ function updateFileStatus() {
 // 1. Iniciar Análisis (Paso 1)
 function startAnalysis() {
     if (!selectedValue) return;
-    
+
     initialView.classList.add('animate-fade-out');
     setTimeout(() => {
         initialView.classList.add('hidden');
         resultsView.classList.remove('hidden');
         resultsView.classList.add('flex');
         globalStepper.classList.remove('hidden');
-        
+
         document.getElementById('selected-label').innerText = mockDB[selectedValue].title;
         runStep1();
     }, 500);
@@ -101,7 +101,7 @@ function runStep1() {
     setTimeout(() => {
         loader.classList.add('hidden');
         const data = mockDB[selectedValue];
-        
+
         // Poblar datos Paso 1
         document.getElementById('res-title').innerText = data.title;
         document.getElementById('res-objective').innerText = data.objective;
@@ -112,7 +112,7 @@ function runStep1() {
         data.tags.forEach(t => tagsDiv.innerHTML += `<span class="bg-gray-100 px-2 py-1 rounded">#${t}</span>`);
 
         document.getElementById('step-1-ingest').classList.remove('hidden');
-    }, 2000); 
+    }, 2000);
 }
 
 // 2. Generar Ideas (Paso 2)
@@ -180,14 +180,14 @@ function confirmIdea() {
     setTimeout(() => {
         loader.classList.add('hidden');
         document.getElementById('step-3-schema').classList.remove('hidden');
-        
+
         // Poblar Documento Mock
         document.getElementById('schema-title').innerText = currentSelectedIdea.title;
         document.getElementById('schema-desc').innerText = currentSelectedIdea.desc + " Este proyecto busca alinearse con los objetivos estratégicos de la convocatoria mediante la implementación de tecnología de vanguardia...";
         const ul = document.getElementById('schema-objs');
         ul.innerHTML = '';
         currentSelectedIdea.objectives.forEach(o => {
-            if(o.trim()) ul.innerHTML += `<li>${o}</li>`;
+            if (o.trim()) ul.innerHTML += `<li>${o}</li>`;
         });
     }, 2000);
 }
@@ -207,7 +207,7 @@ function generateFinal() {
 
 // --- Utilidades ---
 function updateStepper(step) {
-    for(let i=1; i<=4; i++) {
+    for (let i = 1; i <= 4; i++) {
         const el = document.getElementById(`step-dot-${i}`);
         if (i === step) el.className = "text-cotecmar-mid font-bold underline decoration-2 underline-offset-4";
         else if (i < step) el.className = "text-gray-800";
@@ -225,3 +225,48 @@ function toggleSidebar() {
     sb.classList.toggle('w-0');
     sb.classList.toggle('p-0');
 }
+
+// --- Integración API: Cargar Historial ---
+async function loadHistory() {
+    const historyList = document.getElementById('history-list');
+    if (!historyList) return;
+
+    try {
+        const response = await fetch('/api/sessions');
+        if (!response.ok) throw new Error('Error cargando historial');
+
+        const sessions = await response.json();
+        historyList.innerHTML = ''; // Limpiar lista
+
+        if (sessions.length === 0) {
+            historyList.innerHTML = '<div class="text-xs text-gray-400 px-2 italic">No hay historial reciente</div>';
+            return;
+        }
+
+        sessions.forEach(session => {
+            const item = document.createElement('div');
+            // Formatear fecha
+            const date = session.created_at ? new Date(session.created_at).toLocaleDateString() : 'Fecha desc.';
+
+            item.className = "px-3 py-2 hover:bg-blue-900/30 cursor-pointer rounded-lg transition-colors group";
+            item.innerHTML = `
+                <div class="font-bold text-xs text-blue-100 truncate group-hover:text-white">${session.title_preview || 'Nueva Sesión'}</div>
+                <div class="flex justify-between items-center mt-1">
+                    <span class="text-[10px] text-blue-400 uppercase tracking-wider">${session.status || 'Activo'}</span>
+                    <span class="text-[10px] text-gray-400">${date}</span>
+                </div>
+            `;
+            // TODO: Agregar evento onClick para cargar la sesión
+            historyList.appendChild(item);
+        });
+
+    } catch (error) {
+        console.error('Error:', error);
+        historyList.innerHTML = '<div class="text-xs text-red-400 px-2">Error de conexión</div>';
+    }
+}
+
+// Inicializar
+document.addEventListener('DOMContentLoaded', () => {
+    loadHistory();
+});
