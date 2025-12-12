@@ -109,22 +109,27 @@ function renderStep1Result(dataJson) {
 
     // Keywords
     const tagsDiv = document.getElementById('res-keywords');
+    tagsDiv.className = "flex flex-wrap gap-2 mt-2"; // Better container styling
     tagsDiv.innerHTML = '';
     if (callInfo.keywords && Array.isArray(callInfo.keywords)) {
         callInfo.keywords.forEach(t => tagsDiv.innerHTML += `
-            <span class="bg-blue-50 text-blue-700 border border-blue-100 px-2 py-1 rounded-md shadow-sm">#${t}</span>
+            <span class="bg-blue-50 text-blue-700 border border-blue-100 px-2 py-1 rounded-md shadow-sm text-xs font-medium whitespace-nowrap">#${t}</span>
         `);
     }
 
     // Dates 
     document.getElementById('res-dates').innerText = callInfo.dates || "Fechas no detectadas";
 
-    // Update Presentation Link
+    // Update Presentation Link: Use correct key 'presentation_oath_pdf' from state.py
     const presBtn = document.getElementById('btn-presentation-link');
-    if (presBtn && docs.presentation_pdf) {
-        presBtn.href = docs.presentation_pdf;
+    if (presBtn && docs.presentation_oath_pdf) {
+        presBtn.href = docs.presentation_oath_pdf;
         presBtn.target = "_blank";
         presBtn.classList.remove('opacity-50', 'pointer-events-none');
+
+        // Visual indicator that it is ready
+        presBtn.classList.add('animate-pulse-slow');
+        setTimeout(() => presBtn.classList.remove('animate-pulse-slow'), 3000);
     } else if (presBtn) {
         presBtn.classList.add('opacity-50', 'pointer-events-none');
     }
