@@ -39,51 +39,41 @@ export async function generateIdeas(sessionId) {
             throw new Error(err.detail || 'Error generating ideas');
         }
 
-        // ... generateIdeas above
-
-        export async function selectIdea(sessionId, idea) {
-            try {
-                const response = await fetch('/api/agent/select-idea', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        session_id: sessionId,
-                        selected_idea: {
-                            idea_title: idea.title,
-                            idea_description: idea.desc,
-                            idea_objectives: idea.objectives
-                        }
-                    })
-                });
-
-                if (!response.ok) {
-                    const err = await response.json();
-                    throw new Error(err.detail || 'Error selecting idea');
-                }
-
-                return await response.json(); // { task_id, session_id }
-            } catch (error) {
-                console.error('API Select Idea Error:', error);
-                throw error;
-            }
-        }
-    })
-});
-
-if (!response.ok) {
-    const err = await response.json();
-    throw new Error(err.detail || 'Error selecting idea');
-}
-
-return await response.json(); // { task_id, session_id }
+        return await response.json(); // { task_id, session_id }
     } catch (error) {
-    console.error('API Select Idea Error:', error);
-    throw error;
+        console.error('API Gen Ideas Error:', error);
+        throw error;
+    }
 }
+
+export async function selectIdea(sessionId, idea) {
+    try {
+        const response = await fetch('/api/agent/select-idea', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                session_id: sessionId,
+                selected_idea: {
+                    idea_title: idea.title,
+                    idea_description: idea.desc,
+                    idea_objectives: idea.objectives
+                }
+            })
+        });
+
+        if (!response.ok) {
+            const err = await response.json();
+            throw new Error(err.detail || 'Error selecting idea');
+        }
+
+        return await response.json(); // { task_id, session_id }
+    } catch (error) {
+        console.error('API Select Idea Error:', error);
+        throw error;
+    }
 }
 
 export async function getSessionHistory(sessionId) {
-    // ...
     try {
         const response = await fetch(`/api/agent/history/${sessionId}`);
         if (!response.ok) throw new Error('Error fetching session info');
@@ -93,4 +83,3 @@ export async function getSessionHistory(sessionId) {
         throw error;
     }
 }
-```
