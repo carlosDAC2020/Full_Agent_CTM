@@ -8,44 +8,11 @@ from fastapi import Depends, HTTPException
 from src.core.database import get_db
 from src.models.history import AgentSession, AgentStep
 
+import json
+from src.services.storage import MinioService
+
 router = APIRouter(prefix="/api/agent", tags=["Agent Actions"])
-
-@router.post("/ingest")
-async def start_ingest(request: IngestRequest):
-    session_id = str(uuid.uuid4())
-    task = task_process_agent_step.delay(
-        session_id=session_id, 
-        input_data={"text": request.text}, 
-        step_type="ingest"
-    )
-    return {"task_id": task.id, "session_id": session_id}
-
-@router.post("/generate-ideas")
-async def generate_ideas(request: NextStepRequest):
-    task = task_process_agent_step.delay(
-        session_id=request.session_id, 
-        input_data={}, 
-        step_type="proposal_ideas"
-    )
-    return {"task_id": task.id, "session_id": request.session_id}
-
-@router.post("/select-idea")
-async def select_idea(request: SelectionRequest):
-    task = task_process_agent_step.delay(
-        session_id=request.session_id, 
-        input_data={"selected_idea": request.selected_idea}, 
-        step_type="project_idea"
-    )
-    return {"task_id": task.id, "session_id": request.session_id}
-
-@router.post("/finalize")
-async def finalize_project(request: NextStepRequest):
-    task = task_process_agent_step.delay(
-        session_id=request.session_id, 
-        input_data={}, 
-        step_type="generate_project"
-    )
-    return {"task_id": task.id, "session_id": request.session_id}
+storage_service = MinioService()
 
 
 @router.get("/history/{session_id}")
@@ -61,10 +28,37 @@ async def get_session_history(session_id: str, db: Session = Depends(get_db)):
     steps = db.query(AgentStep).filter(AgentStep.session_id == session_id).all()
     
     # 3. Determinar el estado actual
-    # Convertimos los pasos a un diccionario para acceso rápido
-    # step_type -> output_data
-    history_map = {step.step_type: step.output_data for step in steps}
+    history_map = {}
     
+    for step in steps:
+        step_data = step.output_data
+        
+        # PROCESAMIENTO DE URLs DE MINIO (Firma)
+        # Y new_state tiene todo acumulado. 
+        # Así que 'ingest' puede tener 'docs_paths' si se generaron ahí (el grafo dice 'presentation_generator' -> 'ingest'? No, es paralelo o secuencial).
+        # En tu grafo, 'ingest' -> 'presentation_generator' -> ...
+        # El paso guardado es 'ingest' y luego 'presentation_generator'.
+        
+        # Si step.step_type es 'ingest' o 'presentation_generator' o cualquiera que tenga docs_paths...
+        # Como el estado SE ACUMULA, el último paso tendrá todo. Pero los pasos intermedios también tienen su snapshot.
+        # Si el frontend usa history_map['ingest'], espera ver los docs ahí?
+        # El frontend usa: if(stepsMap['ingest']) { renderStep1Result(stepsMap['ingest']); }
+        
+        # Así que debemos procesar CADA paso en el history_map porsiaca el frontend lee de uno específico.
+        
+        if step_data and isinstance(step_data, dict):
+            if "docs_paths" in step_data and step_data["docs_paths"]:
+                docs = step_data["docs_paths"]
+                for key, val in docs.items():
+                     if val and isinstance(val, str) and "/" in val: 
+                         docs[key] = storage_service.get_presigned_url(val)
+                step_data["docs_paths"] = docs
+                
+            # Si el step data es string (a veces pasa por serialización doble accidental), parsear, firmar, stringificar.
+            # Pero en la DB 'output_data' es JSONB (Postgres) o JSON. Asumimos dict.
+        
+        history_map[step.step_type] = step_data
+
     response = {
         "session_id": session_id,
         "status": session.status,
