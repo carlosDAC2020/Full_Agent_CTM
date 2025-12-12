@@ -1,6 +1,6 @@
 import { mockDB, mockIdeas } from '../data/mocks.js';
 import { store } from '../data/store.js';
-import { ingestCall, getSessionHistory } from '../api/agent.js';
+import { ingestCall, getSessionHistory, generateIdeas } from '../api/agent.js';
 import { pollTask } from '../api/tasks.js';
 
 // DOM Elements
