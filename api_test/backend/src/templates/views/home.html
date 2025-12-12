@@ -97,11 +97,23 @@
                     <div class="p-8">
                         <div class="flex justify-between items-start">
                             <div>
-                                <div class="inline-block px-3 py-1 bg-blue-50 text-blue-600 rounded-full text-xs font-bold mb-3 border border-blue-100">PASO 1: ANÁLISIS</div>
+                                <div class="inline-block px-3 py-1 bg-blue-50 text-blue-600 rounded-full text-xs font-bold mb-3 border border-blue-100">PASO 1: ANÁLISIS DE CONVOCATORIA</div>
                                 <h2 id="res-title" class="text-2xl font-bold text-gray-800">Título</h2>
                             </div>
+                            <!-- NUEVO: Link a la presentación generada -->
+                            <a href="#" class="group flex items-center gap-3 bg-red-50 hover:bg-red-100 border border-red-200 pr-4 pl-3 py-2 rounded-xl transition-all">
+                                <div class="w-8 h-8 rounded-full bg-red-500 text-white flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
+                                    <i class="ph ph-presentation text-lg"></i>
+                                </div>
+                                <div class="text-left">
+                                    <div class="text-[10px] text-red-400 font-bold uppercase">Evaluación</div>
+                                    <div class="text-sm font-bold text-red-700">Ver Presentación</div>
+                                </div>
+                            </a>
                         </div>
+
                         <p id="res-objective" class="text-gray-600 mt-4 text-sm bg-blue-50/30 p-4 rounded-lg border border-blue-50">---</p>
+                        
                         <div class="grid grid-cols-2 gap-4 mt-6">
                             <div class="p-3 bg-gray-50 rounded border">
                                 <div class="text-xs font-bold text-gray-500 mb-1">DINERO</div>
@@ -116,7 +128,7 @@
                     <div class="bg-gray-50 p-4 flex justify-between items-center border-t border-gray-100">
                         <div id="res-keywords" class="flex gap-2 text-xs text-gray-500"></div>
                         <button onclick="goToStep2()" class="bg-cotecmar-mid hover:bg-cotecmar-light text-white px-6 py-2 rounded-lg font-medium shadow-lg shadow-blue-900/10 flex items-center gap-2 transition-transform active:scale-95">
-                            Generar Ideas <i class="ph ph-lightbulb"></i>
+                            Generar Ideas de Proyecto <i class="ph ph-lightbulb"></i>
                         </button>
                     </div>
                 </div>
