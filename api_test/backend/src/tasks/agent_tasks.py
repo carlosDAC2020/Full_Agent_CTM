@@ -113,9 +113,19 @@ def task_process_agent_step(self, session_id: str, input_data: dict, step_type: 
         current_state = json.loads(stored_state)
         
         # --- REHIDRATACIÓN PYDANTIC ---
-        if "call_info" in current_state and isinstance(current_state["call_info"], dict):
-            try: current_state["call_info"] = CallInfo(**current_state["call_info"])
-            except: pass
+        # --- REHIDRATACIÓN PYDANTIC ---
+        # Redis stores JSON structure, so top-level keys are dicts.
+        # But some keys might be deserialized as dicts already by json.loads(stored_state).
+        
+        # 1. call_info
+        if "call_info" in current_state and current_state["call_info"]:
+            # If it's a dictionary, convert to Pydantic model
+            if isinstance(current_state["call_info"], dict):
+                try: 
+                    current_state["call_info"] = CallInfo(**current_state["call_info"])
+                except Exception as e:
+                    print(f"⚠️ Error rehydrating call_info: {e}")
+            # If it's already an object (unlikely from json.loads but possible in memory), keep it.
 
         if "report_components" in current_state and isinstance(current_state["report_components"], dict):
             try: current_state["report_components"] = ReportSchema(**current_state["report_components"])
@@ -135,6 +145,11 @@ def task_process_agent_step(self, session_id: str, input_data: dict, step_type: 
 
     # Inyectar Session ID
     current_state["session_id"] = session_id
+
+    # DEBUG
+    print(f"🔍 DEBUG STATE ({step_type}): CallInfo Presente? {'call_info' in current_state}")
+    if 'call_info' in current_state:
+        print(f"🔍 DEBUG CallInfo: {current_state['call_info']}")
 
     # ==========================================
     # 3. PREPARAR INPUT
