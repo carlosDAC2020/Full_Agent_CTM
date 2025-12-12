@@ -15,5 +15,5 @@ templates = Jinja2Templates(directory=os.path.join(BASE_DIR, "templates"))
 # --- RUTA 1: HOME (DASHBOARD) ---
 @router.get("/", response_class=HTMLResponse)
 async def home(request: Request):
-    return templates.TemplateResponse("views/workspace.html", {"request": request})
+    return templates.TemplateResponse("views/home.html", {"request": request})
 
