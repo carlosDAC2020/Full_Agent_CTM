@@ -7,7 +7,8 @@ import {
     goToStep2,
     cancelEdit,
     confirmIdea,
-    generateFinal
+    generateFinal,
+    restoreSession
 } from './ui/wizard.js';
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -28,4 +29,5 @@ document.addEventListener('DOMContentLoaded', () => {
     window.cancelEdit = cancelEdit;
     window.confirmIdea = confirmIdea;
     window.generateFinal = generateFinal;
+    window.restoreSession = restoreSession; // Exponer para debug o usos globales
 });

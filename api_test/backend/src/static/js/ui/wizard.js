@@ -1,6 +1,6 @@
 import { mockDB, mockIdeas } from '../data/mocks.js';
 import { store } from '../data/store.js';
-import { ingestCall } from '../api/agent.js';
+import { ingestCall, getSessionHistory } from '../api/agent.js';
 import { pollTask } from '../api/tasks.js';
 
 // DOM Elements
@@ -111,24 +111,93 @@ function renderStep1Result(dataJson) {
     const tagsDiv = document.getElementById('res-keywords');
     tagsDiv.innerHTML = '';
     if (callInfo.keywords && Array.isArray(callInfo.keywords)) {
-        callInfo.keywords.forEach(t => tagsDiv.innerHTML += `<span class="bg-gray-100 px-2 py-1 rounded">#${t}</span>`);
+        callInfo.keywords.forEach(t => tagsDiv.innerHTML += `
+            <span class="bg-blue-50 text-blue-700 border border-blue-100 px-2 py-1 rounded-md shadow-sm">#${t}</span>
+        `);
     }
 
-    // Dates (Need logic if backend provides specific dates, fallback for now)
+    // Dates 
     document.getElementById('res-dates').innerText = callInfo.dates || "Fechas no detectadas";
 
     // Update Presentation Link
-    // Assuming docs.presentation_pdf or similar exists
-    // We need to find the link element. In HTML it was just <a href="#">
-    // Let's assume we want to update that specific anchor.
-    // Quick hack: find via text or selector if possible. Or add ID in HTML later.
-    // For now, let's look for the presentation card logic or the button in step 1.
-    // The HTML has a "Ver Presentación" link. Let's assume we grabbed it via ID or querySelector.
-    // Ideally, we should add an ID to that <a> link in the HTML next time.
-    // TODO: Add ID to presentation link in HTML for easier access.
+    const presBtn = document.getElementById('btn-presentation-link');
+    if (presBtn && docs.presentation_pdf) {
+        presBtn.href = docs.presentation_pdf;
+        presBtn.target = "_blank";
+        presBtn.classList.remove('opacity-50', 'pointer-events-none');
+    } else if (presBtn) {
+        presBtn.classList.add('opacity-50', 'pointer-events-none');
+    }
 
     step1.classList.remove('hidden');
+
 }
+
+// RESTORE SESSION LOGIC
+export async function restoreSession(sessionId) {
+    const { initialView, resultsView, globalStepper, loader, loaderText, step1, step2, step3, step4 } = getElements();
+    store.sessionId = sessionId;
+
+    // Switch Views
+    initialView.classList.add('hidden');
+    resultsView.classList.remove('hidden');
+    resultsView.classList.add('flex');
+    globalStepper.classList.remove('hidden');
+
+    loader.classList.remove('hidden');
+    loaderText.innerText = "Restaurando sesión...";
+
+    // Reset Steps
+    step1.classList.add('hidden');
+    step2.classList.add('hidden');
+    step3.classList.add('hidden');
+    step4.classList.add('hidden');
+
+    try {
+        const historyData = await getSessionHistory(sessionId); // returns { steps_data: {...}, status, last_step }
+        const stepsMap = historyData.steps_data || {};
+        const lastStep = historyData.last_step;
+
+        loader.classList.add('hidden');
+
+        // 1. Restore Ingest Data (Always expected if session exists)
+        if (stepsMap['ingest']) {
+            renderStep1Result(stepsMap['ingest']);
+            updateStepper(1);
+
+            // Extract title for the header label
+            let ingestData = typeof stepsMap['ingest'] === 'string' ? JSON.parse(stepsMap['ingest']) : stepsMap['ingest'];
+            if (ingestData.call_info && ingestData.call_info.title) {
+                document.getElementById('selected-label').innerText = ingestData.call_info.title;
+            }
+        }
+
+        // 2. Logic based on last executed step
+        if (!lastStep || lastStep === 'ingest') {
+            // Stay on Step 1
+            step1.classList.remove('hidden');
+        }
+        else if (lastStep === 'proposal_ideas') {
+            // Step 1 done, move to Step 2
+            step1.classList.add('hidden');
+            step2.classList.remove('hidden');
+            updateStepper(2);
+            // Verify if we have ideas data to render
+            if (stepsMap['proposal_ideas']) {
+                // TODO: Render real ideas from 'proposal_ideas' output. 
+                // For now, using mocks or check if data matches structure.
+                renderIdeas();
+            }
+        }
+        // Add more steps logic as we implement them...
+
+    } catch (err) {
+        loader.classList.add('hidden');
+        alert("Error restaurando sesión: " + err.message);
+        location.reload();
+    }
+}
+
 
 // Paso 2
 export function goToStep2() {

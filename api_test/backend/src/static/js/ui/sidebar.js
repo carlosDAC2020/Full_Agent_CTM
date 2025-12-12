@@ -1,4 +1,5 @@
 import { fetchSessions } from '../api/sessions.js';
+import { restoreSession } from './wizard.js'; // Import logic
 
 export function toggleSidebar() {
     const sb = document.getElementById('sidebar');
@@ -26,6 +27,8 @@ export async function loadHistory() {
         const date = session.created_at ? new Date(session.created_at).toLocaleDateString() : 'Fecha desc.';
 
         item.className = "px-3 py-2 hover:bg-blue-900/30 cursor-pointer rounded-lg transition-colors group";
+        item.onclick = () => restoreSession(session.id); // Click Handler
+
         item.innerHTML = `
             <div class="font-bold text-xs text-blue-100 truncate group-hover:text-white">${session.title_preview || 'Nueva Sesión'}</div>
             <div class="flex justify-between items-center mt-1">
@@ -33,7 +36,6 @@ export async function loadHistory() {
                 <span class="text-[10px] text-gray-400">${date}</span>
             </div>
         `;
-        // Future: Add click handler to load session
         historyList.appendChild(item);
     });
 }

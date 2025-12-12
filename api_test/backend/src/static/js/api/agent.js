@@ -25,3 +25,14 @@ export async function ingestCall(text, title = "") {
         throw error;
     }
 }
+
+export async function getSessionHistory(sessionId) {
+    try {
+        const response = await fetch(`/api/agent/history/${sessionId}`);
+        if (!response.ok) throw new Error('Error fetching session info');
+        return await response.json();
+    } catch (error) {
+        console.error('API History Error:', error);
+        throw error;
+    }
+}
