@@ -287,15 +287,17 @@ function renderIdeas(data) {
 }
 
 // --- Dynamic Objectives Logic ---
+// --- Dynamic Objectives Logic ---
 window.addObjectiveInput = function (value = '') {
     const list = document.getElementById('objectives-list');
     const div = document.createElement('div');
-    div.className = "flex gap-2 items-center group/item";
+    div.className = "flex gap-2 items-start group/item";
     div.innerHTML = `
-        <input type="text" value="${value}" 
-            class="flex-1 bg-gray-50 border border-gray-200 rounded-lg p-3 text-sm text-gray-600 focus:ring-2 focus:ring-cotecmar-light outline-none"
-            placeholder="Redactar objetivo...">
-        <button onclick="removeObjectiveInput(this)" class="text-gray-400 hover:text-red-500 p-2 opacity-0 group-hover/item:opacity-100 transition-opacity">
+        <textarea 
+            class="flex-1 bg-gray-50 border border-gray-200 rounded-lg p-3 text-sm text-gray-600 focus:ring-2 focus:ring-cotecmar-light outline-none resize-y"
+            rows="2"
+            placeholder="Redactar objetivo...">${value}</textarea>
+        <button onclick="removeObjectiveInput(this)" class="text-gray-400 hover:text-red-500 p-2 opacity-0 group-hover/item:opacity-100 transition-opacity mt-2">
             <i class="ph ph-trash"></i>
         </button>
     `;
@@ -339,7 +341,7 @@ export async function confirmIdea() {
     const editedDesc = document.getElementById('edit-desc').value;
 
     // Gather objectives from dynamic inputs
-    const objInputs = document.querySelectorAll('#objectives-list input');
+    const objInputs = document.querySelectorAll('#objectives-list textarea');
     const editedObjs = Array.from(objInputs).map(input => input.value.trim()).filter(v => v !== '');
 
     if (!editedTitle || !editedDesc || editedObjs.length === 0) {
