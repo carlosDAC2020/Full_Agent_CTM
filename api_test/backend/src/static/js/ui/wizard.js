@@ -286,6 +286,26 @@ function renderIdeas(data) {
     });
 }
 
+// --- Dynamic Objectives Logic ---
+window.addObjectiveInput = function (value = '') {
+    const list = document.getElementById('objectives-list');
+    const div = document.createElement('div');
+    div.className = "flex gap-2 items-center group/item";
+    div.innerHTML = `
+        <input type="text" value="${value}" 
+            class="flex-1 bg-gray-50 border border-gray-200 rounded-lg p-3 text-sm text-gray-600 focus:ring-2 focus:ring-cotecmar-light outline-none"
+            placeholder="Redactar objetivo...">
+        <button onclick="removeObjectiveInput(this)" class="text-gray-400 hover:text-red-500 p-2 opacity-0 group-hover/item:opacity-100 transition-opacity">
+            <i class="ph ph-trash"></i>
+        </button>
+    `;
+    list.appendChild(div);
+}
+
+window.removeObjectiveInput = function (btn) {
+    btn.parentElement.remove();
+}
+
 function openEditIdea(idea) {
     const { ideasContainer, ideaEditor } = getElements();
     store.currentSelectedIdea = idea;
@@ -294,7 +314,14 @@ function openEditIdea(idea) {
 
     document.getElementById('edit-title').value = idea.title;
     document.getElementById('edit-desc').value = idea.desc;
-    document.getElementById('edit-objectives').value = idea.objectives.join('\n');
+
+    // Clear and populate objectives
+    document.getElementById('objectives-list').innerHTML = '';
+    if (idea.objectives && Array.isArray(idea.objectives)) {
+        idea.objectives.forEach(obj => window.addObjectiveInput(obj));
+    } else {
+        window.addObjectiveInput(''); // Start with one empty
+    }
 }
 
 export function cancelEdit() {
@@ -304,34 +331,130 @@ export function cancelEdit() {
 }
 
 // Paso 3
-export function confirmIdea() {
+export async function confirmIdea() {
     const { step2, loader, loaderText, step3 } = getElements();
 
-    // Guardar cambios mock
-    if (store.currentSelectedIdea) {
-        store.currentSelectedIdea.title = document.getElementById('edit-title').value;
-        store.currentSelectedIdea.desc = document.getElementById('edit-desc').value;
-        const objsRaw = document.getElementById('edit-objectives').value;
-        store.currentSelectedIdea.objectives = objsRaw.split('\n');
+    // 1. Gather Data from Editor
+    const editedTitle = document.getElementById('edit-title').value;
+    const editedDesc = document.getElementById('edit-desc').value;
+
+    // Gather objectives from dynamic inputs
+    const objInputs = document.querySelectorAll('#objectives-list input');
+    const editedObjs = Array.from(objInputs).map(input => input.value.trim()).filter(v => v !== '');
+
+    if (!editedTitle || !editedDesc || editedObjs.length === 0) {
+        alert("Por favor completa el título, descripción y al menos un objetivo.");
+        return;
     }
 
+    const selectedIdea = {
+        title: editedTitle,
+        desc: editedDesc,
+        objectives: editedObjs
+    };
+
+    // Update store (optional/fallback)
+    store.currentSelectedIdea = selectedIdea;
+
+    // UI Transition
     step2.classList.add('hidden');
     loader.classList.remove('hidden');
     loaderText.innerText = "Estructurando esquema inicial del proyecto...";
     updateStepper(3);
 
-    setTimeout(() => {
-        loader.classList.add('hidden');
-        step3.classList.remove('hidden');
+    try {
+        // 2. Call API
+        // Note: selectIdea needs to be imported! 
+        const { task_id } = await import('../api/agent.js').then(m => m.selectIdea(store.sessionId, selectedIdea));
 
-        document.getElementById('schema-title').innerText = store.currentSelectedIdea.title;
-        document.getElementById('schema-desc').innerText = store.currentSelectedIdea.desc + " Este proyecto busca alinearse con los objetivos estratégicos...";
-        const ul = document.getElementById('schema-objs');
-        ul.innerHTML = '';
-        store.currentSelectedIdea.objectives.forEach(o => {
-            if (o.trim()) ul.innerHTML += `<li>${o}</li>`;
-        });
-    }, 2000);
+        // 3. Poll Task
+        pollTask(
+            task_id,
+            (message) => {
+                loaderText.innerText = message || "Generando esquema...";
+            },
+            (result) => {
+                // On Complete
+                let data;
+                try { data = typeof result.data === 'string' ? JSON.parse(result.data) : result.data; }
+                catch (e) { console.error("Error parsing JSON", e); return; }
+
+                renderSchema(data);
+                loader.classList.add('hidden');
+                step3.classList.remove('hidden');
+            },
+            (error) => {
+                loaderText.innerText = "Error: " + error;
+                loaderText.classList.add('text-red-500');
+            }
+        );
+
+    } catch (err) {
+        loaderText.innerText = "Error de conexión: " + err.message;
+        loaderText.classList.add('text-red-500');
+    }
+}
+
+function renderSchema(data) {
+    // Data structure: data.initial_schema (Markdown string)
+    // data.docs_paths.proyect_proposal_initial_schema_pdf (Link)
+
+    const schemaTitle = document.getElementById('schema-title');
+    const schemaDesc = document.getElementById('schema-desc'); // Mapping to Executive Summary for now
+    const schemaObjs = document.getElementById('schema-objs');
+
+    // Attempt to parse simple markdown to fill specific UI slots, or just dump it?
+    // User requested: "podria toamr el q viene del .md q es tetxo"
+
+    const mdContent = data.initial_schema || "";
+    const pdfLink = data.docs_paths?.proyect_proposal_initial_schema_pdf;
+
+    // Basic extraction (regex or split) to fill the structured view in step-3-schema
+    // Since parsing MD is complex without library, we will put the raw or slightly formatted text.
+    // Ideally we would use a markdown renderer. For now, populating known fields if available in `report_components` 
+    // BUT `initial_schema` node might output text blocks.
+    // Let's check `state.py`: initial_schema is Optional[str].
+    // `report_components` might optionally be populated.
+
+    // Fallback: Use the data we sent if schema is just raw text
+    schemaTitle.innerText = store.currentSelectedIdea.title;
+
+    // If output is just a big string, maybe put it in a container?
+    // The current UI expects: Resumen Ejecutivo, Objetivos, Metodología.
+
+    // Let's try to find sections in MD
+    const getSection = (name) => {
+        const regex = new RegExp(`#+\\s*${name}[\\s\\S]*?(?=#+|$)`, 'i');
+        const match = mdContent.match(regex);
+        return match ? match[0].replace(/#+.*/, '').trim() : "Contenido no generado.";
+    };
+
+    // Populate UI
+    schemaDesc.innerText = getSection("Resumen Ejecutivo") || mdContent.slice(0, 500) + "..."; // Fallback
+
+    schemaObjs.innerHTML = '';
+    const objsSection = getSection("Objetivos");
+    const objsLines = objsSection.split('\n').filter(l => l.trim().startsWith('-'));
+    objsLines.forEach(l => schemaObjs.innerHTML += `<li>${l.replace('-', '').trim()}</li>`);
+
+    // Document Links Container (Dynamic creation if not exists)
+    let linksContainer = document.getElementById('schema-links');
+    if (!linksContainer) {
+        linksContainer = document.createElement('div');
+        linksContainer.id = 'schema-links';
+        linksContainer.className = "mt-6 flex justify-center gap-4";
+        document.querySelector('#step-3-schema .doc-page').appendChild(linksContainer);
+    }
+    linksContainer.innerHTML = '';
+
+    if (pdfLink) {
+        linksContainer.innerHTML += `
+            <a href="${pdfLink}" target="_blank" class="flex items-center gap-2 text-red-600 font-bold border border-red-200 bg-red-50 px-4 py-2 rounded-lg hover:bg-red-100 transition">
+                <i class="ph ph-file-pdf"></i> Ver PDF Generado
+            </a>
+        `;
+    }
+    // Optional: TXT/MD download could be added here
 }
 
 // Paso 4

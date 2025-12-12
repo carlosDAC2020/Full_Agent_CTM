@@ -201,8 +201,14 @@
                     <div>
                         <label class="block text-xs font-bold text-gray-500 mb-1">OBJETIVOS (Separados por
                             línea)</label>
-                        <textarea id="edit-objectives" rows="4"
-                            class="w-full bg-gray-50 border border-gray-200 rounded-lg p-3 text-sm text-gray-600 focus:ring-2 focus:ring-cotecmar-light outline-none resize-none"></textarea>
+                        <label class="block text-xs font-bold text-gray-500 mb-1">OBJETIVOS</label>
+                        <div id="objectives-list" class="space-y-2 mb-3">
+                            <!-- Dynamic Inputs -->
+                        </div>
+                        <button onclick="addObjectiveInput('')"
+                            class="text-xs font-bold text-cotecmar-mid hover:text-cotecmar-dark flex items-center gap-1">
+                            <i class="ph ph-plus-circle"></i> Agregar Objetivo
+                        </button>
                     </div>
                 </div>
                 <div class="bg-gray-50 p-4 flex justify-end gap-3 border-t border-gray-100">
