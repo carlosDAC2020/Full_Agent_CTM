@@ -66,11 +66,13 @@
             </button>
         </div>
 
-        <div class="flex-1 overflow-y-auto px-3 py-2 space-y-1 min-w-[16rem]">
-            <div class="text-[10px] font-bold text-blue-400 uppercase tracking-widest mb-2 px-2 mt-2">Historial Reciente
+        <div class="flex-1 overflow-y-auto px-2 py-3 min-w-[16rem] custom-scrollbar">
+            <div class="text-[10px] font-bold text-blue-400/80 uppercase tracking-widest mb-3 px-3 flex items-center gap-2">
+                <i class="ph ph-clock-counter-clockwise text-xs"></i>
+                Historial Reciente
             </div>
-            <!-- Aquí podrías inyectar historial real desde FastAPI -->
-            <div id="history-list" class="space-y-1"></div>
+            <!-- Aquí se inyecta el historial desde JavaScript -->
+            <div id="history-list"></div>
         </div>
 
         <div class="p-4 bg-black/20 flex items-center gap-3 text-sm min-w-[16rem]">

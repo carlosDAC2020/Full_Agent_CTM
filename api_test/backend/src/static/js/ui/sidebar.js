@@ -11,10 +11,10 @@ export function toggleSidebar() {
 
 // Mapeo de step_type a nombres amigables y colores
 const STEP_INFO = {
-    'ingest': { name: 'Evaluación', color: 'bg-blue-500', icon: 'ph-file-magnifying-glass' },
-    'proposal_ideas': { name: 'Ideas', color: 'bg-yellow-500', icon: 'ph-lightbulb' },
-    'project_idea': { name: 'Esquema', color: 'bg-purple-500', icon: 'ph-file-text' },
-    'generate_project': { name: 'Final', color: 'bg-green-500', icon: 'ph-check-circle' }
+    'ingest': { name: 'Evaluación', color: 'bg-blue-500/90', icon: 'ph-file-magnifying-glass' },
+    'proposal_ideas': { name: 'Ideas', color: 'bg-yellow-500/90', icon: 'ph-lightbulb' },
+    'project_idea': { name: 'Esquema', color: 'bg-purple-500/90', icon: 'ph-file-text' },
+    'generate_project': { name: 'Final', color: 'bg-green-500/90', icon: 'ph-check-circle' }
 };
 
 export async function loadHistory() {
@@ -22,49 +22,57 @@ export async function loadHistory() {
     if (!historyList) return;
 
     // Loading state
-    historyList.innerHTML = '<div class="text-xs text-gray-400 px-2 italic">Cargando...</div>';
+    historyList.innerHTML = '<div class="text-xs text-blue-300/60 px-3 py-2 italic">Cargando historial...</div>';
 
     const sessions = await fetchSessions();
     historyList.innerHTML = '';
 
     if (sessions.length === 0) {
-        historyList.innerHTML = '<div class="text-xs text-gray-400 px-2 italic">No hay historial reciente</div>';
+        historyList.innerHTML = '<div class="text-xs text-blue-300/60 px-3 py-2 italic">No hay historial reciente</div>';
         return;
     }
 
     sessions.forEach(session => {
         const item = document.createElement('div');
-        const date = session.created_at ? new Date(session.created_at).toLocaleDateString() : 'Fecha desc.';
+        const date = session.created_at ? new Date(session.created_at).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' }) : '--/--';
 
         // Obtener información del paso
-        const stepInfo = STEP_INFO[session.last_step] || { name: 'Iniciado', color: 'bg-gray-500', icon: 'ph-circle' };
+        const stepInfo = STEP_INFO[session.last_step] || { name: 'Iniciado', color: 'bg-gray-500/90', icon: 'ph-circle-dashed' };
 
-        item.className = "px-3 py-2 hover:bg-blue-900/30 rounded-lg transition-colors group relative";
+        item.className = "group relative mb-1.5";
 
         item.innerHTML = `
-            <div class="flex items-start gap-2">
+            <div class="relative px-3 py-3 rounded-lg hover:bg-blue-900/30 transition-all duration-200 cursor-pointer border border-transparent hover:border-blue-700/30">
                 <!-- Área clickeable para restaurar -->
-                <div class="flex-1 cursor-pointer" data-session-id="${session.id}">
-                    <div class="font-bold text-xs text-blue-100 truncate group-hover:text-white pr-6">
+                <div class="pr-8" data-session-id="${session.id}">
+                    <!-- Título -->
+                    <div class="text-xs font-semibold text-blue-50 leading-tight mb-2 group-hover:text-white transition-colors line-clamp-2">
                         ${session.title_preview || 'Nueva Sesión'}
                     </div>
-                    <div class="flex items-center gap-2 mt-1">
+                    
+                    <!-- Metadata row -->
+                    <div class="flex items-center gap-2 flex-wrap">
                         <!-- Badge del paso -->
-                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold text-white ${stepInfo.color}">
-                            <i class="ph ${stepInfo.icon} text-[10px]"></i>
+                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold text-white ${stepInfo.color} shadow-sm">
+                            <i class="ph-fill ${stepInfo.icon}"></i>
                             ${stepInfo.name}
                         </span>
-                        <span class="text-[10px] text-gray-400">${date}</span>
+                        
+                        <!-- Fecha -->
+                        <span class="text-[10px] text-blue-300/70 font-medium">
+                            <i class="ph ph-calendar-blank text-[9px]"></i>
+                            ${date}
+                        </span>
                     </div>
                 </div>
                 
                 <!-- Botón eliminar (visible al hover) -->
                 <button 
-                    class="opacity-0 group-hover:opacity-100 transition-opacity absolute right-2 top-2 text-red-400 hover:text-red-300 p-1 rounded hover:bg-red-900/20"
+                    class="absolute right-2 top-2 opacity-0 group-hover:opacity-100 transition-all duration-200 text-red-400 hover:text-red-300 hover:scale-110 p-1.5 rounded-md hover:bg-red-900/30"
                     data-delete-id="${session.id}"
                     title="Eliminar sesión"
                 >
-                    <i class="ph ph-trash text-sm"></i>
+                    <i class="ph-fill ph-trash text-sm"></i>
                 </button>
             </div>
         `;

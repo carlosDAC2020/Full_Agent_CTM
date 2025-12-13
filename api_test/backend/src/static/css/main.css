@@ -1,7 +1,20 @@
-.custom-scrollbar::-webkit-scrollbar { width: 6px; }
-.custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-.custom-scrollbar::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 10px; }
-.custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94A3B8; }
+.custom-scrollbar::-webkit-scrollbar { 
+    width: 5px; 
+}
+
+.custom-scrollbar::-webkit-scrollbar-track { 
+    background: rgba(30, 58, 138, 0.2); 
+    border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb { 
+    background: rgba(96, 165, 250, 0.3); 
+    border-radius: 10px; 
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover { 
+    background: rgba(96, 165, 250, 0.5); 
+}
 
 /* Estilos para el documento simulado */
 .doc-page {
