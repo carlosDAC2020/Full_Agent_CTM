@@ -178,43 +178,100 @@
                 <!-- Se llena con JS -->
             </div>
 
-            <!-- Editor de Idea (Modal Inline) -->
+            <!-- Editor de Idea (Modal Inline Mejorado) -->
             <div id="idea-editor"
-                class="hidden mt-6 bg-white rounded-2xl shadow-xl border-2 border-cotecmar-light overflow-hidden animate-slide-up relative">
-                <div class="bg-cotecmar-light text-white p-4 flex justify-between items-center">
-                    <h3 class="font-bold flex items-center gap-2"><i class="ph ph-pencil-simple"></i> Editar Propuesta
-                    </h3>
-                    <button onclick="cancelEdit()" class="hover:bg-white/20 p-1 rounded"><i
-                            class="ph ph-x"></i></button>
+                class="hidden mt-6 bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden animate-slide-up relative max-h-[80vh] flex flex-col">
+
+                <!-- Header Fijo -->
+                <div
+                    class="bg-gradient-to-r from-cotecmar-dark to-cotecmar-mid text-white px-6 py-4 flex justify-between items-center flex-shrink-0">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
+                            <i class="ph-fill ph-pencil-simple text-xl"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-lg">Editar Propuesta</h3>
+                            <p class="text-xs text-blue-100 opacity-90">Personaliza los detalles de tu proyecto</p>
+                        </div>
+                    </div>
+                    <button onclick="cancelEdit()" class="hover:bg-white/20 p-2 rounded-lg transition-colors"
+                        title="Cerrar">
+                        <i class="ph ph-x text-xl"></i>
+                    </button>
                 </div>
-                <div class="p-6 space-y-4">
-                    <div>
-                        <label class="block text-xs font-bold text-gray-500 mb-1">TÍTULO DEL PROYECTO</label>
-                        <input type="text" id="edit-title"
-                            class="w-full bg-gray-50 border border-gray-200 rounded-lg p-3 text-sm font-bold text-gray-800 focus:ring-2 focus:ring-cotecmar-light outline-none">
+
+                <!-- Contenido con Scroll -->
+                <div class="flex-1 overflow-y-auto custom-scrollbar px-6 py-6 space-y-6">
+
+                    <!-- Título del Proyecto -->
+                    <div class="space-y-2">
+                        <label class="flex items-center gap-2 text-sm font-bold text-gray-700">
+                            <i class="ph ph-text-aa text-cotecmar-mid"></i>
+                            TÍTULO DEL PROYECTO
+                        </label>
+                        <input type="text" id="edit-title" placeholder="Ej: Sistema de Monitoreo Inteligente para..."
+                            class="w-full bg-gray-50 border-2 border-gray-200 rounded-xl px-4 py-3 text-base font-semibold text-gray-800 
+                                   focus:border-cotecmar-light focus:ring-4 focus:ring-cotecmar-light/20 outline-none transition-all
+                                   hover:border-gray-300">
                     </div>
-                    <div>
-                        <label class="block text-xs font-bold text-gray-500 mb-1">DESCRIPCIÓN</label>
-                        <textarea id="edit-desc" rows="3"
-                            class="w-full bg-gray-50 border border-gray-200 rounded-lg p-3 text-sm text-gray-600 focus:ring-2 focus:ring-cotecmar-light outline-none resize-none"></textarea>
+
+                    <!-- Descripción -->
+                    <div class="space-y-2">
+                        <label class="flex items-center gap-2 text-sm font-bold text-gray-700">
+                            <i class="ph ph-align-left text-cotecmar-mid"></i>
+                            DESCRIPCIÓN
+                        </label>
+                        <textarea id="edit-desc" rows="5"
+                            placeholder="Describe el contexto, problema a resolver y la solución propuesta..." class="w-full bg-gray-50 border-2 border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-700 leading-relaxed
+                                   focus:border-cotecmar-light focus:ring-4 focus:ring-cotecmar-light/20 outline-none transition-all
+                                   hover:border-gray-300 resize-none"></textarea>
+                        <div class="flex items-center gap-2 text-xs text-gray-500">
+                            <i class="ph ph-info"></i>
+                            <span>Sé específico sobre el impacto y beneficios esperados</span>
+                        </div>
                     </div>
-                    <div>
-                        <label class="block text-xs font-bold text-gray-500 mb-1">OBJETIVOS</label>
-                        <div id="objectives-list" class="space-y-2 mb-3">
+
+                    <!-- Objetivos -->
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between">
+                            <label class="flex items-center gap-2 text-sm font-bold text-gray-700">
+                                <i class="ph ph-target text-cotecmar-mid"></i>
+                                OBJETIVOS ESPECÍFICOS
+                            </label>
+                            <button onclick="addObjectiveInput('')" class="text-xs font-bold text-cotecmar-mid hover:text-cotecmar-dark flex items-center gap-1 
+                                       bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg transition-colors">
+                                <i class="ph ph-plus-circle text-sm"></i>
+                                Agregar Objetivo
+                            </button>
+                        </div>
+
+                        <div id="objectives-list" class="space-y-3">
                             <!-- Dynamic Inputs -->
                         </div>
-                        <button onclick="addObjectiveInput('')"
-                            class="text-xs font-bold text-cotecmar-mid hover:text-cotecmar-dark flex items-center gap-1">
-                            <i class="ph ph-plus-circle"></i> Agregar Objetivo
-                        </button>
+
+                        <div class="bg-blue-50 border border-blue-100 rounded-lg p-3 flex items-start gap-2">
+                            <i class="ph ph-lightbulb text-blue-600 text-lg flex-shrink-0 mt-0.5"></i>
+                            <div class="text-xs text-blue-800 leading-relaxed">
+                                <strong>Tip:</strong> Usa la metodología SMART: Específicos, Medibles, Alcanzables,
+                                Relevantes y con Tiempo definido.
+                            </div>
+                        </div>
                     </div>
                 </div>
-                <div class="bg-gray-50 p-4 flex justify-end gap-3 border-t border-gray-100">
-                    <button onclick="cancelEdit()"
-                        class="text-gray-500 hover:text-gray-700 text-sm font-medium px-4">Cancelar</button>
-                    <button onclick="confirmIdea()"
-                        class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg font-medium shadow-md flex items-center gap-2">
-                        Aprobar y Generar Esquema <i class="ph ph-check-circle"></i>
+
+                <!-- Footer Fijo -->
+                <div
+                    class="bg-gray-50 px-6 py-4 flex justify-between items-center border-t border-gray-200 flex-shrink-0">
+                    <button onclick="cancelEdit()" class="text-gray-600 hover:text-gray-800 text-sm font-semibold px-5 py-2.5 rounded-lg 
+                               hover:bg-gray-200 transition-colors flex items-center gap-2">
+                        <i class="ph ph-x-circle"></i>
+                        Cancelar
+                    </button>
+                    <button onclick="confirmIdea()" class="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 
+                               text-white px-6 py-2.5 rounded-lg font-semibold shadow-lg hover:shadow-xl 
+                               transition-all flex items-center gap-2 group">
+                        Aprobar y Continuar
+                        <i class="ph-fill ph-arrow-right group-hover:translate-x-1 transition-transform"></i>
                     </button>
                 </div>
             </div>

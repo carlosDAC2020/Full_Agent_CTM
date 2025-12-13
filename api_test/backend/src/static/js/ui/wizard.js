@@ -309,26 +309,51 @@ function renderIdeas(data) {
 }
 
 // --- Dynamic Objectives Logic ---
-// --- Dynamic Objectives Logic ---
 window.addObjectiveInput = function (value = '') {
     const list = document.getElementById('objectives-list');
     const div = document.createElement('div');
-    div.className = "flex gap-2 items-start group/item";
+    const index = list.children.length + 1;
+
+    div.className = "flex gap-3 items-start group/item bg-gray-50 p-3 rounded-xl border-2 border-gray-200 hover:border-gray-300 transition-all";
     div.innerHTML = `
+        <div class="flex-shrink-0 w-8 h-8 bg-cotecmar-mid/10 text-cotecmar-mid rounded-lg flex items-center justify-center font-bold text-sm mt-1">
+            ${index}
+        </div>
         <textarea 
-            class="flex-1 bg-gray-50 border border-gray-200 rounded-lg p-3 text-sm text-gray-600 focus:ring-2 focus:ring-cotecmar-light outline-none resize-y"
-            rows="2"
-            placeholder="Redactar objetivo...">${value}</textarea>
-        <button onclick="removeObjectiveInput(this)" class="text-gray-400 hover:text-red-500 p-2 opacity-0 group-hover/item:opacity-100 transition-opacity mt-2">
-            <i class="ph ph-trash"></i>
+            class="flex-1 bg-white border-2 border-gray-200 rounded-lg px-3 py-2.5 text-sm text-gray-700 leading-relaxed
+                   focus:border-cotecmar-light focus:ring-4 focus:ring-cotecmar-light/20 outline-none transition-all
+                   hover:border-gray-300 resize-none"
+            rows="3"
+            placeholder="Ej: Desarrollar un prototipo funcional con precisión del 85% en 12 meses...">${value}</textarea>
+        <button 
+            onclick="removeObjectiveInput(this)" 
+            class="flex-shrink-0 text-gray-400 hover:text-red-500 hover:bg-red-50 p-2 rounded-lg opacity-0 group-hover/item:opacity-100 transition-all mt-1"
+            title="Eliminar objetivo">
+            <i class="ph-fill ph-trash text-lg"></i>
         </button>
     `;
     list.appendChild(div);
+
+    // Renumerar todos los objetivos
+    renumberObjectives();
 }
 
 window.removeObjectiveInput = function (btn) {
     btn.parentElement.remove();
+    renumberObjectives();
 }
+
+function renumberObjectives() {
+    const list = document.getElementById('objectives-list');
+    const items = list.children;
+    for (let i = 0; i < items.length; i++) {
+        const numberBadge = items[i].querySelector('div');
+        if (numberBadge) {
+            numberBadge.textContent = i + 1;
+        }
+    }
+}
+
 
 function openEditIdea(idea) {
     const { ideasContainer, ideaEditor } = getElements();
