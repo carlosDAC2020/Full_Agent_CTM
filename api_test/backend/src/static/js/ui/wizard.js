@@ -445,72 +445,189 @@ export async function confirmIdea() {
 }
 
 function renderSchema(data) {
-    // Data structure: data.initial_schema (Markdown string)
-    // data.docs_paths.proyect_proposal_initial_schema_pdf (Link)
+    console.log("Rendering schema with data:", data);
 
-    const schemaTitle = document.getElementById('schema-title');
-    const schemaDesc = document.getElementById('schema-desc'); // Mapping to Executive Summary for now
-    const schemaObjs = document.getElementById('schema-objs');
+    // 1. Extraer información general
+    const generalInfo = data.report_components?.general_info || {};
+    const selectedIdea = data.selected_idea || store.currentSelectedIdea || {};
 
-    // Attempt to parse simple markdown to fill specific UI slots, or just dump it?
-    // User requested: "podria toamr el q viene del .md q es tetxo"
+    // 2. Renderizar información general
+    renderGeneralInfo(generalInfo, selectedIdea);
 
+    // 3. Parsear y renderizar contenido del esquema
     const mdContent = data.initial_schema || "";
-    const pdfLink = data.docs_paths?.proyect_proposal_initial_schema_pdf;
+    renderSchemaContent(mdContent);
 
-    // Basic extraction (regex or split) to fill the structured view in step-3-schema
-    // Since parsing MD is complex without library, we will put the raw or slightly formatted text.
-    // Ideally we would use a markdown renderer. For now, populating known fields if available in `report_components` 
-    // BUT `initial_schema` node might output text blocks.
-    // Let's check `state.py`: initial_schema is Optional[str].
-    // `report_components` might optionally be populated.
+    // 4. Renderizar enlaces a documentos
+    renderDocumentLinks(data.docs_paths);
+}
 
-    // Fallback: Use the data we sent if schema is just raw text
-    // Try multiple sources for the title
-    let projectTitle = "Proyecto";
-    if (store.currentSelectedIdea && store.currentSelectedIdea.title) {
-        projectTitle = store.currentSelectedIdea.title;
-    } else if (data.selected_idea && data.selected_idea.idea_title) {
-        projectTitle = data.selected_idea.idea_title;
+// Función auxiliar: Renderizar información general
+function renderGeneralInfo(generalInfo, selectedIdea) {
+    // Título
+    const title = generalInfo.project_title || selectedIdea.idea_title || selectedIdea.title || 'Sin título';
+    document.getElementById('general-title').textContent = title;
+
+    // Duración
+    const duration = generalInfo.duration_months
+        ? `${generalInfo.duration_months} meses`
+        : 'No especificado';
+    document.getElementById('general-duration').textContent = duration;
+
+    // Línea Temática
+    const thematic = generalInfo.thematic_line || 'No especificado';
+    document.getElementById('general-thematic').textContent = thematic;
+
+    // Palabras Clave
+    const keywordsContainer = document.getElementById('general-keywords');
+    keywordsContainer.innerHTML = '';
+
+    const keywords = generalInfo.keywords || [];
+    if (keywords.length > 0) {
+        keywords.forEach(keyword => {
+            const badge = document.createElement('span');
+            badge.className = 'px-2 py-1 bg-blue-500 text-white rounded-md text-xs font-semibold shadow-sm';
+            badge.textContent = keyword;
+            keywordsContainer.appendChild(badge);
+        });
+    } else {
+        keywordsContainer.innerHTML = '<span class="text-xs text-gray-400 italic">No especificadas</span>';
     }
-    schemaTitle.innerText = projectTitle;
+}
 
-    // If output is just a big string, maybe put it in a container?
-    // The current UI expects: Resumen Ejecutivo, Objetivos, Metodología.
+// Función auxiliar: Parsear Markdown en secciones
+function parseMarkdownSections(markdown) {
+    const sections = [];
+    const lines = markdown.split('\n');
+    let currentSection = null;
 
-    // Let's try to find sections in MD
-    const getSection = (name) => {
-        const regex = new RegExp(`#+\\s*${name}[\\s\\S]*?(?=#+|$)`, 'i');
-        const match = mdContent.match(regex);
-        return match ? match[0].replace(/#+.*/, '').trim() : "Contenido no generado.";
-    };
+    lines.forEach(line => {
+        // Detectar encabezados (## o ###)
+        const headerMatch = line.match(/^(#{1,3})\s+(.+)/);
+        if (headerMatch) {
+            // Guardar sección anterior si existe
+            if (currentSection) {
+                sections.push(currentSection);
+            }
+            // Crear nueva sección
+            currentSection = {
+                level: headerMatch[1].length,
+                title: headerMatch[2].trim(),
+                content: []
+            };
+        } else if (currentSection && line.trim()) {
+            // Agregar contenido a la sección actual
+            currentSection.content.push(line);
+        }
+    });
 
-    // Populate UI
-    schemaDesc.innerText = getSection("Resumen Ejecutivo") || mdContent.slice(0, 500) + "..."; // Fallback
-
-    schemaObjs.innerHTML = '';
-    const objsSection = getSection("Objetivos");
-    const objsLines = objsSection.split('\n').filter(l => l.trim().startsWith('-'));
-    objsLines.forEach(l => schemaObjs.innerHTML += `<li>${l.replace('-', '').trim()}</li>`);
-
-    // Document Links Container (Dynamic creation if not exists)
-    let linksContainer = document.getElementById('schema-links');
-    if (!linksContainer) {
-        linksContainer = document.createElement('div');
-        linksContainer.id = 'schema-links';
-        linksContainer.className = "mt-6 flex justify-center gap-4";
-        document.querySelector('#step-3-schema .doc-page').appendChild(linksContainer);
+    // Guardar última sección
+    if (currentSection) {
+        sections.push(currentSection);
     }
-    linksContainer.innerHTML = '';
 
-    if (pdfLink) {
-        linksContainer.innerHTML += `
-            <a href="${pdfLink}" target="_blank" class="flex items-center gap-2 text-red-600 font-bold border border-red-200 bg-red-50 px-4 py-2 rounded-lg hover:bg-red-100 transition">
-                <i class="ph ph-file-pdf"></i> Ver PDF Generado
-            </a>
+    return sections;
+}
+
+// Función auxiliar: Renderizar contenido del esquema
+function renderSchemaContent(markdown) {
+    const container = document.getElementById('schema-content');
+    container.innerHTML = '';
+
+    if (!markdown || markdown.trim() === '') {
+        container.innerHTML = '<p class="text-sm text-gray-400 italic">No hay contenido disponible</p>';
+        return;
+    }
+
+    const sections = parseMarkdownSections(markdown);
+
+    if (sections.length === 0) {
+        // Si no se detectaron secciones, mostrar el contenido completo
+        container.innerHTML = `<div class="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">${markdown}</div>`;
+        return;
+    }
+
+    // Renderizar cada sección
+    sections.forEach((section, index) => {
+        const sectionDiv = document.createElement('div');
+        sectionDiv.className = 'mb-6 pb-6 border-b border-gray-200 last:border-b-0';
+
+        // Título de la sección
+        const titleClass = section.level === 1
+            ? 'text-lg font-bold text-gray-900'
+            : 'text-base font-bold text-gray-800';
+
+        const title = document.createElement('h4');
+        title.className = `${titleClass} mb-3 pb-2 border-b-2 border-blue-500 flex items-center gap-2`;
+        title.innerHTML = `
+            <span class="w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0">
+                ${index + 1}
+            </span>
+            ${section.title}
         `;
+        sectionDiv.appendChild(title);
+
+        // Contenido de la sección
+        const contentDiv = document.createElement('div');
+        contentDiv.className = 'text-sm text-gray-700 leading-relaxed space-y-2 pl-8';
+
+        // Procesar el contenido
+        section.content.forEach(line => {
+            const trimmedLine = line.trim();
+            if (trimmedLine) {
+                // Detectar listas
+                if (trimmedLine.startsWith('-') || trimmedLine.startsWith('*')) {
+                    const listItem = document.createElement('div');
+                    listItem.className = 'flex items-start gap-2';
+                    listItem.innerHTML = `
+                        <i class="ph-fill ph-check-circle text-green-500 text-sm mt-0.5 flex-shrink-0"></i>
+                        <span>${trimmedLine.substring(1).trim()}</span>
+                    `;
+                    contentDiv.appendChild(listItem);
+                } else {
+                    // Párrafo normal
+                    const p = document.createElement('p');
+                    p.textContent = trimmedLine;
+                    contentDiv.appendChild(p);
+                }
+            }
+        });
+
+        sectionDiv.appendChild(contentDiv);
+        container.appendChild(sectionDiv);
+    });
+}
+
+// Función auxiliar: Renderizar enlaces a documentos
+function renderDocumentLinks(docsPaths) {
+    const mdLink = document.getElementById('link-md');
+    const pdfLink = document.getElementById('link-pdf');
+
+    if (docsPaths) {
+        // Markdown
+        if (docsPaths.proyect_proposal_initial_schema_md) {
+            mdLink.href = docsPaths.proyect_proposal_initial_schema_md;
+            mdLink.classList.remove('opacity-50', 'pointer-events-none');
+        } else {
+            mdLink.href = '#';
+            mdLink.classList.add('opacity-50', 'pointer-events-none');
+        }
+
+        // PDF
+        if (docsPaths.proyect_proposal_initial_schema_pdf) {
+            pdfLink.href = docsPaths.proyect_proposal_initial_schema_pdf;
+            pdfLink.classList.remove('opacity-50', 'pointer-events-none');
+        } else {
+            pdfLink.href = '#';
+            pdfLink.classList.add('opacity-50', 'pointer-events-none');
+        }
+    } else {
+        // No hay documentos disponibles
+        mdLink.href = '#';
+        mdLink.classList.add('opacity-50', 'pointer-events-none');
+        pdfLink.href = '#';
+        pdfLink.classList.add('opacity-50', 'pointer-events-none');
     }
-    // Optional: TXT/MD download could be added here
 }
 
 // Paso 4
