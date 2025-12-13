@@ -194,6 +194,28 @@ export async function restoreSession(sessionId) {
                 renderIdeas(stepsMap['proposal_ideas']); // Pass the data to renderIdeas
             }
         }
+        else if (lastStep === 'project_idea') {
+            // Step 2 done, move to Step 3 (Schema)
+            step1.classList.add('hidden');
+            step2.classList.add('hidden');
+            step3.classList.remove('hidden');
+            updateStepper(3);
+
+            // Restore selected idea to store (needed for renderSchema)
+            if (stepsMap['project_idea'] && stepsMap['project_idea'].selected_idea) {
+                const ideaData = stepsMap['project_idea'].selected_idea;
+                store.currentSelectedIdea = {
+                    title: ideaData.idea_title,
+                    desc: ideaData.idea_description,
+                    objectives: ideaData.idea_objectives || []
+                };
+            }
+
+            // Render the schema with the saved data
+            if (stepsMap['project_idea']) {
+                renderSchema(stepsMap['project_idea']);
+            }
+        }
         // Add more steps logic as we implement them...
 
     } catch (err) {
@@ -419,7 +441,14 @@ function renderSchema(data) {
     // `report_components` might optionally be populated.
 
     // Fallback: Use the data we sent if schema is just raw text
-    schemaTitle.innerText = store.currentSelectedIdea.title;
+    // Try multiple sources for the title
+    let projectTitle = "Proyecto";
+    if (store.currentSelectedIdea && store.currentSelectedIdea.title) {
+        projectTitle = store.currentSelectedIdea.title;
+    } else if (data.selected_idea && data.selected_idea.idea_title) {
+        projectTitle = data.selected_idea.idea_title;
+    }
+    schemaTitle.innerText = projectTitle;
 
     // If output is just a big string, maybe put it in a container?
     // The current UI expects: Resumen Ejecutivo, Objetivos, Metodología.
