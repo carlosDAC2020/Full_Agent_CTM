@@ -41,14 +41,45 @@ async def list_sessions(db: Session = Depends(get_db)):
             except Exception:
                 pass
         
+        # Obtener el último paso ejecutado
+        last_step_record = db.query(AgentStep).filter(
+            AgentStep.session_id == session.id
+        ).order_by(desc(AgentStep.created_at)).first()
+        
+        last_step = last_step_record.step_type if last_step_record else None
+        
         result.append({
             "id": session.id,
             "status": session.status,
             "created_at": session.created_at.isoformat() if session.created_at else None,
-            "title_preview": title_preview
+            "title_preview": title_preview,
+            "last_step": last_step  # Nuevo campo
         })
     
     return result
+
+
+@router.delete("/{session_id}")
+async def delete_session(session_id: str, db: Session = Depends(get_db)):
+    """
+    Elimina una sesión y todos sus pasos asociados.
+    """
+    from fastapi import HTTPException
+    
+    # Verificar que la sesión existe
+    session = db.query(AgentSession).filter(AgentSession.id == session_id).first()
+    if not session:
+        raise HTTPException(status_code=404, detail="Sesión no encontrada")
+    
+    # Eliminar todos los pasos asociados
+    db.query(AgentStep).filter(AgentStep.session_id == session_id).delete()
+    
+    # Eliminar la sesión
+    db.delete(session)
+    db.commit()
+    
+    return {"message": "Sesión eliminada correctamente", "session_id": session_id}
+
 
 
 @router.get("/{session_id}/steps")

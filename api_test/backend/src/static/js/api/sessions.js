@@ -8,3 +8,16 @@ export async function fetchSessions() {
         return [];
     }
 }
+
+export async function deleteSession(sessionId) {
+    try {
+        const response = await fetch(`/api/sessions/${sessionId}`, {
+            method: 'DELETE'
+        });
+        if (!response.ok) throw new Error('Error deleting session');
+        return await response.json();
+    } catch (error) {
+        console.error('API Error:', error);
+        throw error;
+    }
+}
