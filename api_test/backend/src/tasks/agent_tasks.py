@@ -104,41 +104,54 @@ def task_process_agent_step(self, session_id: str, input_data: dict, step_type: 
             db.rollback()
     
     # ==========================================
-    # 2. RECUPERAR Y REHIDRATAR ESTADO (REDIS)
+    # 2. RECUPERAR Y REHIDRATAR ESTADO (REDIS O DB)
     # ==========================================
     current_state = {}
     stored_state = redis_client.get(f"agent_state:{session_id}")
     
     if stored_state:
         current_state = json.loads(stored_state)
-        
-        # --- REHIDRATACIÓN PYDANTIC ---
-        # --- REHIDRATACIÓN PYDANTIC ---
-        # Redis stores JSON structure, so top-level keys are dicts.
-        # But some keys might be deserialized as dicts already by json.loads(stored_state).
-        
+    else:
+        # Fallback: Intentar recuperar el último estado conocido de la base de datos
+        try:
+            last_step = db.query(AgentStep).filter(
+                AgentStep.session_id == session_id
+            ).order_by(AgentStep.created_at.desc()).first()
+            
+            if last_step and last_step.output_data:
+                print(f"🔄 Estado recuperado de DB para sesión: {session_id}")
+                current_state = last_step.output_data
+        except Exception as e:
+            print(f"⚠️ Error recuperando estado de fallback DB: {e}")
+
+    # --- REHIDRATACIÓN PYDANTIC ---
+    # Convertimos diccionarios a objetos Pydantic si es necesario
+    
+    if current_state:
         # 1. call_info
         if "call_info" in current_state and current_state["call_info"]:
-            # If it's a dictionary, convert to Pydantic model
             if isinstance(current_state["call_info"], dict):
                 try: 
                     current_state["call_info"] = CallInfo(**current_state["call_info"])
                 except Exception as e:
                     print(f"⚠️ Error rehydrating call_info: {e}")
-            # If it's already an object (unlikely from json.loads but possible in memory), keep it.
 
+        # 2. report_components
         if "report_components" in current_state and isinstance(current_state["report_components"], dict):
             try: current_state["report_components"] = ReportSchema(**current_state["report_components"])
             except: pass
 
+        # 3. docs_paths
         if "docs_paths" in current_state and isinstance(current_state["docs_paths"], dict):
             try: current_state["docs_paths"] = DocsPaths(**current_state["docs_paths"])
             except: pass
         
+        # 4. proposal_ideas (Response wrapper)
         if "proposal_ideas" in current_state and isinstance(current_state["proposal_ideas"], dict):
             try: current_state["proposal_ideas"] = proposalIdeaResponse(**current_state["proposal_ideas"])
             except: pass
 
+        # 5. selected_idea
         if "selected_idea" in current_state and isinstance(current_state["selected_idea"], dict):
             try: current_state["selected_idea"] = ProposalIdea(**current_state["selected_idea"])
             except: pass
