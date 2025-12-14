@@ -8,8 +8,6 @@ import {
     cancelEdit,
     confirmIdea,
     generateFinal,
-    confirmIdea,
-    generateFinal,
     restoreSession,
     resetInterface
 } from './ui/wizard.js';
