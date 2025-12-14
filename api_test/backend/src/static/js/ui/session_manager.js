@@ -37,10 +37,22 @@ export async function restoreSession(sessionId) {
 
         loader.classList.add('hidden');
 
-        // 1. Restore Ingest Data (Always expected if session exists)
+        // 1. Calculate and update Max Reached Step
+        const STEP_MAPPING = {
+            'ingest': 1,
+            'proposal_ideas': 2,
+            'project_idea': 3,
+            'generate_project': 4,
+            'generate_proyect': 4,
+            'final': 4,
+            'report': 4
+        };
+        const maxStep = STEP_MAPPING[lastStep] || 1;
+        store.maxReachedStep = maxStep;
+
+        // 2. Restore Ingest Data (Always expected if session exists)
         if (stepsMap['ingest']) {
             renderStep1Result(stepsMap['ingest']);
-            updateStepper(1);
 
             // Extract title for the header label
             let ingestData = typeof stepsMap['ingest'] === 'string' ? JSON.parse(stepsMap['ingest']) : stepsMap['ingest'];
