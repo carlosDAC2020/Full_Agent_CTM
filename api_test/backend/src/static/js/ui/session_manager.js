@@ -61,6 +61,7 @@ export async function restoreSession(sessionId) {
         if (!lastStep || lastStep === 'ingest') {
             // Stay on Step 1
             step1.classList.remove('hidden');
+            updateStepper(1);
         }
         else if (lastStep === 'proposal_ideas') {
             // Step 1 done, move to Step 2
