@@ -8,7 +8,10 @@ import {
     cancelEdit,
     confirmIdea,
     generateFinal,
-    restoreSession
+    confirmIdea,
+    generateFinal,
+    restoreSession,
+    resetInterface
 } from './ui/wizard.js';
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -17,7 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Exponer funciones globales necesarias para onclicks en el HTML
     window.toggleSidebar = toggleSidebar;
-    window.resetInterface = () => location.reload();
+    window.resetInterface = resetInterface;
 
     window.openDropdown = openDropdown;
     window.filterOptions = filterOptions;
