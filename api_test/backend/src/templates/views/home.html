@@ -405,69 +405,159 @@
         </div>
 
         <!-- PASO 4: RESULTADO FINAL -->
-        <div id="step-4-final" class="hidden text-center pt-10">
-            <div
-                class="inline-flex items-center justify-center w-24 h-24 rounded-full bg-green-100 text-green-600 mb-6 animate-slide-up">
-                <i class="ph ph-check text-5xl"></i>
-            </div>
-            <h2 class="text-3xl font-bold text-gray-800 mb-2 animate-slide-up">¡Propuesta Generada!</h2>
-            <p class="text-gray-500 mb-10 max-w-lg mx-auto animate-slide-up">El agente ha completado la investigación
-                profunda y ha generado los documentos finales para la postulación.</p>
-
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 animate-slide-up" style="animation-delay: 0.2s">
-                <!-- Card PDF -->
-                <div
-                    class="bg-white p-6 rounded-2xl border border-gray-100 shadow-xl hover:shadow-2xl transition-shadow group cursor-pointer relative overflow-hidden">
-                    <div
-                        class="absolute top-0 right-0 bg-red-500 text-white text-[10px] font-bold px-2 py-1 rounded-bl-lg">
-                        PDF</div>
-                    <div
-                        class="w-16 h-16 bg-red-50 text-red-500 rounded-xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
-                        <i class="ph ph-file-pdf text-3xl"></i>
-                    </div>
-                    <h4 class="font-bold text-gray-800">Propuesta Técnica</h4>
-                    <p class="text-xs text-gray-400 mb-4">Formato completo MinCiencias</p>
-                    <button
-                        class="w-full py-2 bg-red-500 text-white rounded-lg text-sm font-bold hover:bg-red-600 transition">Descargar</button>
+        <!-- PASO 4: RESULTADO FINAL -->
+        <div id="step-4-final" class="hidden pt-6 fade-in">
+            <!-- Header de Éxito -->
+            <div class="text-center mb-8">
+                <div class="inline-flex items-center gap-2 bg-green-100 text-green-700 px-4 py-2 rounded-full mb-3">
+                    <i class="ph-fill ph-check-circle text-xl"></i>
+                    <span class="font-bold text-sm">Proceso Completado Exitosamente</span>
                 </div>
-
-                <!-- Card MD -->
-                <div
-                    class="bg-white p-6 rounded-2xl border border-gray-100 shadow-xl hover:shadow-2xl transition-shadow group cursor-pointer relative overflow-hidden">
-                    <div
-                        class="absolute top-0 right-0 bg-gray-800 text-white text-[10px] font-bold px-2 py-1 rounded-bl-lg">
-                        MD</div>
-                    <div
-                        class="w-16 h-16 bg-gray-100 text-gray-600 rounded-xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
-                        <i class="ph ph-markdown-logo text-3xl"></i>
-                    </div>
-                    <h4 class="font-bold text-gray-800">Fuente Markdown</h4>
-                    <p class="text-xs text-gray-400 mb-4">Editable para Wiki/Docs</p>
-                    <button
-                        class="w-full py-2 bg-gray-700 text-white rounded-lg text-sm font-bold hover:bg-gray-800 transition">Descargar</button>
-                </div>
-
-                <!-- Card IMG -->
-                <div
-                    class="bg-white p-6 rounded-2xl border border-gray-100 shadow-xl hover:shadow-2xl transition-shadow group cursor-pointer relative overflow-hidden">
-                    <div
-                        class="absolute top-0 right-0 bg-purple-500 text-white text-[10px] font-bold px-2 py-1 rounded-bl-lg">
-                        IMG</div>
-                    <div
-                        class="w-16 h-16 bg-purple-50 text-purple-500 rounded-xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
-                        <i class="ph ph-image text-3xl"></i>
-                    </div>
-                    <h4 class="font-bold text-gray-800">Poster Científico</h4>
-                    <p class="text-xs text-gray-400 mb-4">Resumen visual del proyecto</p>
-                    <button
-                        class="w-full py-2 bg-purple-600 text-white rounded-lg text-sm font-bold hover:bg-purple-700 transition">Ver
-                        Imagen</button>
-                </div>
+                <h2 class="text-3xl font-bold text-gray-800">Resultados del Proyecto</h2>
             </div>
 
-            <div class="mt-12">
-                <button onclick="resetInterface()" class="text-cotecmar-mid font-medium hover:underline text-sm">Iniciar
-                    nuevo proceso</button>
+            <div class="flex flex-col lg:flex-row gap-8 max-w-7xl mx-auto">
+                <!-- COLUMNA IZQUIERDA: Poster + Descargas (65%) -->
+                <div class="w-full lg:w-2/3 flex flex-col gap-6">
+                    <!-- Poster Card -->
+                    <div
+                        class="bg-gray-100 rounded-2xl border-2 border-dashed border-gray-300 flex items-center justify-center min-h-[500px] relative group overflow-hidden shadow-inner">
+                        <!-- Imagen del Poster -->
+                        <img id="final-poster-img"
+                            class="hidden w-full h-full object-contain rounded-lg shadow-2xl transition-transform duration-500 hover:scale-[1.02]"
+                            alt="Poster Científico">
+
+                        <!-- Placeholder por defecto -->
+                        <div id="final-poster-placeholder" class="text-center text-gray-400 p-8">
+                            <div
+                                class="w-20 h-20 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <i class="ph ph-image text-4xl"></i>
+                            </div>
+                            <p class="font-medium">El poster se visualizará aquí una vez generado</p>
+                        </div>
+
+                        <!-- Botón de ampliar (overlay) -->
+                        <div id="poster-overlay"
+                            class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center hidden">
+                            <button id="btn-view-poster"
+                                class="bg-white text-gray-900 px-6 py-3 rounded-full font-bold shadow-lg transform hover:scale-105 transition flex items-center gap-2">
+                                <i class="ph-fill ph-arrows-out-simple"></i>
+                                Ver en Alta Resolución
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Botones de Descarga -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <!-- PDF -->
+                        <a id="final-btn-pdf" href="#" target="_blank"
+                            class="flex items-center p-4 bg-red-50 border-2 border-red-100 hover:border-red-300 hover:bg-red-100 rounded-xl transition-all group opacity-50 pointer-events-none">
+                            <div
+                                class="w-12 h-12 bg-red-500 text-white rounded-lg flex items-center justify-center shadow-md group-hover:scale-110 transition-transform flex-shrink-0">
+                                <i class="ph-fill ph-file-pdf text-2xl"></i>
+                            </div>
+                            <div class="ml-4">
+                                <div class="text-gray-900 font-bold text-lg">Propuesta Técnica</div>
+                                <div class="text-red-500 text-sm font-medium flex items-center gap-1">
+                                    Descargar PDF <i class="ph-bold ph-download-simple"></i>
+                                </div>
+                            </div>
+                        </a>
+
+                        <!-- Markdown -->
+                        <a id="final-btn-md" href="#" target="_blank"
+                            class="flex items-center p-4 bg-gray-50 border-2 border-gray-200 hover:border-gray-400 hover:bg-gray-100 rounded-xl transition-all group opacity-50 pointer-events-none">
+                            <div
+                                class="w-12 h-12 bg-gray-800 text-white rounded-lg flex items-center justify-center shadow-md group-hover:scale-110 transition-transform flex-shrink-0">
+                                <i class="ph-fill ph-markdown-logo text-2xl"></i>
+                            </div>
+                            <div class="ml-4">
+                                <div class="text-gray-900 font-bold text-lg">Fuente Markdown</div>
+                                <div class="text-gray-600 text-sm font-medium flex items-center gap-1">
+                                    Descargar Archivo <i class="ph-bold ph-download-simple"></i>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- COLUMNA DERECHA: Información General (35%) -->
+                <div class="w-full lg:w-1/3 flex flex-col gap-6">
+                    <!-- Tarjeta de Info -->
+                    <div class="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden sticky top-6">
+                        <div class="bg-gradient-to-r from-blue-600 to-indigo-700 px-6 py-4">
+                            <h3 class="text-white font-bold text-lg flex items-center gap-2">
+                                <i class="ph-fill ph-info"></i>
+                                Información del Proyecto
+                            </h3>
+                        </div>
+
+                        <div class="p-6 space-y-6">
+                            <!-- Título -->
+                            <div>
+                                <label
+                                    class="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-1">Título
+                                    del Proyecto</label>
+                                <p id="final-info-title" class="text-gray-800 font-bold text-lg leading-snug">
+                                    Cargando título...
+                                </p>
+                            </div>
+
+                            <hr class="border-gray-100">
+
+                            <!-- Detalles Grid -->
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label
+                                        class="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-1">Duración</label>
+                                    <div class="flex items-center gap-2 text-gray-700 font-medium">
+                                        <i class="ph-fill ph-clock text-blue-500"></i>
+                                        <span id="final-info-duration">--</span>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label
+                                        class="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-1">Estado</label>
+                                    <div
+                                        class="flex items-center gap-2 text-green-600 font-bold bg-green-50 px-2 py-0.5 rounded-md w-fit">
+                                        <i class="ph-fill ph-check-circle"></i>
+                                        <span>Generado</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Línea Temática -->
+                            <div>
+                                <label class="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-1">Línea
+                                    Temática</label>
+                                <p id="final-info-thematic"
+                                    class="text-indigo-600 font-medium bg-indigo-50 px-3 py-2 rounded-lg border border-indigo-100">
+                                    --
+                                </p>
+                            </div>
+
+                            <!-- Keywords -->
+                            <div>
+                                <label
+                                    class="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-2">Palabras
+                                    Clave</label>
+                                <div id="final-info-keywords" class="flex flex-wrap gap-2">
+                                    <!-- Se poblará dinámicamente -->
+                                    <span class="text-gray-400 text-sm italic">Sin palabras clave</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Acción Secundaria -->
+                    <div class="text-center mt-4">
+                        <button onclick="resetInterface()"
+                            class="inline-flex items-center gap-2 text-gray-500 hover:text-cotecmar-mid font-medium transition-colors">
+                            <i class="ph ph-arrow-counter-clockwise"></i>
+                            Iniciar nuevo proceso
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
 

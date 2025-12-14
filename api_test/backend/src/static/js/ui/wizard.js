@@ -695,60 +695,87 @@ export async function generateFinal() {
 function renderFinalResult(data) {
     console.log("Rendering final result:", data);
     const docs = data.docs_paths || {};
+    const generalInfo = data.report_components?.general_info || {};
+    const selectedIdea = data.selected_idea || {};
+    const callInfo = data.call_info || {};
 
-    // 1. Configurar Botón PDF
-    // Buscamos el contenedor del icono PDF
-    const pdfIcon = document.querySelector('#step-4-final .ph-file-pdf');
-    if (pdfIcon) {
-        const pdfCard = pdfIcon.closest('.group');
-        const pdfBtn = pdfCard.querySelector('button');
+    // ----------------------------------------------------
+    // COLUMNA IZQUIERDA: Poster + Botones
+    // ----------------------------------------------------
 
-        if (docs.proyect_proposal_pdf) {
-            pdfBtn.onclick = () => window.open(docs.proyect_proposal_pdf, '_blank');
-            pdfBtn.innerText = "Descargar PDF";
-            pdfCard.classList.remove('opacity-50', 'pointer-events-none');
-            // Efecto visual de éxito
-            pdfCard.classList.add('ring-2', 'ring-green-400', 'bg-green-50');
-        } else {
-            pdfCard.classList.add('opacity-50', 'pointer-events-none');
-        }
+    // 1. Configurar Poster
+    const posterImg = document.getElementById('final-poster-img');
+    const posterPlaceholder = document.getElementById('final-poster-placeholder');
+    const posterOverlay = document.getElementById('poster-overlay');
+    const viewPosterBtn = document.getElementById('btn-view-poster');
+
+    if (docs.poster_image_path) {
+        posterImg.src = docs.poster_image_path;
+        posterImg.classList.remove('hidden');
+        posterPlaceholder.classList.add('hidden');
+        posterOverlay.classList.remove('hidden');
+
+        // Botón ver en HD
+        viewPosterBtn.onclick = () => window.open(docs.poster_image_path, '_blank');
+    } else {
+        posterImg.classList.add('hidden');
+        posterPlaceholder.classList.remove('hidden');
+        posterOverlay.classList.add('hidden');
     }
 
-    // 2. Configurar Botón Markdown
-    const mdIcon = document.querySelector('#step-4-final .ph-markdown-logo');
-    if (mdIcon) {
-        const mdCard = mdIcon.closest('.group');
-        const mdBtn = mdCard.querySelector('button');
-
-        if (docs.proyect_proposal_md) {
-            mdBtn.onclick = () => window.open(docs.proyect_proposal_md, '_blank');
-            mdBtn.innerText = "Descargar Markdown";
-            mdCard.classList.remove('opacity-50', 'pointer-events-none');
-        } else {
-            mdCard.classList.add('opacity-50', 'pointer-events-none');
-        }
+    // 2. Configurar Botón PDF
+    const pdfBtn = document.getElementById('final-btn-pdf');
+    if (docs.proyect_proposal_pdf) {
+        pdfBtn.href = docs.proyect_proposal_pdf;
+        pdfBtn.classList.remove('opacity-50', 'pointer-events-none');
+        pdfBtn.classList.add('ring-2', 'ring-red-100', 'bg-red-50');
+    } else {
+        pdfBtn.classList.add('opacity-50', 'pointer-events-none');
+        pdfBtn.href = '#';
     }
 
-    // 3. Configurar Imagen (Poster)
-    const imgIcon = document.querySelector('#step-4-final .ph-image');
-    if (imgIcon) {
-        const imgCard = imgIcon.closest('.group');
-        const imgBtn = imgCard.querySelector('button');
+    // 3. Configurar Botón Markdown
+    const mdBtn = document.getElementById('final-btn-md');
+    if (docs.proyect_proposal_md) {
+        mdBtn.href = docs.proyect_proposal_md;
+        mdBtn.classList.remove('opacity-50', 'pointer-events-none');
+        mdBtn.classList.add('ring-2', 'ring-gray-200', 'bg-gray-50');
+    } else {
+        mdBtn.classList.add('opacity-50', 'pointer-events-none');
+        mdBtn.href = '#';
+    }
 
-        // La clave puede estar en poster_image_path
-        if (docs.poster_image_path) {
-            imgBtn.onclick = () => window.open(docs.poster_image_path, '_blank');
-            imgBtn.innerText = "Ver Poster en HD";
-            imgCard.classList.remove('opacity-50', 'pointer-events-none');
+    // ----------------------------------------------------
+    // COLUMNA DERECHA: Información General
+    // ----------------------------------------------------
 
-            // Opcional: Reemplazar el icono con la imagen real pequeña
-            const iconContainer = imgCard.querySelector('div.w-16');
-            if (iconContainer) {
-                iconContainer.innerHTML = `<img src="${docs.poster_image_path}" class="w-full h-full object-cover rounded-xl" alt="Poster generado">`;
-                iconContainer.classList.remove('p-4'); // Ajustar padding si es necesario
-            }
-        } else {
-            imgCard.classList.add('opacity-50', 'pointer-events-none');
-        }
+    // Título
+    const title = generalInfo.project_title || selectedIdea.idea_title || callInfo.title || "Proyecto Generado";
+    document.getElementById('final-info-title').innerText = title;
+
+    // Duración
+    const duration = generalInfo.duration_months ? `${generalInfo.duration_months} meses` : "No especificada";
+    document.getElementById('final-info-duration').innerText = duration;
+
+    // Línea Temática
+    const thematic = generalInfo.thematic_line || "General";
+    document.getElementById('final-info-thematic').innerText = thematic;
+
+    // Palabras Clave
+    const keywordsContainer = document.getElementById('final-info-keywords');
+    keywordsContainer.innerHTML = '';
+
+    const keywords = generalInfo.keywords || callInfo.keywords || [];
+
+    if (keywords.length > 0) {
+        keywords.forEach(kw => {
+            const badge = document.createElement('span');
+            badge.className = "bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs border border-gray-200";
+            badge.innerText = kw;
+            keywordsContainer.appendChild(badge);
+        });
+    } else {
+        keywordsContainer.innerHTML = '<span class="text-gray-400 text-sm italic">Sin palabras clave</span>';
     }
 }
+
