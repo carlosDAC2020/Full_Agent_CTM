@@ -54,11 +54,7 @@ export async function restoreSession(sessionId) {
         if (stepsMap['ingest']) {
             renderStep1Result(stepsMap['ingest']);
 
-            // Extract title for the header label
-            let ingestData = typeof stepsMap['ingest'] === 'string' ? JSON.parse(stepsMap['ingest']) : stepsMap['ingest'];
-            if (ingestData.call_info && ingestData.call_info.title) {
-                document.getElementById('selected-label').innerText = ingestData.call_info.title;
-            }
+
         }
 
         // 2. Logic based on last executed step

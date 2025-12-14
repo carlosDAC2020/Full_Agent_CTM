@@ -17,7 +17,6 @@ export async function startAnalysis() {
         resultsView.classList.remove('hidden');
         resultsView.classList.add('flex');
         globalStepper.classList.remove('hidden');
-        document.getElementById('selected-label').innerText = mockDB[store.selectedValue].title;
     }, 500);
 
     // Call API
