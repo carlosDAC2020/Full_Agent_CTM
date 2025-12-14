@@ -2,7 +2,7 @@
 // Centralizes imports/exports for the application
 
 // Common Utilities
-export { updateFileStatus } from './common.js';
+export { updateFileStatus, navigateToStep } from './common.js';
 
 // Step Logic
 export { startAnalysis } from './steps/step1.js';
