@@ -83,3 +83,23 @@ export async function getSessionHistory(sessionId) {
         throw error;
     }
 }
+
+export async function finalizeProject(sessionId) {
+    try {
+        const response = await fetch('/api/agent/finalize', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ session_id: sessionId })
+        });
+
+        if (!response.ok) {
+            const err = await response.json();
+            throw new Error(err.detail || 'Error finalizing project');
+        }
+
+        return await response.json(); // { task_id, session_id }
+    } catch (error) {
+        console.error('API Finalize Error:', error);
+        throw error;
+    }
+}

@@ -1,6 +1,6 @@
 import { mockDB, mockIdeas } from '../data/mocks.js';
 import { store } from '../data/store.js';
-import { ingestCall, getSessionHistory, generateIdeas } from '../api/agent.js';
+import { ingestCall, getSessionHistory, generateIdeas, finalizeProject } from '../api/agent.js';
 import { pollTask } from '../api/tasks.js';
 
 // DOM Elements
@@ -214,6 +214,23 @@ export async function restoreSession(sessionId) {
             // Render the schema with the saved data
             if (stepsMap['project_idea']) {
                 renderSchema(stepsMap['project_idea']);
+            }
+        }
+        else if (lastStep === 'generate_project' || lastStep === 'generate_proyect' || lastStep === 'final') {
+            // Step 3 done, move to Step 4
+            step1.classList.add('hidden');
+            step2.classList.add('hidden');
+            step3.classList.add('hidden');
+            step4.classList.remove('hidden');
+            updateStepper(4);
+
+            // Renderizar resultados finales
+            // Buscamos en 'generate_project', 'generate_proyect' o 'report'
+            const finalData = stepsMap['generate_project'] || stepsMap['generate_proyect'] || stepsMap['report'];
+
+            if (finalData) {
+                const data = typeof finalData === 'string' ? JSON.parse(finalData) : finalData;
+                renderFinalResult(data);
             }
         }
         // Add more steps logic as we implement them...
@@ -631,15 +648,107 @@ function renderDocumentLinks(docsPaths) {
 }
 
 // Paso 4
-export function generateFinal() {
+// Paso 4
+export async function generateFinal() {
     const { step3, loader, loaderText, step4 } = getElements();
+
+    // UI Transition
     step3.classList.add('hidden');
     loader.classList.remove('hidden');
-    loaderText.innerText = "Realizando investigación profunda y redactando documentos finales...";
+    loaderText.innerText = "Realizando investigación profunda, generando imágenes y redactando documentos finales...";
     updateStepper(4);
 
-    setTimeout(() => {
-        loader.classList.add('hidden');
-        step4.classList.remove('hidden');
-    }, 3000);
+    try {
+        // 1. Iniciar Tarea (API Real)
+        const { task_id } = await finalizeProject(store.sessionId);
+
+        // 2. Polling
+        pollTask(
+            task_id,
+            (message) => {
+                loaderText.innerText = message || "Procesando...";
+            },
+            (result) => {
+                // Completado
+                loader.classList.add('hidden');
+                step4.classList.remove('hidden');
+
+                // Renderizar datos reales
+                if (result.data) {
+                    const data = typeof result.data === 'string' ? JSON.parse(result.data) : result.data;
+                    renderFinalResult(data);
+                }
+            },
+            (error) => {
+                loaderText.innerText = "Error: " + error;
+                loaderText.classList.add('text-red-500');
+            }
+        );
+
+    } catch (err) {
+        loaderText.innerText = "Error de conexión: " + err.message;
+        loaderText.classList.add('text-red-500');
+    }
+}
+
+// Función auxiliar: Renderizar resultados finales
+function renderFinalResult(data) {
+    console.log("Rendering final result:", data);
+    const docs = data.docs_paths || {};
+
+    // 1. Configurar Botón PDF
+    // Buscamos el contenedor del icono PDF
+    const pdfIcon = document.querySelector('#step-4-final .ph-file-pdf');
+    if (pdfIcon) {
+        const pdfCard = pdfIcon.closest('.group');
+        const pdfBtn = pdfCard.querySelector('button');
+
+        if (docs.proyect_proposal_pdf) {
+            pdfBtn.onclick = () => window.open(docs.proyect_proposal_pdf, '_blank');
+            pdfBtn.innerText = "Descargar PDF";
+            pdfCard.classList.remove('opacity-50', 'pointer-events-none');
+            // Efecto visual de éxito
+            pdfCard.classList.add('ring-2', 'ring-green-400', 'bg-green-50');
+        } else {
+            pdfCard.classList.add('opacity-50', 'pointer-events-none');
+        }
+    }
+
+    // 2. Configurar Botón Markdown
+    const mdIcon = document.querySelector('#step-4-final .ph-markdown-logo');
+    if (mdIcon) {
+        const mdCard = mdIcon.closest('.group');
+        const mdBtn = mdCard.querySelector('button');
+
+        if (docs.proyect_proposal_md) {
+            mdBtn.onclick = () => window.open(docs.proyect_proposal_md, '_blank');
+            mdBtn.innerText = "Descargar Markdown";
+            mdCard.classList.remove('opacity-50', 'pointer-events-none');
+        } else {
+            mdCard.classList.add('opacity-50', 'pointer-events-none');
+        }
+    }
+
+    // 3. Configurar Imagen (Poster)
+    const imgIcon = document.querySelector('#step-4-final .ph-image');
+    if (imgIcon) {
+        const imgCard = imgIcon.closest('.group');
+        const imgBtn = imgCard.querySelector('button');
+
+        // La clave puede estar en poster_image_path
+        if (docs.poster_image_path) {
+            imgBtn.onclick = () => window.open(docs.poster_image_path, '_blank');
+            imgBtn.innerText = "Ver Poster en HD";
+            imgCard.classList.remove('opacity-50', 'pointer-events-none');
+
+            // Opcional: Reemplazar el icono con la imagen real pequeña
+            const iconContainer = imgCard.querySelector('div.w-16');
+            if (iconContainer) {
+                iconContainer.innerHTML = `<img src="${docs.poster_image_path}" class="w-full h-full object-cover rounded-xl" alt="Poster generado">`;
+                iconContainer.classList.remove('p-4'); // Ajustar padding si es necesario
+            }
+        } else {
+            imgCard.classList.add('opacity-50', 'pointer-events-none');
+        }
+    }
 }
