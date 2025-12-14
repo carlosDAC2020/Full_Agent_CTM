@@ -5,11 +5,15 @@ import { renderStep1Result } from './steps/step1.js';
 import { renderIdeas } from './steps/step2.js';
 import { renderSchema } from './steps/step3.js';
 import { renderFinalResult } from './steps/step4.js';
+import { loadHistory } from './sidebar.js'; // Helper for sidebar updates
 
 // RESTORE SESSION LOGIC
 export async function restoreSession(sessionId) {
     const { initialView, resultsView, globalStepper, loader, loaderText, step1, step2, step3, step4 } = getElements();
     store.sessionId = sessionId;
+
+    // Highlight active session
+    loadHistory(sessionId);
 
     // Switch Views
     initialView.classList.add('hidden');

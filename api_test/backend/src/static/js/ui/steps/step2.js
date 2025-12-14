@@ -2,6 +2,7 @@ import { store } from '../../data/store.js';
 import { generateIdeas } from '../../api/agent.js';
 import { pollTask } from '../../api/tasks.js';
 import { getElements, updateStepper } from '../common.js';
+import { loadHistory } from '../sidebar.js';
 
 // Paso 2: Generar Ideas
 export async function goToStep2() {
@@ -32,6 +33,7 @@ export async function goToStep2() {
                 renderIdeas(data);
                 loader.classList.add('hidden');
                 step2.classList.remove('hidden');
+                loadHistory(store.sessionId); // Refresh status
             },
             (error) => {
                 loaderText.innerText = "Error: " + error;

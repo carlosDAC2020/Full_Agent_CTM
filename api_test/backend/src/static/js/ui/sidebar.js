@@ -1,5 +1,6 @@
 import { fetchSessions, deleteSession } from '../api/sessions.js';
 import { restoreSession } from './wizard.js'; // Import logic
+import { store } from '../data/store.js';
 
 export function toggleSidebar() {
     const sb = document.getElementById('sidebar');
@@ -17,12 +18,17 @@ const STEP_INFO = {
     'generate_project': { name: 'Final', color: 'bg-green-500/90', icon: 'ph-check-circle' }
 };
 
-export async function loadHistory() {
+export async function loadHistory(activeSessionId = null) {
     const historyList = document.getElementById('history-list');
     if (!historyList) return;
 
-    // Loading state
-    historyList.innerHTML = '<div class="text-xs text-blue-300/60 px-3 py-2 italic">Cargando historial...</div>';
+    // Use passed ID or fallback to store
+    const currentId = activeSessionId || store.sessionId;
+
+    // Loading state (only if empty)
+    if (historyList.children.length === 0) {
+        historyList.innerHTML = '<div class="text-xs text-blue-300/60 px-3 py-2 italic">Cargando historial...</div>';
+    }
 
     const sessions = await fetchSessions();
     historyList.innerHTML = '';
@@ -35,18 +41,24 @@ export async function loadHistory() {
     sessions.forEach(session => {
         const item = document.createElement('div');
         const date = session.created_at ? new Date(session.created_at).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' }) : '--/--';
+        const isActive = session.id === currentId;
 
         // Obtener información del paso
         const stepInfo = STEP_INFO[session.last_step] || { name: 'Iniciado', color: 'bg-gray-500/90', icon: 'ph-circle-dashed' };
 
         item.className = "group relative mb-1.5";
 
+        // Active State Styling
+        const activeClasses = isActive
+            ? "bg-blue-800/40 border-l-4 border-l-cotecmar-light border-y border-r border-y-blue-500/30 border-r-blue-500/30 shadow-md"
+            : "hover:bg-blue-900/30 border border-transparent hover:border-blue-700/30";
+
         item.innerHTML = `
-            <div class="relative px-3 py-3 rounded-lg hover:bg-blue-900/30 transition-all duration-200 cursor-pointer border border-transparent hover:border-blue-700/30">
+            <div class="relative px-3 py-3 rounded-r-lg ${isActive ? 'rounded-l-sm' : 'rounded-lg'} transition-all duration-200 cursor-pointer ${activeClasses}">
                 <!-- Área clickeable para restaurar -->
                 <div class="pr-8" data-session-id="${session.id}">
                     <!-- Título -->
-                    <div class="text-xs font-semibold text-blue-50 leading-tight mb-2 group-hover:text-white transition-colors line-clamp-2">
+                    <div class="text-xs font-semibold ${isActive ? 'text-white' : 'text-blue-50'} leading-tight mb-2 group-hover:text-white transition-colors line-clamp-2">
                         ${session.title_preview || 'Nueva Sesión'}
                     </div>
                     

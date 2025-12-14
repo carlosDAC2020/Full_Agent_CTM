@@ -3,6 +3,7 @@ import { store } from '../../data/store.js';
 import { ingestCall } from '../../api/agent.js';
 import { pollTask } from '../../api/tasks.js';
 import { getElements, updateStepper } from '../common.js';
+import { loadHistory } from '../sidebar.js'; // Helper for sidebar updates
 
 // Paso 1: Iniciar Análisis
 export async function startAnalysis() {
@@ -28,6 +29,7 @@ export async function startAnalysis() {
         // 1. Start Ingestion Task
         const { task_id, session_id } = await ingestCall(store.selectedCallText);
         store.sessionId = session_id;
+        loadHistory(session_id); // Refresh history with new session
 
         // 2. Poll Task Progress
         pollTask(

@@ -2,6 +2,7 @@ import { store } from '../../data/store.js';
 import { finalizeProject } from '../../api/agent.js';
 import { pollTask } from '../../api/tasks.js';
 import { getElements, updateStepper } from '../common.js';
+import { loadHistory } from '../sidebar.js';
 
 // Paso 4: Resultados Finales
 export async function generateFinal() {
@@ -27,6 +28,7 @@ export async function generateFinal() {
                 // Completado
                 loader.classList.add('hidden');
                 step4.classList.remove('hidden');
+                loadHistory(store.sessionId);
 
                 // Renderizar datos reales
                 if (result.data) {

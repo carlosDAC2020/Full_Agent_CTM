@@ -2,6 +2,7 @@ import { store } from '../../data/store.js';
 import { selectIdea } from '../../api/agent.js'; // Note: check if selectIdea is exported in api/agent.js
 import { pollTask } from '../../api/tasks.js';
 import { getElements, updateStepper } from '../common.js';
+import { loadHistory } from '../sidebar.js';
 
 // Paso 3: Confirmar Idea y Generar Esquema
 export async function confirmIdea() {
@@ -54,6 +55,7 @@ export async function confirmIdea() {
                 renderSchema(data);
                 loader.classList.add('hidden');
                 step3.classList.remove('hidden');
+                loadHistory(store.sessionId);
             },
             (error) => {
                 loaderText.innerText = "Error: " + error;
