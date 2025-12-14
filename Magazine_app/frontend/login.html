@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Acceso | Magazine App</title>
+  <link rel="icon" href="/assets/logo-cotecmar.png" type="image/png">
+  
+  <!-- Fuentes -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Iconos -->
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+  <style>
+    :root {
+      --primary: #0f4c81;
+      --primary-dark: #092e4f;
+      --accent: #2c93d8;
+      --text-main: #1f2937;
+      --text-light: #6b7280;
+      --bg-right: #f3f4f6; 
+      --glass-bg: rgba(255, 255, 255, 0.9);
+      --glass-border: rgba(255, 255, 255, 1);
+      --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+      --radius: 16px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Montserrat', sans-serif;
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+    }
+
+    /* Izquierda: video */
+    .split-left {
+      flex: 1.8;
+      position: relative;
+      overflow: hidden;
+      background-color: #000;
+    }
+    .bg-video {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      object-fit: cover; opacity: 0.7;
+    }
+    .video-overlay { position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(15, 76, 129, 0.4), rgba(0, 0, 0, 0.6)); z-index: 1; }
+    .brand-caption { position: absolute; bottom: 40px; left: 40px; z-index: 2; color: #fff; max-width: 500px; }
+    .brand-caption h2 { font-size: 2.4rem; font-weight: 700; margin-bottom: 10px; }
+    .brand-caption p { font-size: 1.05rem; opacity: 0.9; font-weight: 300; }
+
+    /* Derecha: formulario */
+    .split-right {
+      flex: 1;
+      display: flex; align-items: center; justify-content: center;
+      background: var(--bg-right); padding: 20px;
+      position: relative;
+    }
+
+    .auth-card {
+      width: 100%; max-width: 400px;
+      background: var(--glass-bg); border: 1px solid var(--glass-border);
+      border-radius: var(--radius); box-shadow: var(--shadow);
+      padding: 2.5rem 2rem; position: relative; z-index: 10;
+    }
+
+    .header { text-align: center; margin-bottom: 2rem; }
+    .logo-container { width: 70px; height: 70px; margin: 0 auto 1rem; display: flex; align-items: center; justify-content: center; }
+    .logo { max-width: 100%; max-height: 100%; object-fit: contain; }
+    .title { font-size: 1.4rem; font-weight: 700; color: var(--primary); margin-bottom: 0.3rem; }
+    .subtitle { font-size: 0.85rem; color: var(--text-light); }
+
+    .input-group { margin-bottom: 1.2rem; }
+    .input-group label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-main); margin-bottom: 0.4rem; }
+    .input-wrapper { position: relative; }
+    .input-wrapper i { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-light); font-size: 1.2rem; }
+    .styled-input { width: 100%; padding: 12px 12px 12px 42px; border: 1px solid #e5e7eb; border-radius: 8px; font-family: inherit; font-size: 0.95rem; transition: all 0.2s; background: white; }
+    .styled-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(44, 147, 216, 0.15); }
+    .styled-input.pass-input { padding-right: 45px !important; }
+    .password-toggle { position: absolute; right: 14px !important; left: auto !important; top: 50%; transform: translateY(-50%); color: var(--text-light); font-size: 1.2rem; cursor: pointer; z-index: 10; }
+    .password-toggle:hover { color: var(--primary); }
+
+    /* --- Ocultar el ojo por defecto del navegador --- */
+
+    /* Para Chrome, Safari, Edge y Opera */
+    input[type="password"]::-webkit-password-reveal-button,
+    input[type="password"]::-webkit-clear-button {
+      display: none;
+      -webkit-appearance: none;
+    }
+
+    /* Para versiones antiguas de Edge/IE */
+    input[type="password"]::-ms-reveal,
+    input[type="password"]::-ms-clear {
+      display: none;
+    }
+
+    .btn-primary { width: 100%; padding: 12px; background: var(--primary); color: #fff; border: none; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px; transition: background 0.2s; }
+    .btn-primary:hover { background: var(--primary-dark); }
+
+    .auth-footer { margin-top: 1.5rem; text-align: center; font-size: 0.9rem; color: var(--text-light); }
+    .link { color: var(--primary); text-decoration: none; font-weight: 600; cursor: pointer; }
+    .error-msg { background-color: #fef2f2; border: 1px solid #fecaca; color: #b91c1c; padding: 10px; border-radius: 6px; font-size: 0.85rem; margin-bottom: 1rem; display: none; text-align: center; }
+    .success-msg { background-color: #ecfdf5; border: 1px solid #a7f3d0; color: #065f46; padding: 10px; border-radius: 6px; font-size: 0.85rem; margin-bottom: 1rem; display: none; text-align: center; }
+    .hidden { display: none; }
+
+    @media (max-width: 900px) { .split-left { display: none; } .split-right { background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); } }
+  </style>
+</head>
+<body>
+
+  <!-- IZQUIERDA: VIDEO -->
+  <div class="split-left">
+    <video class="bg-video" autoplay loop muted playsinline poster="/assets/poster.png">
+      <source src="/assets/home.mp4" type="video/mp4">
+      Tu navegador no soporta videos HTML5.
+    </video>
+    <div class="video-overlay"></div>
+    <div class="brand-caption">
+      <h2>Innovación, Ciencia y Tecnología</h2>
+      <p>Bienvenido a la plataforma de Vigilancia Tecnológica de COTECMAR.</p>
+    </div>
+  </div>
+
+  <!-- DERECHA: FORM -->
+  <div class="split-right">
+    <div class="auth-card">
+      <header class="header">
+        <div class="logo-container">
+          <img src="/assets/logo-cotecmar.png" onerror="this.style.display='none'" alt="Logo" class="logo" />
+        </div>
+        <h1 class="title" id="pageTitle">Bienvenido</h1>
+        <p class="subtitle" id="pageSubtitle">Ingresa tus credenciales para continuar</p>
+      </header>
+
+      <div id="authSuccess" class="success-msg"></div>
+      <div id="authError" class="error-msg"></div>
+
+      <form id="authForm">
+        <div class="input-group hidden" id="nameGroup">
+          <label for="authName">Nombre Completo</label>
+          <div class="input-wrapper">
+            <i class="ph ph-user"></i>
+            <input id="authName" class="styled-input" type="text" placeholder="Ej. Juan Pérez" autocomplete="name" />
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label for="authEmail">Correo Electrónico</label>
+          <div class="input-wrapper">
+            <i class="ph ph-envelope-simple"></i>
+            <input id="authEmail" class="styled-input" type="email" placeholder="usuario@dominio.com" required autocomplete="email" />
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label for="authPass">Contraseña</label>
+          <div class="input-wrapper">
+            <i class="ph ph-lock-key"></i>
+            <input id="authPass" class="styled-input pass-input" type="password" placeholder="••••••••" required autocomplete="current-password" maxlength="72" />
+            <i class="ph ph-eye password-toggle" id="togglePassBtn"></i>
+          </div>
+        </div>
+
+        <button id="submitBtn" class="btn-primary" type="submit">
+          <span>Iniciar Sesión</span>
+          <i class="ph ph-arrow-right"></i>
+        </button>
+
+        <!-- Botones ocultos para compatibilidad con auth.js -->
+        <button id="doLogin" type="button" class="hidden"></button>
+        <button id="doRegister" type="button" class="hidden"></button>
+      </form>
+
+      <div class="auth-footer">
+        <span id="toggleText">¿No tienes cuenta?</span>
+        <a class="link" id="toggleMode">Regístrate aquí</a>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/auth.js"></script>
+  <script>
+    const toggleLink = document.getElementById('toggleMode');
+    const toggleText = document.getElementById('toggleText');
+    const nameGroup = document.getElementById('nameGroup');
+    const pageTitle = document.getElementById('pageTitle');
+    const submitBtn = document.getElementById('submitBtn');
+    const submitBtnText = submitBtn.querySelector('span');
+    const errorDiv = document.getElementById('authError');
+    const doLoginBtn = document.getElementById('doLogin');
+    const doRegisterBtn = document.getElementById('doRegister');
+
+    let isRegisterMode = false;
+
+    toggleLink.addEventListener('click', (e) => {
+      e.preventDefault();
+      isRegisterMode = !isRegisterMode;
+      errorDiv.style.display = 'none';
+      if (isRegisterMode) {
+        nameGroup.classList.remove('hidden');
+        pageTitle.textContent = 'Crear Cuenta';
+        submitBtnText.textContent = 'Registrarse';
+        toggleText.textContent = '¿Ya tienes cuenta?';
+        toggleLink.textContent = 'Inicia sesión';
+        document.getElementById('authName').required = true;
+      } else {
+        nameGroup.classList.add('hidden');
+        pageTitle.textContent = 'Bienvenido';
+        submitBtnText.textContent = 'Iniciar Sesión';
+        toggleText.textContent = '¿No tienes cuenta?';
+        toggleLink.textContent = 'Regístrate aquí';
+        document.getElementById('authName').required = false;
+      }
+    });
+
+    document.getElementById('authForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const originalText = submitBtnText.textContent;
+      submitBtn.disabled = true;
+      submitBtnText.textContent = 'Procesando...';
+      errorDiv.style.display = 'none';
+
+      try {
+        if (isRegisterMode) {
+          doRegisterBtn?.click();
+        } else {
+          doLoginBtn?.click();
+        }
+      } catch (err) {
+        errorDiv.textContent = 'Error de conexión o credenciales inválidas.';
+        errorDiv.style.display = 'block';
+      } finally {
+        submitBtn.disabled = false;
+        submitBtnText.textContent = originalText;
+      }
+    });
+
+    (async function(){
+      try {
+        const API_URL = window.location.origin;
+        const token = localStorage.getItem('auth_token');
+        if (token) {
+          const r = await fetch(`${API_URL}/auth/me`, { headers: { 'Authorization': `Bearer ${token}` } });
+          if (r.ok) {
+            window.location.href = '/frontend/index.html';
+            return;
+          } else {
+            localStorage.removeItem('auth_token');
+          }
+        }
+      } catch {}
+    })();
+
+    // Lógica para ver/ocultar contraseña
+    const toggleBtn = document.getElementById('togglePassBtn');
+    const passInput = document.getElementById('authPass');
+    if (toggleBtn && passInput) {
+      toggleBtn.addEventListener('click', () => {
+        const type = passInput.getAttribute('type') === 'password' ? 'text' : 'password';
+        passInput.setAttribute('type', type);
+        if (type === 'text') {
+          toggleBtn.classList.replace('ph-eye', 'ph-eye-slash');
+        } else {
+          toggleBtn.classList.replace('ph-eye-slash', 'ph-eye');
+        }
+      });
+    }
+  </script>
+</body>
+</html>

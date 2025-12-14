@@ -1,0 +1,107 @@
+[
+  {
+    "id": 1,
+    "name": "Minciencias - Todas las convocatorias",
+    "type": "Nacional",
+    "url": "https://www.minciencias.gov.co/convocatorias/todas",
+    "hidden": true
+  },
+  {
+    "id": 2,
+    "name": "Minciencias - Jóvenes investigadores",
+    "type": "Nacional",
+    "url": "https://minciencias.gov.co/jovenes-investigadores/convocatorias-abiertas",
+    "hidden": true
+  },
+  {
+    "id": 3,
+    "name": "Minciencias - Convocatoria Colombia Inteligente",
+    "type": "Nacional",
+    "url": "https://minciencias.gov.co/convocatorias/convocatoria-colombia-inteligente-ciencia-y-tecnologias-cuanticas-e-inteligencia",
+    "hidden": true
+  },
+  {
+    "id": 4,
+    "name": "Ministerio TIC - Convocatorias",
+    "type": "Nacional",
+    "url": "https://www.mintic.gov.co/portal/715/w3-propertyvalue-111099.html",
+    "hidden": false
+  },
+  {
+    "id": 5,
+    "name": "SECOP II - Colombia Compra Eficiente",
+    "type": "Gubernamental / Contratación Pública",
+    "url": "https://www.secop.gov.co/",
+    "hidden": false
+  },
+  {
+    "id": 6,
+    "name": "Innovamos - Plataforma de Innovación",
+    "type": "Gubernamental / Innovación",
+    "url": "https://www.innovamos.gov.co/",
+    "hidden": true
+  },
+  {
+    "id": 7,
+    "name": "CORDIS - Portal de la Comisión Europea",
+    "type": "Internacional",
+    "url": "https://cordis.europa.eu/",
+    "hidden": true
+  },
+  {
+    "id": 8,
+    "name": "CORDIS - Projects & Results",
+    "type": "Internacional",
+    "url": "https://cordis.europa.eu/projects",
+    "hidden": true
+  },
+  {
+    "id": 9,
+    "name": "Banco Interamericano de Desarrollo (BID)",
+    "type": "Internacional",
+    "url": "https://www.iadb.org/es/como-trabajar-juntos/convocatorias",
+    "hidden": true
+  },
+  {
+    "id": 10,
+    "name": "Banco Mundial - Convocatorias y licitaciones",
+    "type": "Internacional",
+    "url": "https://projects.worldbank.org/en/projects-operations/procurement",
+    "hidden": true
+  },
+  {
+    "id": 11,
+    "name": "ONU / PNUD - Oportunidades",
+    "type": "Internacional",
+    "url": "https://procurement-notices.undp.org/",
+    "hidden": true
+  },
+  {
+    "id": 12,
+    "name": "Agencia Española de Cooperación Internacional (AECID)",
+    "type": "Internacional",
+    "url": "https://www.aecid.es/es/Paginas/Convocatorias.aspx",
+    "hidden": true
+  },
+  {
+    "id": 13,
+    "name": "GIZ - Cooperación Alemana",
+    "type": "Internacional",
+    "url": "https://www.giz.de/en/worldwide/Jobs_and_Careers.html",
+    "hidden": true
+  },
+  {
+    "id": 14,
+    "name": "Red de Innovación y Emprendimiento de Colombia (RIC)",
+    "type": "Nacional",
+    "url": "https://www.redinnovacioncolombia.com/",
+    "hidden": true
+  },
+  {
+    "id": 15,
+    "name": "Conference Calendar - IEEE Computational Intelligence Society",
+    "type": "",
+    "url": "https://cis.ieee.org/conferences/conference-calendar",
+    "hidden": false
+  }
+]
