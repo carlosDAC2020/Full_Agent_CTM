@@ -1,6 +1,6 @@
-import { store } from '../../data/store.js';
-import { getSessionHistory } from '../../api/agent.js';
-import { getElements, updateStepper } from '../common.js';
+import { store } from '../data/store.js';
+import { getSessionHistory } from '../api/agent.js';
+import { getElements, updateStepper } from './common.js';
 import { renderStep1Result } from './steps/step1.js';
 import { renderIdeas } from './steps/step2.js';
 import { renderSchema } from './steps/step3.js';
