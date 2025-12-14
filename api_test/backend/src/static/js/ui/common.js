@@ -35,20 +35,29 @@ export function updateStepper(currentStep) {
         const dot = document.getElementById(`step-dot-${i}`);
         if (!dot) continue;
 
-        // Reset classes
-        dot.className = "cursor-default text-gray-300 transition-colors duration-200 select-none"; // Base style
+        const circle = dot.querySelector('div');
+        const label = dot.querySelector('span');
+
+        // Reset click
         dot.onclick = null;
 
         if (i === currentStep) {
             // Active Step
-            dot.className = "text-cotecmar-mid font-bold underline decoration-2 underline-offset-4 cursor-default";
+            dot.className = "flex items-center gap-2 px-4 py-1.5 rounded-full bg-cotecmar-dark text-white shadow-md transform scale-105 transition-all duration-300 cursor-default";
+            circle.className = "w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold border-2 border-white/20 bg-white/10";
+            label.className = "text-xs font-bold whitespace-nowrap hidden md:block";
         } else if (i < currentStep || i <= store.maxReachedStep) {
             // Completed / Reached Step (Clickable)
-            dot.className = "text-gray-800 hover:text-cotecmar-mid cursor-pointer font-medium";
+            dot.className = "flex items-center gap-2 px-4 py-1.5 rounded-full hover:bg-gray-100 transition-all duration-300 cursor-pointer text-gray-600 group";
+            circle.className = "w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold border-2 border-cotecmar-mid text-cotecmar-mid bg-white group-hover:bg-cotecmar-mid group-hover:text-white transition-colors";
+            label.className = "text-xs font-bold whitespace-nowrap hidden md:block group-hover:text-cotecmar-mid";
+
             dot.onclick = () => navigateToStep(i);
         } else {
             // Future Step (Disabled)
-            dot.className = "text-gray-300 cursor-not-allowed";
+            dot.className = "flex items-center gap-2 px-4 py-1.5 rounded-full transition-all duration-300 cursor-not-allowed text-gray-300 opacity-60";
+            circle.className = "w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold border-2 border-gray-200 bg-gray-50";
+            label.className = "text-xs font-bold whitespace-nowrap hidden md:block";
         }
     }
 }
