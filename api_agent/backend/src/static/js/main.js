@@ -63,8 +63,6 @@ async function loadUserInfo() {
         localStorage.removeItem('auth_token');
         window.location.href = getLoginUrl();
     }
-    window.location.href = 'http://localhost:8000/frontend/login.html';
-}
 }
 
 document.addEventListener('DOMContentLoaded', () => {
