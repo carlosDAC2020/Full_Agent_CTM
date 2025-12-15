@@ -38,7 +38,7 @@ services:
     ports:
       - "8000:8000"
     env_file:
-      - ./Magazine_app/.env
+      - .env
     environment:
       - REDIS_URL=redis://magazine_redis:6379/0
       - DATABASE_URL=postgresql+psycopg2://mag_user:mag_pass@magazine_postgres:5432/mag_db
@@ -59,7 +59,7 @@ services:
     command: celery -A backend.celery_app worker -l info -c 1
     user: "${UID:-1000}:${GID:-1000}"
     env_file:
-      - ./Magazine_app/.env
+      - .env
     environment:
       - REDIS_URL=redis://magazine_redis:6379/0
       - DATABASE_URL=postgresql+psycopg2://mag_user:mag_pass@magazine_postgres:5432/mag_db
@@ -128,7 +128,7 @@ services:
     ports:
       - "8001:8000"
     env_file: 
-      - ./api_agent/.env
+      - .env
     environment:
       - CELERY_BROKER_URL=redis://agent_redis:6379/0
       - CELERY_RESULT_BACKEND=redis://agent_redis:6379/0
@@ -157,7 +157,7 @@ services:
       - ./api_agent/backend/src:/app/src
       - ./api_agent/backend/shared_data:/app/shared_data
     env_file: 
-      - ./api_agent/.env
+      - .env
     environment:
       - CELERY_BROKER_URL=redis://agent_redis:6379/0
       - CELERY_RESULT_BACKEND=redis://agent_redis:6379/0
