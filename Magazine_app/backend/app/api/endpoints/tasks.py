@@ -89,7 +89,7 @@ async def create_task(body: TaskCreate, current_user: models.User = Depends(get_
         payload = body.payload or {}
         payload["user_id"] = current_user.id
         payload["user_email"] = current_user.email
-        res = celery_app.send_task(task_name, kwargs={"payload": payload}, queue="flows")
+        res = celery_app.send_task(task_name, kwargs={"payload": payload})
         task_id = res.id
         
         if r:
