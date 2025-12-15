@@ -4,7 +4,7 @@ from datetime import datetime
 from src.core.database import Base
 
 class AgentSession(Base):
-    __tablename__ = "sessions"
+    __tablename__ = "agent_sessions"
 
     id = Column(String, primary_key=True, index=True) # UUID
     created_at = Column(DateTime, default=datetime.utcnow)
@@ -14,10 +14,10 @@ class AgentSession(Base):
     steps = relationship("AgentStep", back_populates="session")
 
 class AgentStep(Base):
-    __tablename__ = "steps"
+    __tablename__ = "agent_steps"
 
     id = Column(Integer, primary_key=True, index=True)
-    session_id = Column(String, ForeignKey("sessions.id"))
+    session_id = Column(String, ForeignKey("agent_sessions.id"))
     step_type = Column(String) # ingest, proposal_ideas, etc.
     input_data = Column(JSON)  # Lo que envió el usuario
     output_data = Column(JSON) # El resultado del agente (estado)

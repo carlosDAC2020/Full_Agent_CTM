@@ -25,6 +25,10 @@ celery_app.conf.update(
     result_serializer="json",
     timezone="UTC",
     worker_max_tasks_per_child=100,
+    task_default_queue='magazine',
+    task_routes={
+        'backend.tasks.*': {'queue': 'magazine'},
+    }
 )
 
 # Explicit import to ensure task registration when worker starts
