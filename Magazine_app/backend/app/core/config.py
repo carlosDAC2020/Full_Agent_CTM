@@ -24,5 +24,6 @@ class Settings:
     
     # Email
     EMAIL_SETTINGS_FILE = os.getenv("EMAIL_SETTINGS_FILE", "email_settings.json")
+    DEFAULT_SENDER_EMAIL = os.getenv("DEFAULT_SENDER_EMAIL", "noreply@cotecmar.com")
 
 settings = Settings()
