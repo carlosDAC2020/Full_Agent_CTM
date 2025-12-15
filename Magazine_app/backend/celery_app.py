@@ -1,12 +1,19 @@
 import os
 from celery import Celery
+import sys
 
-REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
+# Ensure sys path includes root for backend package resolution if run directly
+_CUR_DIR = os.path.dirname(os.path.abspath(__file__))
+_ROOT_DIR = os.path.join(_CUR_DIR, '..')
+if _ROOT_DIR not in sys.path:
+    sys.path.insert(0, _ROOT_DIR)
+
+from backend.app.core.config import settings
 
 celery_app = Celery(
     "magazine_tasks",
-    broker=REDIS_URL,
-    backend=REDIS_URL,
+    broker=settings.REDIS_URL,
+    backend=settings.REDIS_URL,
     include=[
         "backend.tasks",
     ],

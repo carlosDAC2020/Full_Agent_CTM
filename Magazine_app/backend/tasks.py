@@ -1,158 +1,73 @@
 import os
-from dotenv import load_dotenv
 import json
 import time
 from datetime import datetime
 from typing import Any, Dict, Optional, List
 from celery import states
 from .celery_app import celery_app
-import smtplib
-from email.message import EmailMessage
-import mimetypes
-from backend.db.session import SessionLocal
 import requests
-from backend.db import models as db_models
 
-try:
-    from redis import Redis
-except ImportError:
-    Redis = None  # type: ignore
+from backend.app.core.config import settings
+from backend.app.db.session import SessionLocal
+from backend.app.db import models as db_models
+from backend.app.services.redis_service import get_redis, task_key, release_flow_lock
+from backend.app.services.email_service import send_smtp_email
+from backend.app.services.agent_service import run_magazine_generation_stream, search_web, llm_invoke, agent_app
 
-# Cargar .env desde la raíz del proyecto antes de importar el agente
-load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), '..', '.env'))
+# Agent imports handled by agent_service, but we access agent_app directly in runs
+# If agent_app is needed, we imported it above from agent_service
 
-# Agent imports (absolute package path)
-try:
-    from backend.agent.graph import app as agent_app  # type: ignore
-except Exception:
-    try:
-        from backend.agent.graph import workflow  # type: ignore
-        agent_app = workflow.compile()  # type: ignore
-    except Exception:
-        # Fallback for running directly from backend/ as CWD
-        from agent.graph import workflow  # type: ignore
-        agent_app = workflow.compile()  # type: ignore
-
-REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
+def _get_redis():
+    return get_redis()
 
 
-def _get_redis() -> Optional["Redis"]:
-    if Redis is None:
-        return None
-    return Redis.from_url(REDIS_URL)
-
-
+# Helpers
 def _publish_event(event_type: str, payload: Dict[str, Any]):
     r = _get_redis()
-    if not r:
-        return
+    if not r: return
     data = {"type": event_type, **payload}
     r.publish("tasks_events", json.dumps(data))
 
-
 def _post_flow_status(task_id: str, status: str, name: Optional[str] = None, meta: Optional[Dict[str, Any]] = None):
-    """Notificar al API el estado del flow. Usa WORKER_TOKEN si está configurado.
-    API_INTERNAL_URL debe apuntar al contenedor/host accesible por el worker (p.ej. http://api:8000).
-    Fallback: http://localhost:8000
-    """
     try:
         base_url = os.getenv("API_INTERNAL_URL") or os.getenv("BACKEND_BASE_URL") or "http://localhost:8000"
         url = f"{base_url}/flows/{task_id}/status"
         headers = {"Content-Type": "application/json"}
-        worker_token = os.getenv("WORKER_TOKEN")
+        worker_token = settings.WORKER_TOKEN
         if worker_token:
             headers["X-Worker-Token"] = worker_token
         payload: Dict[str, Any] = {"status": status}
-        if name:
-            payload["name"] = name
-        if meta is not None:
-            payload["meta"] = meta
-        # best-effort, no raise
+        if name: payload["name"] = name
+        if meta is not None: payload["meta"] = meta
         requests.post(url, json=payload, headers=headers, timeout=5)
     except Exception:
         pass
 
-
 def _set_task_status(task_id: str, data: Dict[str, Any]):
     r = _get_redis()
-    if not r:
-        return
-    key = f"task:{task_id}"
-    r.hset(key, mapping={k: json.dumps(v) if isinstance(v, (dict, list)) else str(v) for k, v in data.items()})
-    r.sadd("active_tasks", task_id)
-
+    if r:
+        key = task_key(task_id)
+        r.hset(key, mapping={k: json.dumps(v) if isinstance(v, (dict, list)) else str(v) for k, v in data.items()})
+        r.sadd("active_tasks", task_id)
 
 def _finish_task_status(task_id: str, status: str):
     r = _get_redis()
-    if not r:
-        return
-    key = f"task:{task_id}"
-    r.hset(key, mapping={"status": status, "updated": datetime.utcnow().isoformat()})
-    r.srem("active_tasks", task_id)
-
-
-def _flow_lock_key(flow_type: str) -> str:
-    return f"flow_lock:{flow_type}"
-
+    if r:
+        key = task_key(task_id)
+        r.hset(key, mapping={"status": status, "updated": datetime.utcnow().isoformat()})
+        r.srem("active_tasks", task_id)
 
 def _release_flow_lock(flow_type: str):
     r = _get_redis()
-    if not r:
-        return
-    try:
-        r.delete(_flow_lock_key(flow_type))
-    except Exception:
-        pass
+    release_flow_lock(r, flow_type)
 
 
 def _send_smtp(sender: str, to_list: List[str], subject: str, body: str, attachments: List[str]):
-    host = os.getenv("SMTP_HOST")
-    port = int(os.getenv("SMTP_PORT", "587"))
-    user = os.getenv("SMTP_USER")
-    password = os.getenv("SMTP_PASS")
-    use_tls = os.getenv("SMTP_TLS", "true").lower() in ("1", "true", "yes")
-    demo_mode = os.getenv("DEMO_MODE", "false").lower() in ("1", "true", "yes")
-
-    if demo_mode:
-        # Simular envío guardando el .eml
-        out_dir = os.path.join("outputs", "sent_emails")
-        os.makedirs(out_dir, exist_ok=True)
-        msg = EmailMessage()
-        msg["From"] = sender
-        msg["To"] = ", ".join(to_list)
-        msg["Subject"] = subject
-        msg.set_content(body)
-        for path in attachments:
-            ctype, _ = mimetypes.guess_type(path)
-            maintype, subtype = (ctype.split("/", 1) if ctype else ("application", "octet-stream"))
-            with open(path, "rb") as f:
-                msg.add_attachment(f.read(), maintype=maintype, subtype=subtype, filename=os.path.basename(path))
-        fname = os.path.join(out_dir, f"email_{int(time.time())}.eml")
-        with open(fname, "wb") as f:
-            f.write(bytes(msg))
-        return
-
-    if not host:
-        return  # silencioso si no hay SMTP
-
-    msg = EmailMessage()
-    msg["From"] = sender
-    msg["To"] = ", ".join(to_list)
-    msg["Subject"] = subject
-    msg.set_content(body)
-
-    for path in attachments:
-        ctype, _ = mimetypes.guess_type(path)
-        maintype, subtype = (ctype.split("/", 1) if ctype else ("application", "octet-stream"))
-        with open(path, "rb") as f:
-            msg.add_attachment(f.read(), maintype=maintype, subtype=subtype, filename=os.path.basename(path))
-
-    with smtplib.SMTP(host, port) as server:
-        if use_tls:
-            server.starttls()
-        if user and password:
-            server.login(user, password)
-        server.send_message(msg)
+    # Wrapper to use the service
+    try:
+        send_smtp_email(sender, to_list, subject, body, attachments)
+    except Exception as e:
+        print(f"Email error: {e}")
 
 
 @celery_app.task(bind=True, name="tasks.run_magazine", autoretry_for=(Exception,), retry_backoff=True, retry_kwargs={"max_retries": 2})
