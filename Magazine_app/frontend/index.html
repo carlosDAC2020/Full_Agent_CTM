@@ -759,14 +759,18 @@
                     const currentHost = window.location.hostname;
                     const protocol = window.location.protocol;
                     let targetUrl = '';
+                    const token = localStorage.getItem('auth_token');
 
                     if (currentHost.includes('github.dev') || currentHost.includes('csb.app')) {
                         // Codespaces/Cloud environment: replace port in subdomain
-                        // Expecting format like: app-name-8000.app.github.dev
                         targetUrl = protocol + '//' + currentHost.replace('-8000', '-8001');
                     } else {
                         // Localhost environment
                         targetUrl = 'http://' + currentHost + ':8001';
+                    }
+
+                    if (token) {
+                        targetUrl += `?token=${encodeURIComponent(token)}`;
                     }
 
                     window.open(targetUrl, '_blank', 'noopener');
