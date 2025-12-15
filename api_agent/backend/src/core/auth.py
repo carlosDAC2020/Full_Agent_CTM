@@ -20,9 +20,9 @@ class User(Base):
     id = Column(Integer, primary_key=True, index=True)
     email = Column(String, unique=True, index=True, nullable=False)
     name = Column(String)
-    hashed_password = Column(String, nullable=False)
-    is_active = Column(Boolean, default=True)
-    is_superuser = Column(Boolean, default=False)
+    password_hash = Column(String, nullable=False)  # MATCHED: was hashed_password
+    # is_active = Column(Boolean, default=True)  # OPTIONAL: Magazine doesn't show this in snippet, omitting to avoid errors if missing
+    # is_superuser = Column(Boolean, default=False) # OPTIONAL: Magazine doesn't show this in snippet
     role = Column(String, default="user")
     created_at = Column(DateTime, default=datetime.utcnow)
 
