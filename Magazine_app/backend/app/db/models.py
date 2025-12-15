@@ -50,33 +50,9 @@ class SavedItem(Base):
     # I'll stick to 'metadata' as column name if possible or keep item_metadata and handle mapping.
     # Let's keep item_metadata to avoid migration issues if DB exists, but exposing it as 'metadata' in schemas.
     item_metadata = Column(JSON, nullable=True)
-    # Mapping for easier schema usage? No, just keys.
-    # Actually, in main_api.py line 162: row = models.SavedItem(..., item_metadata=payload.metadata) ??
-    # main_api.py line 162: row = models.SavedItem(..., metadata=payload.metadata or None)
-    # This suggests the kwarg was metadata, which means either I misread the model or there is a mismatch.
-    # Ah, main_api.py line 162: row = models.SavedItem(..., metadata=payload.metadata)
-    # But models.py line 45: item_metadata = Column(JSON).
-    # SQLAlchemy constructor usually expects column names. Maybe 'metadata' conflicts with Base.metadata? 
-    # Yes, Base.metadata is reserved. So 'item_metadata' is correct.
-    # The main_api.py code MUST have been doing: item_metadata=payload.metadata.
-    # Let's check main_api.py line 162 again.
-    # row = models.SavedItem(user_id=current_user.id, item_ref=payload.item_ref.strip(), metadata=payload.metadata or None)
-    # Wait, if main_api.py uses metadata=..., and model has item_metadata, that would be an error unless there's an alias or constructor override.
-    # Or maybe I misread line 162 of main_api.py. 
-    # Let's assume item_metadata is the column. I will use item_metadata here.
-    
     created_at = Column(DateTime, default=datetime.utcnow)
 
     user = relationship("User", back_populates="saved_items")
-    
-    # Property to allow .metadata access if needed?
-    @property
-    def metadata(self):
-        return self.item_metadata
-    
-    @metadata.setter
-    def metadata(self, value):
-        self.item_metadata = value
 
 
 class Flow(Base):
