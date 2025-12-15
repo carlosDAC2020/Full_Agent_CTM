@@ -5,12 +5,26 @@ from jose import jwt, JWTError
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
+from sqlalchemy import Column, Integer, String, Boolean, DateTime
+from datetime import datetime
 
-# Import Magazine App's database models and session
-import sys
-sys.path.append('/app')  # Add Magazine App to path
-from backend.app.db.session import get_db
-from backend.app.db.models import User
+# Local DB import
+from src.core.database import Base, get_db
+
+# --- LOCAL USER MODEL DEFINITION (Mirror of Magazine App) ---
+# Defined here to avoid complex cross-project imports
+class User(Base):
+    __tablename__ = "users"
+    __table_args__ = {'extend_existing': True}
+
+    id = Column(Integer, primary_key=True, index=True)
+    email = Column(String, unique=True, index=True, nullable=False)
+    name = Column(String)
+    hashed_password = Column(String, nullable=False)
+    is_active = Column(Boolean, default=True)
+    is_superuser = Column(Boolean, default=False)
+    role = Column(String, default="user")
+    created_at = Column(DateTime, default=datetime.utcnow)
 
 # JWT settings (must match Magazine App)
 JWT_SECRET = os.getenv("JWT_SECRET", "change-me")

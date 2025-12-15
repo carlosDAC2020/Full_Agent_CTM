@@ -7,8 +7,7 @@ from sqlalchemy.orm import Session
 from fastapi import Depends, HTTPException
 from src.core.database import get_db
 from src.models.history import AgentSession, AgentStep
-from src.core.auth import get_current_user  # NEW: Import auth
-from backend.app.db.models import User  # NEW: Import User model
+from src.core.auth import get_current_user, User  # NEW: Import auth and local User
 
 import json
 from src.services.storage import MinioService

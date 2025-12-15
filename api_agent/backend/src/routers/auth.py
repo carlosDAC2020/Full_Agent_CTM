@@ -3,8 +3,7 @@ Router para autenticación y gestión de usuarios.
 Proporciona endpoint para obtener información del usuario autenticado.
 """
 from fastapi import APIRouter, Depends
-from src.core.auth import get_current_user
-from backend.app.db.models import User
+from src.core.auth import get_current_user, User
 
 router = APIRouter(prefix="/api", tags=["Auth"])
 
