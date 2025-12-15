@@ -1,0 +1,187 @@
+version: '3.8'
+
+services:
+  # ==========================================
+  # MAGAZINE APP SERVICES
+  # ==========================================
+  
+  magazine_redis:
+    image: redis:7-alpine
+    container_name: magazine_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - magazine_redis_data:/data
+    networks:
+      - agent_network
+
+  magazine_postgres:
+    image: postgres:15-alpine
+    container_name: magazine_postgres
+    environment:
+      - POSTGRES_USER=mag_user
+      - POSTGRES_PASSWORD=mag_pass
+      - POSTGRES_DB=mag_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - magazine_pg_data:/var/lib/postgresql/data
+    networks:
+      - agent_network
+
+  magazine_api:
+    build: 
+      context: ./Magazine_app
+    container_name: magazine_api
+    command: uvicorn backend.app.main:app --host 0.0.0.0 --port 8000 --reload --reload-exclude outputs/*
+    user: "${UID:-1000}:${GID:-1000}"
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./Magazine_app/.env
+    environment:
+      - REDIS_URL=redis://magazine_redis:6379/0
+      - DATABASE_URL=postgresql+psycopg2://mag_user:mag_pass@magazine_postgres:5432/mag_db
+      - WORKER_TOKEN=${WORKER_TOKEN:-change-me-strong}
+    volumes:
+      - ./Magazine_app:/app
+      - ./Magazine_app/outputs:/app/outputs
+    depends_on:
+      - magazine_redis
+      - magazine_postgres
+    networks:
+      - agent_network
+
+  magazine_worker:
+    build: 
+      context: ./Magazine_app
+    container_name: magazine_worker
+    command: celery -A backend.celery_app worker -l info -c 1
+    user: "${UID:-1000}:${GID:-1000}"
+    env_file:
+      - ./Magazine_app/.env
+    environment:
+      - REDIS_URL=redis://magazine_redis:6379/0
+      - DATABASE_URL=postgresql+psycopg2://mag_user:mag_pass@magazine_postgres:5432/mag_db
+      - WORKER_TOKEN=${WORKER_TOKEN:-change-me-strong}
+      - API_INTERNAL_URL=http://magazine_api:8000
+    volumes:
+      - ./Magazine_app:/app
+      - ./Magazine_app/outputs:/app/outputs
+    depends_on:
+      - magazine_redis
+      - magazine_postgres
+    networks:
+      - agent_network
+
+  # ==========================================
+  # API AGENT SERVICES
+  # ==========================================
+
+  agent_redis:
+    image: redis:7-alpine
+    container_name: agent_redis
+    # Mapped to host port 6380 to avoid conflict with Magazine app
+    ports:
+      - "6380:6379"
+    networks:
+      - agent_network
+
+  agent_db:
+    image: postgres:15-alpine
+    container_name: agent_db
+    restart: always
+    environment:
+      - POSTGRES_USER=agentuser
+      - POSTGRES_PASSWORD=agentpass
+      - POSTGRES_DB=agentdb
+    # Mapped to host port 5433 to avoid conflict with Magazine app
+    ports:
+      - "5433:5432"
+    volumes:
+      - agent_postgres_data:/var/lib/postgresql/data
+    networks:
+      - agent_network
+
+  agent_minio:
+    image: minio/minio
+    container_name: agent_minio
+    ports:
+      - "9000:9000"   # Puerto API S3
+      - "9001:9001"   # Consola Web (UI)
+    environment:
+      - MINIO_ROOT_USER=minioadmin
+      - MINIO_ROOT_PASSWORD=minioadmin
+    command: server /data --console-address ":9001"
+    volumes:
+      - agent_minio_data:/data
+    networks:
+      - agent_network
+
+  agent_api:
+    build: 
+      context: ./api_agent/backend
+    container_name: agent_api
+    volumes:
+      - ./api_agent/backend/src:/app/src
+    # Mapped to host port 8001 to avoid conflict with Magazine app
+    ports:
+      - "8001:8000"
+    env_file: 
+      - ./api_agent/.env
+    environment:
+      - CELERY_BROKER_URL=redis://agent_redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://agent_redis:6379/0
+      # Config MinIO para la API (comunicación interna docker)
+      - MINIO_ENDPOINT=http://agent_minio:9000
+      - MINIO_ACCESS_KEY=minioadmin
+      - MINIO_SECRET_KEY=minioadmin
+      - MINIO_BUCKET=agent-results
+      # Para generar URLs accesibles desde el navegador (localhost)
+      - MINIO_PUBLIC_ENDPOINT=http://localhost:9000 
+      # coneccion con base de datos 
+      - DATABASE_URL=postgresql://agentuser:agentpass@agent_db:5432/agentdb
+    depends_on:
+      - agent_redis
+      - agent_minio
+      - agent_db 
+    networks:
+      - agent_network
+
+  agent_worker:
+    build: 
+      context: ./api_agent/backend
+    container_name: agent_worker
+    command: celery -A src.celery_worker.celery_app worker --loglevel=info
+    volumes:
+      - ./api_agent/backend/src:/app/src
+      - ./api_agent/backend/shared_data:/app/shared_data
+    env_file: 
+      - ./api_agent/.env
+    environment:
+      - CELERY_BROKER_URL=redis://agent_redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://agent_redis:6379/0
+      - SHARED_DATA_PATH=/app/shared_data
+      # Config MinIO para el Worker
+      - MINIO_ENDPOINT=http://agent_minio:9000
+      - MINIO_ACCESS_KEY=minioadmin
+      - MINIO_SECRET_KEY=minioadmin
+      - MINIO_BUCKET=agent-results
+      # coneccion con db 
+      - DATABASE_URL=postgresql://agentuser:agentpass@agent_db:5432/agentdb
+    depends_on:
+      - agent_redis
+      - agent_minio
+      - agent_db 
+    networks:
+      - agent_network
+
+volumes:
+  magazine_redis_data:
+  magazine_pg_data:
+  agent_postgres_data:
+  agent_minio_data:
+
+networks:
+  agent_network:
+    driver: bridge
