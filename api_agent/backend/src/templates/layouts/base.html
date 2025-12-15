@@ -15,8 +15,21 @@
         (function () {
             const token = localStorage.getItem('auth_token');
             if (!token) {
+                // Determine Magazine App URL
+                const currentHost = window.location.hostname;
+                const protocol = window.location.protocol;
+                let loginUrl = '';
+
+                if (currentHost.includes('github.dev') || currentHost.includes('csb.app')) {
+                     // Codespaces: replace 8001 with 8000
+                     loginUrl = protocol + '//' + currentHost.replace('-8001', '-8000') + '/frontend/login.html';
+                } else {
+                    // Localhost: use port 8000
+                    loginUrl = 'http://' + currentHost + ':8000/frontend/login.html';
+                }
+
                 // Redirect to Magazine App login
-                window.location.href = 'http://localhost:8000/frontend/login.html';
+                window.location.href = loginUrl;
                 return;
             }
         })();
