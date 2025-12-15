@@ -30,9 +30,9 @@ services:
     networks:
       - agent_network
 
-  shared_minio:
+  shared-minio:
     image: minio/minio
-    container_name: shared_minio
+    container_name: shared-minio
     ports:
       - "9000:9000"   # Puerto API S3
       - "9001:9001"   # Consola Web (UI)
@@ -113,7 +113,7 @@ services:
     environment:
       - CELERY_BROKER_URL=redis://shared_redis:6379/0
       - CELERY_RESULT_BACKEND=redis://shared_redis:6379/0
-      - MINIO_ENDPOINT=http://shared_minio:9000
+      - MINIO_ENDPOINT=http://shared-minio:9000
       - MINIO_ACCESS_KEY=minioadmin
       - MINIO_SECRET_KEY=minioadmin
       - MINIO_BUCKET=agent-results
@@ -121,7 +121,7 @@ services:
       - DATABASE_URL=postgresql://shared_user:shared_pass@shared_postgres:5432/agent_db
     depends_on:
       - shared_redis
-      - shared_minio
+      - shared-minio
       - shared_postgres
     networks:
       - agent_network
@@ -140,14 +140,14 @@ services:
       - CELERY_BROKER_URL=redis://shared_redis:6379/0
       - CELERY_RESULT_BACKEND=redis://shared_redis:6379/0
       - SHARED_DATA_PATH=/app/shared_data
-      - MINIO_ENDPOINT=http://shared_minio:9000
+      - MINIO_ENDPOINT=http://shared-minio:9000
       - MINIO_ACCESS_KEY=minioadmin
       - MINIO_SECRET_KEY=minioadmin
       - MINIO_BUCKET=agent-results
       - DATABASE_URL=postgresql://shared_user:shared_pass@shared_postgres:5432/agent_db
     depends_on:
       - shared_redis
-      - shared_minio
+      - shared-minio
       - shared_postgres
     networks:
       - agent_network
