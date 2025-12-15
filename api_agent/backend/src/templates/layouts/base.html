@@ -13,6 +13,21 @@
     <!-- AUTH GUARD: Check for token before loading page -->
     <script>
         (function () {
+            // 1. Check if token is passed in URL (Cross-port auth)
+            const urlParams = new URLSearchParams(window.location.search);
+            const tokenFromUrl = urlParams.get('token');
+
+            if (tokenFromUrl) {
+                // Save to localStorage
+                localStorage.setItem('auth_token', tokenFromUrl);
+
+                // Clean URL
+                const url = new URL(window.location.href);
+                url.searchParams.delete('token');
+                window.history.replaceState({}, document.title, url.toString());
+            }
+
+            // 2. Check localStorage
             const token = localStorage.getItem('auth_token');
             if (!token) {
                 // Determine Magazine App URL
@@ -21,8 +36,8 @@
                 let loginUrl = '';
 
                 if (currentHost.includes('github.dev') || currentHost.includes('csb.app')) {
-                     // Codespaces: replace 8001 with 8000
-                     loginUrl = protocol + '//' + currentHost.replace('-8001', '-8000') + '/frontend/login.html';
+                    // Codespaces: replace 8001 with 8000
+                    loginUrl = protocol + '//' + currentHost.replace('-8001', '-8000') + '/frontend/login.html';
                 } else {
                     // Localhost: use port 8000
                     loginUrl = 'http://' + currentHost + ':8000/frontend/login.html';
