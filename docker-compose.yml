@@ -40,6 +40,7 @@ services:
     env_file:
       - .env
     environment:
+      - PYTHONPATH=/app
       - REDIS_URL=redis://magazine_redis:6379/0
       - DATABASE_URL=postgresql+psycopg2://mag_user:mag_pass@magazine_postgres:5432/mag_db
       - WORKER_TOKEN=${WORKER_TOKEN:-change-me-strong}
@@ -61,6 +62,7 @@ services:
     env_file:
       - .env
     environment:
+      - PYTHONPATH=/app
       - REDIS_URL=redis://magazine_redis:6379/0
       - DATABASE_URL=postgresql+psycopg2://mag_user:mag_pass@magazine_postgres:5432/mag_db
       - WORKER_TOKEN=${WORKER_TOKEN:-change-me-strong}
@@ -78,18 +80,18 @@ services:
   # API AGENT SERVICES
   # ==========================================
 
-  agent_redis:
+  agent-redis:
     image: redis:7-alpine
-    container_name: agent_redis
+    container_name: agent-redis
     # Mapped to host port 6380 to avoid conflict with Magazine app
     ports:
       - "6380:6379"
     networks:
       - agent_network
 
-  agent_db:
+  agent-db:
     image: postgres:15-alpine
-    container_name: agent_db
+    container_name: agent-db
     restart: always
     environment:
       - POSTGRES_USER=agentuser
@@ -103,9 +105,9 @@ services:
     networks:
       - agent_network
 
-  agent_minio:
+  agent-minio:
     image: minio/minio
-    container_name: agent_minio
+    container_name: agent-minio
     ports:
       - "9000:9000"   # Puerto API S3
       - "9001:9001"   # Consola Web (UI)
@@ -118,10 +120,10 @@ services:
     networks:
       - agent_network
 
-  agent_api:
+  agent-api:
     build: 
       context: ./api_agent/backend
-    container_name: agent_api
+    container_name: agent-api
     volumes:
       - ./api_agent/backend/src:/app/src
     # Mapped to host port 8001 to avoid conflict with Magazine app
@@ -130,28 +132,28 @@ services:
     env_file: 
       - .env
     environment:
-      - CELERY_BROKER_URL=redis://agent_redis:6379/0
-      - CELERY_RESULT_BACKEND=redis://agent_redis:6379/0
+      - CELERY_BROKER_URL=redis://agent-redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://agent-redis:6379/0
       # Config MinIO para la API (comunicación interna docker)
-      - MINIO_ENDPOINT=http://agent_minio:9000
+      - MINIO_ENDPOINT=http://agent-minio:9000
       - MINIO_ACCESS_KEY=minioadmin
       - MINIO_SECRET_KEY=minioadmin
       - MINIO_BUCKET=agent-results
       # Para generar URLs accesibles desde el navegador (localhost)
       - MINIO_PUBLIC_ENDPOINT=http://localhost:9000 
       # coneccion con base de datos 
-      - DATABASE_URL=postgresql://agentuser:agentpass@agent_db:5432/agentdb
+      - DATABASE_URL=postgresql://agentuser:agentpass@agent-db:5432/agentdb
     depends_on:
-      - agent_redis
-      - agent_minio
-      - agent_db 
+      - agent-redis
+      - agent-minio
+      - agent-db 
     networks:
       - agent_network
 
-  agent_worker:
+  agent-worker:
     build: 
       context: ./api_agent/backend
-    container_name: agent_worker
+    container_name: agent-worker
     command: celery -A src.celery_worker.celery_app worker --loglevel=info
     volumes:
       - ./api_agent/backend/src:/app/src
@@ -159,20 +161,20 @@ services:
     env_file: 
       - .env
     environment:
-      - CELERY_BROKER_URL=redis://agent_redis:6379/0
-      - CELERY_RESULT_BACKEND=redis://agent_redis:6379/0
+      - CELERY_BROKER_URL=redis://agent-redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://agent-redis:6379/0
       - SHARED_DATA_PATH=/app/shared_data
       # Config MinIO para el Worker
-      - MINIO_ENDPOINT=http://agent_minio:9000
+      - MINIO_ENDPOINT=http://agent-minio:9000
       - MINIO_ACCESS_KEY=minioadmin
       - MINIO_SECRET_KEY=minioadmin
       - MINIO_BUCKET=agent-results
       # coneccion con db 
-      - DATABASE_URL=postgresql://agentuser:agentpass@agent_db:5432/agentdb
+      - DATABASE_URL=postgresql://agentuser:agentpass@agent-db:5432/agentdb
     depends_on:
-      - agent_redis
-      - agent_minio
-      - agent_db 
+      - agent-redis
+      - agent-minio
+      - agent-db 
     networks:
       - agent_network
 
