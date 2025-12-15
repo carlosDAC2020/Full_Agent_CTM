@@ -1,11 +1,18 @@
+// Helper to get auth headers
+function getAuthHeaders() {
+    const token = localStorage.getItem('auth_token');
+    return {
+        'Content-Type': 'application/json',
+        ...(token && { 'Authorization': `Bearer ${token}` })
+    };
+}
+
 // Basic wrapper expecting a JSON response
 export async function ingestCall(text, title = "") {
     try {
         const response = await fetch('/api/agent/ingest', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            headers: getAuthHeaders(),
             body: JSON.stringify({
                 text: text,
                 // Si el backend soportara título en el input_data lo mandaríamos, 
@@ -30,7 +37,7 @@ export async function generateIdeas(sessionId) {
     try {
         const response = await fetch('/api/agent/generate-ideas', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: getAuthHeaders(),
             body: JSON.stringify({ session_id: sessionId })
         });
 
@@ -50,7 +57,7 @@ export async function selectIdea(sessionId, idea) {
     try {
         const response = await fetch('/api/agent/select-idea', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: getAuthHeaders(),
             body: JSON.stringify({
                 session_id: sessionId,
                 selected_idea: {
@@ -75,7 +82,10 @@ export async function selectIdea(sessionId, idea) {
 
 export async function getSessionHistory(sessionId) {
     try {
-        const response = await fetch(`/api/agent/history/${sessionId}`);
+        const token = localStorage.getItem('auth_token');
+        const response = await fetch(`/api/agent/history/${sessionId}`, {
+            headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+        });
         if (!response.ok) throw new Error('Error fetching session info');
         return await response.json();
     } catch (error) {
@@ -88,7 +98,7 @@ export async function finalizeProject(sessionId) {
     try {
         const response = await fetch('/api/agent/finalize', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: getAuthHeaders(),
             body: JSON.stringify({ session_id: sessionId })
         });
 

@@ -7,6 +7,8 @@ from sqlalchemy.orm import Session
 from fastapi import Depends, HTTPException
 from src.core.database import get_db
 from src.models.history import AgentSession, AgentStep
+from src.core.auth import get_current_user  # NEW: Import auth
+from backend.app.db.models import User  # NEW: Import User model
 
 import json
 from src.services.storage import MinioService
@@ -15,8 +17,22 @@ router = APIRouter(prefix="/api/agent", tags=["Agent Actions"])
 storage_service = MinioService()
 
 @router.post("/ingest")
-async def start_ingest(request: IngestRequest):
+async def start_ingest(
+    request: IngestRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
     session_id = str(uuid.uuid4())
+    
+    # Create session in database with user_id
+    session = AgentSession(
+        id=session_id,
+        user_id=current_user.id,
+        status="active"
+    )
+    db.add(session)
+    db.commit()
+    
     task = task_process_agent_step.delay(
         session_id=session_id, 
         input_data={"text": request.text}, 
@@ -25,7 +41,19 @@ async def start_ingest(request: IngestRequest):
     return {"task_id": task.id, "session_id": session_id}
 
 @router.post("/generate-ideas")
-async def generate_ideas(request: NextStepRequest):
+async def generate_ideas(
+    request: NextStepRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    # Verify session belongs to user
+    session = db.query(AgentSession).filter(
+        AgentSession.id == request.session_id,
+        AgentSession.user_id == current_user.id
+    ).first()
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found or access denied")
+    
     task = task_process_agent_step.delay(
         session_id=request.session_id, 
         input_data={}, 
@@ -34,7 +62,19 @@ async def generate_ideas(request: NextStepRequest):
     return {"task_id": task.id, "session_id": request.session_id}
 
 @router.post("/select-idea")
-async def select_idea(request: SelectionRequest):
+async def select_idea(
+    request: SelectionRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    # Verify session belongs to user
+    session = db.query(AgentSession).filter(
+        AgentSession.id == request.session_id,
+        AgentSession.user_id == current_user.id
+    ).first()
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found or access denied")
+    
     task = task_process_agent_step.delay(
         session_id=request.session_id, 
         input_data={"selected_idea": request.selected_idea}, 
@@ -43,7 +83,19 @@ async def select_idea(request: SelectionRequest):
     return {"task_id": task.id, "session_id": request.session_id}
 
 @router.post("/finalize")
-async def finalize_project(request: NextStepRequest):
+async def finalize_project(
+    request: NextStepRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    # Verify session belongs to user
+    session = db.query(AgentSession).filter(
+        AgentSession.id == request.session_id,
+        AgentSession.user_id == current_user.id
+    ).first()
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found or access denied")
+    
     task = task_process_agent_step.delay(
         session_id=request.session_id, 
         input_data={}, 
@@ -54,13 +106,20 @@ async def finalize_project(request: NextStepRequest):
 
 
 @router.get("/history/{session_id}")
-async def get_session_history(session_id: str, db: Session = Depends(get_db)):
+async def get_session_history(
+    session_id: str,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
     """Recupera el estado de una sesión para restaurar el Frontend"""
     
-    # 1. Buscar la sesión
-    session = db.query(AgentSession).filter(AgentSession.id == session_id).first()
+    # 1. Buscar la sesión y verificar que pertenece al usuario
+    session = db.query(AgentSession).filter(
+        AgentSession.id == session_id,
+        AgentSession.user_id == current_user.id
+    ).first()
     if not session:
-        raise HTTPException(status_code=404, detail="Sesión no encontrada")
+        raise HTTPException(status_code=404, detail="Sesión no encontrada o acceso denegado")
 
     # 2. Buscar todos los pasos ejecutados
     steps = db.query(AgentStep).filter(AgentStep.session_id == session_id).all()

@@ -64,6 +64,7 @@ services:
       - REDIS_URL=redis://shared_redis:6379/0
       - DATABASE_URL=postgresql+psycopg2://shared_user:shared_pass@shared_postgres:5432/mag_db
       - WORKER_TOKEN=${WORKER_TOKEN:-change-me-strong}
+      - JWT_SECRET=${JWT_SECRET:-change-me}
     volumes:
       - ./Magazine_app:/app
       - ./Magazine_app/outputs:/app/outputs
@@ -118,7 +119,8 @@ services:
       - MINIO_SECRET_KEY=minioadmin
       - MINIO_BUCKET=agent-results
       - MINIO_PUBLIC_ENDPOINT=http://localhost:9000 
-      - DATABASE_URL=postgresql://shared_user:shared_pass@shared_postgres:5432/agent_db
+      - DATABASE_URL=postgresql://shared_user:shared_pass@shared_postgres:5432/mag_db
+      - JWT_SECRET=${JWT_SECRET:-change-me}
     depends_on:
       - shared_redis
       - shared-minio
@@ -144,7 +146,8 @@ services:
       - MINIO_ACCESS_KEY=minioadmin
       - MINIO_SECRET_KEY=minioadmin
       - MINIO_BUCKET=agent-results
-      - DATABASE_URL=postgresql://shared_user:shared_pass@shared_postgres:5432/agent_db
+      - DATABASE_URL=postgresql://shared_user:shared_pass@shared_postgres:5432/mag_db
+      - JWT_SECRET=${JWT_SECRET:-change-me}
     depends_on:
       - shared_redis
       - shared-minio

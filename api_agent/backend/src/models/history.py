@@ -7,6 +7,7 @@ class AgentSession(Base):
     __tablename__ = "agent_sessions"
 
     id = Column(String, primary_key=True, index=True) # UUID
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)  # NEW: Link to user
     created_at = Column(DateTime, default=datetime.utcnow)
     status = Column(String, default="active") # active, completed, failed
     

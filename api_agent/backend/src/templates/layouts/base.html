@@ -10,6 +10,18 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
 
+    <!-- AUTH GUARD: Check for token before loading page -->
+    <script>
+        (function () {
+            const token = localStorage.getItem('auth_token');
+            if (!token) {
+                // Redirect to Magazine App login
+                window.location.href = 'http://localhost:8000/frontend/login.html';
+                return;
+            }
+        })();
+    </script>
+
     <!-- Configuración Tailwind (Inline para funcionar con CDN) -->
     <script>
         tailwind.config = {
@@ -82,12 +94,12 @@
         </div>
 
         <div class="p-4 bg-black/20 flex items-center gap-3 text-sm min-w-[16rem]">
-            <div
+            <div id="user-avatar"
                 class="w-8 h-8 rounded-full bg-gradient-to-tr from-blue-500 to-cyan-400 flex items-center justify-center font-bold text-xs flex-shrink-0">
-                JP</div>
+                U</div>
             <div class="leading-tight">
-                <div class="font-medium">Jefe de Proyectos</div>
-                <div class="text-[10px] text-blue-300 opacity-80">Gerencia de Diseño</div>
+                <div id="user-name" class="font-medium">Cargando...</div>
+                <div id="user-role" class="text-[10px] text-blue-300 opacity-80">Usuario</div>
             </div>
         </div>
 

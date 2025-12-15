@@ -8,17 +8,24 @@ from sqlalchemy import desc
 
 from src.core.database import get_db
 from src.models.history import AgentSession, AgentStep
+from src.core.auth import get_current_user  # NEW: Import auth
+from backend.app.db.models import User  # NEW: Import User model
 
 router = APIRouter(prefix="/api/sessions", tags=["Sessions"])
 
 
 @router.get("")
-async def list_sessions(db: Session = Depends(get_db)):
+async def list_sessions(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
     """
-    Lista todas las sesiones ordenadas por fecha de creación (más recientes primero).
+    Lista todas las sesiones del usuario autenticado ordenadas por fecha de creación.
     Incluye un preview del título basado en los datos de ingesta.
     """
-    sessions = db.query(AgentSession).order_by(desc(AgentSession.created_at)).limit(50).all()
+    sessions = db.query(AgentSession).filter(
+        AgentSession.user_id == current_user.id
+    ).order_by(desc(AgentSession.created_at)).limit(50).all()
     
     result = []
     for session in sessions:
