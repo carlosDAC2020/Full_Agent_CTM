@@ -21,5 +21,8 @@ class Settings:
     ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "30"))
     
     API_INTERNAL_URL = os.getenv("API_INTERNAL_URL", "http://localhost:8000")
+    
+    # Email
+    EMAIL_SETTINGS_FILE = os.getenv("EMAIL_SETTINGS_FILE", "email_settings.json")
 
 settings = Settings()
