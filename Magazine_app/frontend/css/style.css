@@ -626,6 +626,7 @@ body {
 .Btn.pdf-cart { background-color: #dc2626; /* Rojo para PDF */ }
 .Btn.sources-btn { background-color: #0ea5e9; /* Azul para Sources */ }
 .Btn.email-btn { background-color: #6d28d9; /* Morado para Email */ }
+.Btn.agent-btn { background-color: #10b981; /* Verde para Agent */ }
 
 /* Contenedor fijo para los botones flotantes */
 .fab-container {
@@ -638,6 +639,7 @@ body {
 .pdf-cart-pos { bottom: 24px; }
 .sources-btn-pos { bottom: 92px; }
 .email-btn-pos { bottom: 160px; }
+.agent-btn-pos { bottom: 228px; }
 
 /* Expand container width on hover so internal absolute button can expand */
 .fab-container:hover { width: 150px; }
