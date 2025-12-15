@@ -58,6 +58,19 @@ pip install -r requirements.txt
 
 ### 4. Ejecutar la Aplicación
 
+#### Opción A: Docker (Recomendado)
+Docker Compose levantará la API, el Worker de Celery, Redis y PostgreSQL automáticamente.
+
+1. Asegúrate de tener Docker instalado.
+2. Crea el archivo `.env` (ver arriba).
+3. Ejecuta:
+   ```bash
+   docker compose up --build
+   ```
+4. La API estará disponible en `http://localhost:8000`.
+
+#### Opción B: Ejecución Local (Manual)
+
 #### Servidor API
 ```bash
 uvicorn backend.app.main:app --reload --host 0.0.0.0 --port 8000

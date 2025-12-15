@@ -10,7 +10,7 @@ services:
   api:
     build: .
     container_name: magazine_api
-    command: uvicorn backend.main_api:api --host 0.0.0.0 --port 8000 --reload --reload-exclude outputs/*
+    command: uvicorn backend.app.main:app --host 0.0.0.0 --port 8000 --reload --reload-exclude outputs/*
     user: "${UID:-1000}:${GID:-1000}"
     ports:
       - "8000:8000"
@@ -30,7 +30,7 @@ services:
   worker:
     build: .
     container_name: magazine_worker
-    command: celery -A backend.celery_app.celery_app worker -l info -Q flows -c 1
+    command: celery -A backend.celery_app worker -l info -c 1
     user: "${UID:-1000}:${GID:-1000}"
     env_file:
       - .env

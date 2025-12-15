@@ -26,4 +26,4 @@ COPY . /app
 EXPOSE 8000
 
 # Default command is overridden by docker-compose service commands
-CMD ["python", "backend/main_api.py"]
+CMD ["uvicorn", "backend.app.main:app", "--host", "0.0.0.0", "--port", "8000"]
