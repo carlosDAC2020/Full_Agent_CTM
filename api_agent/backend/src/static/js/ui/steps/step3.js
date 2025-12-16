@@ -121,40 +121,6 @@ function renderGeneralInfo(generalInfo, selectedIdea) {
     }
 }
 
-// Función auxiliar: Parsear Markdown en secciones
-function parseMarkdownSections(markdown) {
-    const sections = [];
-    const lines = markdown.split('\n');
-    let currentSection = null;
-
-    lines.forEach(line => {
-        // Detectar encabezados (## o ###)
-        const headerMatch = line.match(/^(#{1,3})\s+(.+)/);
-        if (headerMatch) {
-            // Guardar sección anterior si existe
-            if (currentSection) {
-                sections.push(currentSection);
-            }
-            // Crear nueva sección
-            currentSection = {
-                level: headerMatch[1].length,
-                title: headerMatch[2].trim(),
-                content: []
-            };
-        } else if (currentSection && line.trim()) {
-            // Agregar contenido a la sección actual
-            currentSection.content.push(line);
-        }
-    });
-
-    // Guardar última sección
-    if (currentSection) {
-        sections.push(currentSection);
-    }
-
-    return sections;
-}
-
 // Función auxiliar: Renderizar contenido del esquema
 function renderSchemaContent(markdown) {
     const container = document.getElementById('schema-content');
@@ -165,64 +131,24 @@ function renderSchemaContent(markdown) {
         return;
     }
 
-    const sections = parseMarkdownSections(markdown);
+    // Usar marked.js para renderizar el Markdown a HTML
+    // Configuramos marked para que se vea bien con Tailwind Typography (o estilos básicos)
+    try {
+        const htmlContent = marked.parse(markdown);
 
-    if (sections.length === 0) {
-        // Si no se detectaron secciones, mostrar el contenido completo
+        // Creamos un contenedor con estilos para el contenido renderizado
+        const proseWrapper = document.createElement('div');
+        proseWrapper.className = 'prose prose-sm prose-blue max-w-none text-gray-700 space-y-2';
+        // Estilos específicos para que se vea profesional
+        proseWrapper.innerHTML = htmlContent;
+
+        container.appendChild(proseWrapper);
+    } catch (e) {
+        console.error("Error rendering markdown:", e);
         container.innerHTML = `<div class="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">${markdown}</div>`;
-        return;
     }
-
-    // Renderizar cada sección
-    sections.forEach((section, index) => {
-        const sectionDiv = document.createElement('div');
-        sectionDiv.className = 'mb-6 pb-6 border-b border-gray-200 last:border-b-0';
-
-        // Título de la sección
-        const titleClass = section.level === 1
-            ? 'text-lg font-bold text-gray-900'
-            : 'text-base font-bold text-gray-800';
-
-        const title = document.createElement('h4');
-        title.className = `${titleClass} mb-3 pb-2 border-b-2 border-blue-500 flex items-center gap-2`;
-        title.innerHTML = `
-            <span class="w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0">
-                ${index + 1}
-            </span>
-            ${section.title}
-        `;
-        sectionDiv.appendChild(title);
-
-        // Contenido de la sección
-        const contentDiv = document.createElement('div');
-        contentDiv.className = 'text-sm text-gray-700 leading-relaxed space-y-2 pl-8';
-
-        // Procesar el contenido
-        section.content.forEach(line => {
-            const trimmedLine = line.trim();
-            if (trimmedLine) {
-                // Detectar listas
-                if (trimmedLine.startsWith('-') || trimmedLine.startsWith('*')) {
-                    const listItem = document.createElement('div');
-                    listItem.className = 'flex items-start gap-2';
-                    listItem.innerHTML = `
-                        <i class="ph-fill ph-check-circle text-green-500 text-sm mt-0.5 flex-shrink-0"></i>
-                        <span>${trimmedLine.substring(1).trim()}</span>
-                    `;
-                    contentDiv.appendChild(listItem);
-                } else {
-                    // Párrafo normal
-                    const p = document.createElement('p');
-                    p.textContent = trimmedLine;
-                    contentDiv.appendChild(p);
-                }
-            }
-        });
-
-        sectionDiv.appendChild(contentDiv);
-        container.appendChild(sectionDiv);
-    });
 }
+// parseMarkdownSections function removed as it is no longer needed
 
 // Función auxiliar: Renderizar enlaces a documentos
 function renderDocumentLinks(docsPaths) {
