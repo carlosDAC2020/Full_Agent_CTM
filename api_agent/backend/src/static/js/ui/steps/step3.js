@@ -140,12 +140,20 @@ function renderSchemaContent(markdown) {
     // Usar marked.js para renderizar el Markdown a HTML
     // Configuramos marked para que se vea bien con Tailwind Typography (o estilos básicos)
     try {
+        // Configurar opciones de marked para mejor compatibilidad
+        marked.use({
+            breaks: true, // Interpretar saltos de línea simples como <br>
+            gfm: true     // GitHub Flavored Markdown
+        });
+
         const htmlContent = marked.parse(markdown);
 
         // Creamos un contenedor con estilos para el contenido renderizado
         const proseWrapper = document.createElement('div');
-        proseWrapper.className = 'prose prose-sm prose-blue max-w-none text-gray-700 space-y-2';
-        // Estilos específicos para que se vea profesional
+        // 'prose' activa los estilos tipográficos. 'prose-sm' ajusta el tamaño. 
+        // 'prose-blue' da color a enlaces y acentos. 'max-w-none' usa todo el ancho disponible.
+        proseWrapper.className = 'prose prose-sm prose-slate max-w-none text-gray-700 space-y-2 prose-headings:font-bold prose-headings:text-gray-800 prose-h1:text-2xl prose-h3:text-lg prose-h3:mt-6 prose-h3:text-blue-700 prose-strong:text-gray-900 prose-ul:list-disc prose-ul:pl-4 prose-blockquote:border-l-4 prose-blockquote:border-blue-500 prose-blockquote:bg-blue-50 prose-blockquote:py-2 prose-blockquote:px-4 prose-blockquote:not-italic prose-blockquote:text-gray-600 prose-blockquote:rounded-r-lg';
+        
         proseWrapper.innerHTML = htmlContent;
 
         container.appendChild(proseWrapper);
