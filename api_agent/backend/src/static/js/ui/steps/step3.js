@@ -124,7 +124,13 @@ function renderGeneralInfo(generalInfo, selectedIdea) {
 // Función auxiliar: Renderizar contenido del esquema
 function renderSchemaContent(markdown) {
     const container = document.getElementById('schema-content');
+    const rawContainerText = document.getElementById('schema-raw-text');
+
     container.innerHTML = '';
+    // Populate RAW view as well
+    if (rawContainerText) {
+        rawContainerText.textContent = markdown || "No content.";
+    }
 
     if (!markdown || markdown.trim() === '') {
         container.innerHTML = '<p class="text-sm text-gray-400 italic">No hay contenido disponible</p>';
@@ -148,6 +154,33 @@ function renderSchemaContent(markdown) {
         container.innerHTML = `<div class="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">${markdown}</div>`;
     }
 }
+
+// Nueva función de Toggle (Exportada a window para click handlers)
+export function toggleSchemaView(mode) {
+    const renderContent = document.getElementById('schema-content');
+    const rawContent = document.getElementById('schema-raw');
+    const btnRender = document.getElementById('btn-view-render');
+    const btnRaw = document.getElementById('btn-view-raw');
+
+    if (mode === 'raw') {
+        // Show Raw
+        renderContent.classList.add('hidden');
+        rawContent.classList.remove('hidden');
+
+        // Buttons Update
+        btnRender.className = "px-3 py-1 rounded-md text-xs font-bold transition-all text-gray-500 hover:text-gray-700";
+        btnRaw.className = "px-3 py-1 rounded-md text-xs font-bold transition-all bg-gray-800 text-green-400 shadow-sm";
+    } else {
+        // Show Rendered
+        rawContent.classList.add('hidden');
+        renderContent.classList.remove('hidden');
+
+        // Buttons Update
+        btnRaw.className = "px-3 py-1 rounded-md text-xs font-bold transition-all text-gray-500 hover:text-gray-700";
+        btnRender.className = "px-3 py-1 rounded-md text-xs font-bold transition-all bg-white text-gray-800 shadow-sm";
+    }
+}
+window.toggleSchemaView = toggleSchemaView;
 // parseMarkdownSections function removed as it is no longer needed
 
 // Función auxiliar: Renderizar enlaces a documentos

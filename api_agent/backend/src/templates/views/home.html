@@ -291,16 +291,34 @@
                                 <i class="ph-fill ph-list-dashes text-gray-600 text-lg"></i>
                                 CONTENIDO ESTRUCTURADO
                             </h4>
-                            <span
-                                class="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded border border-blue-200 font-mono">Markdown
-                                Generado</span>
+
+                            <!-- Toggle View Buttons -->
+                            <div class="flex bg-gray-200 rounded-lg p-1 gap-1">
+                                <button onclick="toggleSchemaView('render')" id="btn-view-render"
+                                    class="px-3 py-1 rounded-md text-xs font-bold transition-all bg-white text-gray-800 shadow-sm">
+                                    Vista Previa
+                                </button>
+                                <button onclick="toggleSchemaView('raw')" id="btn-view-raw"
+                                    class="px-3 py-1 rounded-md text-xs font-bold transition-all text-gray-500 hover:text-gray-700">
+                                    Markdown RAW
+                                </button>
+                            </div>
                         </div>
 
-                        <div id="schema-content" class="p-8 max-h-[800px] overflow-y-auto custom-scrollbar bg-white">
-                            <!-- Contenido parseado del Markdown se insertará aquí -->
-                            <div class="flex flex-col items-center justify-center h-64 text-gray-400 gap-4">
-                                <i class="ph ph-spinner animate-spin text-3xl"></i>
-                                <p class="text-sm italic">Esperando contenido del esquema...</p>
+                        <div class="relative bg-white min-h-[500px] max-h-[800px]">
+                            <!-- Rendered Content Container -->
+                            <div id="schema-content" class="p-8 h-full max-h-[800px] overflow-y-auto custom-scrollbar">
+                                <div class="flex flex-col items-center justify-center h-64 text-gray-400 gap-4">
+                                    <i class="ph ph-spinner animate-spin text-3xl"></i>
+                                    <p class="text-sm italic">Esperando contenido del esquema...</p>
+                                </div>
+                            </div>
+
+                            <!-- Raw Content Container (Hidden by default) -->
+                            <div id="schema-raw"
+                                class="hidden absolute inset-0 p-0 h-full max-h-[800px] bg-gray-900 overflow-y-auto custom-scrollbar">
+                                <pre class="p-6 text-sm font-mono text-green-400 whitespace-pre-wrap leading-relaxed selection:bg-green-900 selection:text-white"
+                                    id="schema-raw-text"></pre>
                             </div>
                         </div>
                     </div>
