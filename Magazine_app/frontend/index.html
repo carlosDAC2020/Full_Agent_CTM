@@ -773,7 +773,7 @@
                         targetUrl += `?token=${encodeURIComponent(token)}`;
                     }
 
-                    window.open(targetUrl, '_blank', 'noopener');
+                    window.location.href = targetUrl;
                 });
             }
         });

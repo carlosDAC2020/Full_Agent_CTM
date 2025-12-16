@@ -87,9 +87,9 @@ document.addEventListener('DOMContentLoaded', () => {
     window.confirmIdea = confirmIdea;
     window.generateFinal = generateFinal;
     window.restoreSession = restoreSession; // Exponer para debug o usos globales
-    
+
     // Navigation function to Magazine app
-    window.navigateToMagazineHome = function() {
+    window.navigateToMagazineHome = function () {
         const currentHost = window.location.hostname;
         const protocol = window.location.protocol;
         let targetUrl = '';
@@ -107,6 +107,6 @@ document.addEventListener('DOMContentLoaded', () => {
             targetUrl += `?token=${encodeURIComponent(token)}`;
         }
 
-        window.open(targetUrl, '_blank', 'noopener');
+        window.location.href = targetUrl;
     };
 });
