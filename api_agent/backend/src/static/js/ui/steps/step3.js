@@ -111,7 +111,8 @@ function renderGeneralInfo(generalInfo, selectedIdea) {
     if (keywords.length > 0) {
         keywords.forEach(keyword => {
             const badge = document.createElement('span');
-            badge.className = 'px-2 py-1 bg-blue-500 text-white rounded-md text-xs font-semibold shadow-sm';
+            // Estilo coincidente con Step 4 (más sutil)
+            badge.className = "bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs border border-gray-200 font-medium";
             badge.textContent = keyword;
             keywordsContainer.appendChild(badge);
         });
