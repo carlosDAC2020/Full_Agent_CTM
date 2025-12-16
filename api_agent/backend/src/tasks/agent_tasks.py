@@ -20,6 +20,7 @@ from src.agents.tech_surveillance.state import (
 # --- IMPORTACIONES DE BASE DE DATOS ---
 from src.core.database import SessionLocal
 from src.models.history import AgentSession, AgentStep
+from src.core.auth import User # Importing to register 'users' table in Metadata for FK resolution
 
 # Cliente Redis
 redis_url = os.getenv("CELERY_BROKER_URL", "redis://shared_redis:6379/0")
