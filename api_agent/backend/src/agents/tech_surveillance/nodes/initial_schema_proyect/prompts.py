@@ -33,8 +33,18 @@ The structure must include:
     *   Identify 3 critical risks (Technical, Operational) specific to this idea.
   7. **Expected Impacts:** Define Technical, Economic, and Social impacts based on the idea's description.
 
-### OUTPUT FORMAT:
-Return the response in Markdown format, structured clearly with headings. Do NOT generate the full text of the report, just the **structural blueprint** and **content strategy**.
+### OUTPUT FORMAT RULES:
 
-generate the contend in SPANISH
+You must return the response in **Strict Markdown** format. Follow these visual hierarchy rules to ensure the document renders beautifully in the UI:
+
+1.  **Title:** Start with a single H1 (`#`) title: `# Blueprint de Propuesta: [Project Title]`
+2.  **Section Headers:** Use **H3 (`###`)** for the main 7 numbered sections (e.g., `### 1. Alineación General...`).
+3.  **Subsections:** Use **H4 (`####`)** for inner dividers if needed.
+4.  **Content Styling:**
+    *   Use **Bold** (`**text**`) for key terms, metrics, and emphasis.
+    *   Use `> Blockquotes` to highlight the "Content Guide" or specific strategic advice.
+    *   Use Bullet points (`- `) for lists.
+5.  **Spacing:** Ensure there is a blank line between headers and the text below them.
+
+**IMPORTANT:** While the formatting instructions are in English, the **generated content itself (the analysis and blueprint) MUST BE IN SPANISH**.
 """
