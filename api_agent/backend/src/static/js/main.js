@@ -87,4 +87,26 @@ document.addEventListener('DOMContentLoaded', () => {
     window.confirmIdea = confirmIdea;
     window.generateFinal = generateFinal;
     window.restoreSession = restoreSession; // Exponer para debug o usos globales
+    
+    // Navigation function to Magazine app
+    window.navigateToMagazineHome = function() {
+        const currentHost = window.location.hostname;
+        const protocol = window.location.protocol;
+        let targetUrl = '';
+        const token = localStorage.getItem('auth_token');
+
+        if (currentHost.includes('github.dev') || currentHost.includes('csb.app')) {
+            // Codespaces/Cloud environment: replace port in subdomain
+            targetUrl = protocol + '//' + currentHost.replace('-8001', '-8000') + '/frontend/index.html';
+        } else {
+            // Localhost environment
+            targetUrl = 'http://' + currentHost + ':8000/frontend/index.html';
+        }
+
+        if (token) {
+            targetUrl += `?token=${encodeURIComponent(token)}`;
+        }
+
+        window.open(targetUrl, '_blank', 'noopener');
+    };
 });
