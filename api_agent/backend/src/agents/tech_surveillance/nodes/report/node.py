@@ -149,6 +149,16 @@ def report_node(state: GraphState):
     full_markdown_report = re.sub(r'## (\d+\..+)\n+### \*\*\1\*\*', r'## \1', full_markdown_report)
     full_markdown_report = re.sub(r'## (\d+\..+)\n+## \1', r'## \1', full_markdown_report)
 
+    # --- SANITIZACIÓN PARA REPORTLAB ---
+    # ReportLab usa un parser XML estricto para tags como <br>. 
+    # El markdown a veces genera <br> sin cerrar si hay saltos de línea forzados.
+    # Reemplazamos <br> por <br/> self-closing.
+    full_markdown_report = re.sub(r'<br\s*>', '<br/>', full_markdown_report)
+    full_markdown_report = re.sub(r'<br\s*/?>', '<br/>', full_markdown_report) # Asegurar consistencia
+    # También limpiar posibles atributos vacíos o contenido dentro de br (que no debería existir)
+    full_markdown_report = re.sub(r'<br>(.*?)</br>', r'\1<br/>', full_markdown_report) 
+
+
     # Nombres de Archivo
     sanitized_title = re.sub(r'[\s/:]+', '_', title).lower()[:50]
     timestamp = datetime.now().strftime('%Y%m%d_%H%M')
