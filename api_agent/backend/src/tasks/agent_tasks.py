@@ -1,4 +1,5 @@
 import asyncio
+import os 
 import json
 import redis
 from datetime import datetime
@@ -21,7 +22,10 @@ from src.core.database import SessionLocal
 from src.models.history import AgentSession, AgentStep
 
 # Cliente Redis
-redis_client = redis.Redis(host='redis', port=6379, db=0)
+redis_url = os.getenv("CELERY_BROKER_URL", "redis://shared_redis:6379/0")
+
+# Usamos from_url para que parseé host, puerto y db automáticamente
+redis_client = redis.from_url(redis_url)
 
 # --- MAPEO DE NODOS A MENSAJES DE USUARIO ---
 # Estos keys coinciden exactamente con los definidos en tu graph.py

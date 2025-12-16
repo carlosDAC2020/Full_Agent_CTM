@@ -299,7 +299,9 @@
     "type_financy": "capital semilla",
     "monto": "No especificado",
     "requisitos": [
-      "Firmas de gestión de inversiones que busquen financiamiento de capital de BID Lab para fondos de capital emprendedor con enfoque en América Latina y el Caribe."
+      "Ser firmas de gestión de inversiones",
+      "Buscar financiamiento de capital de BID Lab para fondos de capital emprendedor",
+      "Tener un enfoque en América Latina y el Caribe"
     ],
     "beneficios": [
       "Financiamiento de capital"
@@ -588,6 +590,114 @@
     "beneficios": [
       "No especificados"
     ],
+    "lugar": "No especificado"
+  },
+  {
+    "id": 21,
+    "title": "Convocatorias de financiamiento para proyectos científicos y tecnológicos en Argentina",
+    "description": "**Startups tecnológicas argentinas**, ¡esta es su oportunidad! Accedan a financiamiento y soporte clave para impulsar proyectos científicos y tecnológicos. Desde la creación de prototipos hasta la validación en entorno real y acuerdos de transferencia, esta convocatoria busca fortalecer capacidades e integrar su innovación al sector productivo. ¡Despeguen su tecnología!",
+    "keywords": [
+      "Científicos",
+      "tecnólogos",
+      "convocatoria_internacional",
+      "Financiamiento, Capital semilla"
+    ],
+    "source": "https://www.argentina.gob.ar/noticias/ya-estan-disponibles-las-bases-y-condiciones-de-las-convocatorias-de-financiamiento-para",
+    "type": "convocatoria_internacional",
+    "url": "https://www.argentina.gob.ar/noticias/ya-estan-disponibles-las-bases-y-condiciones-de-las-convocatorias-de-financiamiento-para",
+    "created_at": "2025-12-15T17:33:01.748816+00:00",
+    "fecha_inicio": "2026-01-02",
+    "deadline": "No especificado",
+    "fecha_cierre": "No especificado",
+    "type_financy": "Financiamiento, Capital semilla",
+    "monto": "Hasta USD 500.000 (dependiendo de la línea de financiamiento)",
+    "requisitos": [
+      "Completar el Registro de Potenciales Beneficiarios",
+      "Presentar las iniciativas a través de la plataforma Trámites a Distancia (TAD)",
+      "Para líneas STARTUP 2025, acreditar desarrollos en la escala de madurez tecnológica (TRL) correspondiente (TRL 3-4, TRL 5-6, o TRL 7-9)"
+    ],
+    "beneficios": [
+      "Fortalecimiento de cadenas de valor y capacidades tecnológicas",
+      "Promoción de la articulación entre científicos, tecnólogos y el sector privado",
+      "Obtención de prototipos de pequeña escala y tecnología protegible bajo propiedad intelectual (para TRL 3-4)",
+      "Validación de prototipos avanzados a escala piloto y concreción de acuerdos de colaboración (para TRL 5-6)",
+      "Validación de productos en entorno real, diseño de estrategia de negocios y acuerdos de transferencia (para TRL 7-9)"
+    ],
+    "lugar": "No especificado"
+  },
+  {
+    "id": 22,
+    "title": "Top Artificial Intelligence Conferences 2025-2026",
+    "description": "¿Lideras una startup y quieres dominar la IA? Nuestra guía de las Top Artificial Intelligence Conferences 2025-2026 es tu clave. Conecta con expertos, explora estrategias avanzadas y acelera la innovación de tu negocio. Es la oportunidad perfecta para impulsar tu aprendizaje e impacto global en el ecosistema de la inteligencia artificial.",
+    "keywords": [
+      "evento"
+    ],
+    "source": "https://globalconference.ca/top-artificial-intelligence-conferences/",
+    "type": "evento",
+    "url": "https://globalconference.ca/top-artificial-intelligence-conferences/",
+    "created_at": "2025-12-15T17:33:01.748816+00:00",
+    "fecha_inicio": "2025-11-08",
+    "deadline": "No especificado",
+    "fecha_cierre": "No especificado",
+    "type_financy": "No especificado",
+    "monto": "No especificado",
+    "requisitos": [
+      "No especificado"
+    ],
+    "beneficios": [
+      "Impulso al aprendizaje, el impacto y la innovación global en IA.",
+      "Oportunidades de conexión y networking con líderes de la industria, investigadores y profesionales.",
+      "Acceso a nuevas ideas, investigaciones, estudios revisados por pares y aplicaciones prácticas de IA.",
+      "Posibilidad de establecer colaboraciones en proyectos de investigación.",
+      "Exploración de estrategias empresariales y soluciones tecnológicas avanzadas.",
+      "Plataformas para presentar trabajos académicos y discutir temas de vanguardia en IA.",
+      "Enfoque en la adopción de tecnología en empresas y soluciones a desafíos globales.",
+      "Demostraciones en vivo y oportunidades de aprendizaje práctico."
+    ],
+    "lugar": "Múltiples ciudades a nivel global (Canadá, EE. UU., Singapur, Reino Unido, Países Bajos, España, Suiza, Alemania)"
+  },
+  {
+    "id": 23,
+    "title": "Concurso de innovación JusLab para el sector de justicia en Argentina",
+    "description": "¿Eres un profesional con espíritu innovador dentro del sistema judicial argentino? El Concurso JusLab te convoca a impulsar la modernización del sector. Presenta tus soluciones creativas para transformar la justicia, seas parte de los Poderes Judiciales o Ministerios Públicos. ¡Sé protagonista del cambio!",
+    "keywords": [
+      "convocatoria_internacional",
+      "Premio"
+    ],
+    "source": "https://www.iadb.org/es/como-trabajar-juntos/convocatorias",
+    "type": "convocatoria_internacional",
+    "url": "https://www.iadb.org/es/como-trabajar-juntos/convocatorias",
+    "created_at": "2025-12-15T17:33:01.748816+00:00",
+    "fecha_inicio": "No especificado",
+    "deadline": "No especificado",
+    "fecha_cierre": "No especificado",
+    "type_financy": "Premio",
+    "monto": "No especificado",
+    "requisitos": [
+      "Ser integrante de los poderes judiciales de Argentina, incluidos los Ministerios Públicos Fiscales y de la Defensa."
+    ],
+    "beneficios": "No especificado",
+    "lugar": "No especificado"
+  },
+  {
+    "id": 24,
+    "title": "UNDP China meeting room ICT facilities upgrade",
+    "description": "¡Atención, startups y expertos en tecnología! UNDP China busca proveedores y contratistas para modernizar sus instalaciones TIC. Esta es una oportunidad única para tu empresa de impulsar su visibilidad global y demostrar soluciones innovadoras en un proyecto de gran impacto. Si eres especialista en infraestructura digital, ¡no te pierdas la convocatoria con cierre el 17 de diciembre de 2025!",
+    "keywords": [
+      "convocatoria_internacional",
+      "Contrato de servicio/Adquisición de bienes"
+    ],
+    "source": "https://procurement-notices.undp.org/",
+    "type": "convocatoria_internacional",
+    "url": "https://procurement-notices.undp.org/",
+    "created_at": "2025-12-15T17:33:01.748816+00:00",
+    "fecha_inicio": "2025-12-15",
+    "deadline": "2025-12-17T22:00:00-05:00",
+    "fecha_cierre": "2025-12-17",
+    "type_financy": "Contrato de servicio/Adquisición de bienes",
+    "monto": "No especificado",
+    "requisitos": "No especificado",
+    "beneficios": "No especificado",
     "lugar": "No especificado"
   }
 ]

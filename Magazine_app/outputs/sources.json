@@ -46,49 +46,49 @@
     "name": "CORDIS - Portal de la Comisión Europea",
     "type": "Internacional",
     "url": "https://cordis.europa.eu/",
-    "hidden": true
+    "hidden": false
   },
   {
     "id": 8,
     "name": "CORDIS - Projects & Results",
     "type": "Internacional",
     "url": "https://cordis.europa.eu/projects",
-    "hidden": true
+    "hidden": false
   },
   {
     "id": 9,
     "name": "Banco Interamericano de Desarrollo (BID)",
     "type": "Internacional",
     "url": "https://www.iadb.org/es/como-trabajar-juntos/convocatorias",
-    "hidden": true
+    "hidden": false
   },
   {
     "id": 10,
     "name": "Banco Mundial - Convocatorias y licitaciones",
     "type": "Internacional",
     "url": "https://projects.worldbank.org/en/projects-operations/procurement",
-    "hidden": true
+    "hidden": false
   },
   {
     "id": 11,
     "name": "ONU / PNUD - Oportunidades",
     "type": "Internacional",
     "url": "https://procurement-notices.undp.org/",
-    "hidden": true
+    "hidden": false
   },
   {
     "id": 12,
     "name": "Agencia Española de Cooperación Internacional (AECID)",
     "type": "Internacional",
     "url": "https://www.aecid.es/es/Paginas/Convocatorias.aspx",
-    "hidden": true
+    "hidden": false
   },
   {
     "id": 13,
     "name": "GIZ - Cooperación Alemana",
     "type": "Internacional",
     "url": "https://www.giz.de/en/worldwide/Jobs_and_Careers.html",
-    "hidden": true
+    "hidden": false
   },
   {
     "id": 14,
