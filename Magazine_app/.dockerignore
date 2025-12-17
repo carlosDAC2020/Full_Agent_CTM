@@ -1,0 +1,32 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.sqlite3
+*.log
+
+# Envs / venvs
+.env
+venv/
+venv_wsl/
+.env.*
+
+# VCS
+.git/
+.gitignore
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+
+# Outputs (mounted as volume at runtime)
+outputs/
+
+# Notes
+notas.md
+prueba.py

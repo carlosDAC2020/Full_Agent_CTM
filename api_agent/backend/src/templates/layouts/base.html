@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Cotecmar AI{% endblock %}</title>
+
+    <!-- Librerías Externas -->
+    <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <!-- Marked.js for Markdown rendering -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+    <!-- AUTH GUARD: Check for token before loading page -->
+    <script>
+        (function () {
+            // 1. Check if token is passed in URL (Cross-port auth)
+            const urlParams = new URLSearchParams(window.location.search);
+            const tokenFromUrl = urlParams.get('token');
+
+            if (tokenFromUrl) {
+                // Save to localStorage
+                localStorage.setItem('auth_token', tokenFromUrl);
+
+                // Clean URL
+                const url = new URL(window.location.href);
+                url.searchParams.delete('token');
+                window.history.replaceState({}, document.title, url.toString());
+            }
+
+            // 2. Check localStorage
+            const token = localStorage.getItem('auth_token');
+            if (!token) {
+                // Determine Magazine App URL
+                const currentHost = window.location.hostname;
+                const protocol = window.location.protocol;
+                let loginUrl = '';
+
+                if (currentHost.includes('github.dev') || currentHost.includes('csb.app')) {
+                    // Codespaces: replace 8001 with 8000
+                    loginUrl = protocol + '//' + currentHost.replace('-8001', '-8000') + '/frontend/login.html';
+                } else {
+                    // Localhost: use port 8000
+                    loginUrl = 'http://' + currentHost + ':8000/frontend/login.html';
+                }
+
+                // Redirect to Magazine App login
+                window.location.href = loginUrl;
+                return;
+            }
+        })();
+    </script>
+
+    <!-- Configuración Tailwind (Inline para funcionar con CDN) -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        cotecmar: {
+                            dark: '#002B49',
+                            mid: '#004B78',
+                            light: '#005A8D',
+                            gray: '#F4F6F8',
+                        }
+                    },
+                    animation: {
+                        'fade-out': 'fadeOut 0.5s ease-out forwards',
+                        'slide-up': 'slideUp 0.6s ease-out forwards',
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    },
+                    keyframes: {
+                        fadeOut: {
+                            '0%': { opacity: '1', transform: 'scale(1)' },
+                            '100%': { opacity: '0', transform: 'scale(0.95)', visibility: 'hidden' },
+                        },
+                        slideUp: {
+                            '0%': { opacity: '0', transform: 'translateY(20px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- CSS Personalizado -->
+    <link rel="stylesheet" href="{{ url_for('static', path='/css/main.css') }}">
+</head>
+
+<body class="bg-cotecmar-gray h-screen flex overflow-hidden font-sans text-slate-800">
+
+    <!-- SIDEBAR (Común para toda la app) -->
+    <aside id="sidebar"
+        class="bg-cotecmar-dark text-white w-64 flex-shrink-0 flex flex-col transition-all duration-300 relative z-30 overflow-hidden whitespace-nowrap">
+        <div class="p-5 flex items-center gap-3 border-b border-blue-900/50 min-w-[16rem]">
+            <!-- Uso dinámico del logo que tienes en carpeta -->
+            <!-- Uso dinámico del logo que tienes en carpeta -->
+            <img src="static/images/CotecmarLogo_white.png" alt="Cotecmar" class="h-10 w-auto opacity-90">
+            <div class="h-8 w-px bg-blue-800/50 mx-1"></div>
+            <div class="flex flex-col">
+                <span class="font-extrabold tracking-widest text-base leading-none text-white">INTECMAR</span>
+                <span class="text-[9px] text-blue-300 font-medium tracking-wide uppercase">AI Assistant</span>
+            </div>
+        </div>
+
+        <div class="p-4 min-w-[16rem] space-y-2">
+            <button onclick="resetInterface()"
+                class="w-full flex items-center gap-2 bg-blue-900/40 hover:bg-blue-800 border border-blue-700/50 rounded-lg p-3 transition-all text-sm group">
+                <i class="ph ph-plus-circle text-lg text-blue-300 group-hover:text-white"></i>
+                <span>Nueva Convocatoria</span>
+            </button>
+            <button onclick="navigateToMagazineHome()"
+                class="w-full flex items-center gap-2 bg-emerald-900/40 hover:bg-emerald-800 border border-emerald-700/50 rounded-lg p-3 transition-all text-sm group">
+                <i class="ph ph-house text-lg text-emerald-300 group-hover:text-white"></i>
+                <span>Ir a Magazine</span>
+            </button>
+        </div>
+
+        <div class="flex-1 overflow-y-auto px-2 py-3 min-w-[16rem] custom-scrollbar">
+            <div
+                class="text-[10px] font-bold text-blue-400/80 uppercase tracking-widest mb-3 px-3 flex items-center gap-2">
+                <i class="ph ph-clock-counter-clockwise text-xs"></i>
+                Historial Reciente
+            </div>
+            <!-- Aquí se inyecta el historial desde JavaScript -->
+            <div id="history-list"></div>
+        </div>
+
+        <div class="p-4 bg-black/20 flex items-center gap-3 text-sm min-w-[16rem]">
+            <div id="user-avatar"
+                class="w-8 h-8 rounded-full bg-gradient-to-tr from-blue-500 to-cyan-400 flex items-center justify-center font-bold text-xs flex-shrink-0">
+                U</div>
+            <div class="leading-tight">
+                <div id="user-name" class="font-medium">Cargando...</div>
+                <div id="user-role" class="text-[10px] text-blue-300 opacity-80">Usuario</div>
+            </div>
+        </div>
+
+        <!-- Agent Version Footer -->
+        <div class="py-3 bg-black/40 border-t border-white/5 flex justify-center min-w-[16rem]">
+            <div class="flex items-center gap-2 px-3 py-1 rounded-full bg-blue-900/20 border border-blue-500/10 hover:border-blue-500/30 transition-colors group cursor-help"
+                title="Estado del Agente">
+                <i class="ph ph-robot text-blue-400 group-hover:text-blue-300 text-xs"></i>
+                <span
+                    class="text-[10px] font-mono text-blue-300/70 group-hover:text-blue-200 uppercase tracking-wider">TechSurveillance
+                    v1.2</span>
+            </div>
+        </div>
+    </aside>
+
+    <!-- MAIN AREA -->
+    <main class="flex-1 flex flex-col relative w-full h-full bg-white/50 backdrop-blur-sm transition-all duration-300">
+
+        <!-- HEADER COMÚN -->
+        <!-- HEADER COMÚN -->
+        <header class="absolute top-0 w-full p-4 flex justify-between items-center z-20">
+            <!-- Left: Sidebar Toggle -->
+            <button onclick="toggleSidebar()" class="text-cotecmar-dark hover:bg-gray-200 p-2 rounded-lg transition"
+                title="Alternar Menú">
+                <i class="ph ph-sidebar-simple text-xl"></i>
+            </button>
+
+            <!-- Center: Global Stepper -->
+            <div id="global-stepper"
+                class="hidden absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center gap-1 bg-white/90 backdrop-blur-md px-1.5 py-1.5 rounded-full shadow-lg border border-gray-100/50 transition-all duration-300">
+
+                <!-- Step 1 -->
+                <div id="step-dot-1"
+                    class="flex items-center gap-2 px-4 py-1.5 rounded-full transition-all duration-300 cursor-default">
+                    <div
+                        class="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold border-2 transition-colors">
+                        1</div>
+                    <span class="text-xs font-bold whitespace-nowrap hidden md:block">Evaluación</span>
+                </div>
+
+                <!-- Divider -->
+                <div class="w-8 h-0.5 bg-gray-200 rounded-full"></div>
+
+                <!-- Step 2 -->
+                <div id="step-dot-2"
+                    class="flex items-center gap-2 px-4 py-1.5 rounded-full transition-all duration-300 cursor-default text-gray-400">
+                    <div
+                        class="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold border-2 border-gray-300 transition-colors">
+                        2</div>
+                    <span class="text-xs font-bold whitespace-nowrap hidden md:block">Ideas</span>
+                </div>
+
+                <!-- Divider -->
+                <div class="w-8 h-0.5 bg-gray-200 rounded-full"></div>
+
+                <!-- Step 3 -->
+                <div id="step-dot-3"
+                    class="flex items-center gap-2 px-4 py-1.5 rounded-full transition-all duration-300 cursor-default text-gray-400">
+                    <div
+                        class="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold border-2 border-gray-300 transition-colors">
+                        3</div>
+                    <span class="text-xs font-bold whitespace-nowrap hidden md:block">Esquema</span>
+                </div>
+
+                <!-- Divider -->
+                <div class="w-8 h-0.5 bg-gray-200 rounded-full"></div>
+
+                <!-- Step 4 -->
+                <div id="step-dot-4"
+                    class="flex items-center gap-2 px-4 py-1.5 rounded-full transition-all duration-300 cursor-default text-gray-400">
+                    <div
+                        class="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold border-2 border-gray-300 transition-colors">
+                        4</div>
+                    <span class="text-xs font-bold whitespace-nowrap hidden md:block">Final</span>
+                </div>
+
+            </div>
+
+            <!-- Right: Empty for balance or future tools -->
+            <div class="ml-auto w-10"></div>
+        </header>
+
+        <!-- CONTENIDO DINÁMICO -->
+        <div class="flex-1 relative overflow-hidden flex flex-col pt-4">
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+
+    <!-- JS de la App -->
+    <script type="module" src="static/js/main.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,2317 @@
+/* frontend/css/style.css */
+body {
+  background: #f5f7fb;
+  font-family: 'Montserrat', system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+  color: #0b1930;
+}
+
+.container {
+  max-width: 960px;
+  margin: 40px auto;
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+  padding: 32px;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  border-bottom: 1px solid #e5e7eb;
+  padding-bottom: 16px;
+  margin-bottom: 20px;
+}
+
+.logo { height: 56px; width: auto; }
+
+.titles { display: flex; flex-direction: column; gap: 4px; }
+
+.title {
+  color: #003366;
+  font-weight: 800;
+  margin: 0;
+}
+
+.subtitle {
+  color: #4b5563;
+  margin: 0;
+}
+
+.h1{
+  text-align: center;
+}
+
+.button-primary {
+  width: 100%;
+  background: #003366;
+  color: #ffffff;
+  border: none;
+  border-radius: 10px;
+  padding: 14px 18px;
+  font-size: 18px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background .2s ease, transform .1s ease;
+}
+.button-primary:hover { background: #004488; transform: translateY(-1px); }
+.button-primary:disabled { opacity: .7; cursor: not-allowed; }
+
+.loading {
+  margin: 16px 0;
+  padding: 4px 0;
+  display: block;
+}
+
+/* Minimalist loader: single blue bar that fills over ~230s */
+.loader {
+  display: block;
+  width: 0;
+  height: 4px;
+  background: #003366;
+  border-radius: 2px;
+  animation: progressFill 230s linear infinite;
+}
+
+@keyframes progressFill {
+  0% { width: 0; }
+  100% { width: 100%; }
+}
+
+.error { display: none; background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; padding: 12px; border-radius: 8px; margin-top: 12px; }
+.error.active { display: block; }
+
+#magazine-container { margin-top: 24px; }
+
+/* (flipbook eliminado) */
+
+
+/* Utility */
+.hidden { display: none !important; }
+
+/* ============================================= */
+/*              ACCOUNT MENU (DROPDOWN)          */
+/* ============================================= */
+/* Fixed wrapper to pin the account menu at the top-right of the page (outside header) */
+.account-fixed {
+  position: fixed;
+  top: 24px;
+  right: 24px;
+  z-index: 1300; /* above header & content */
+}
+
+/* Trigger + layout */
+.account-wrapper { position: relative; font-family: 'Montserrat', sans-serif; }
+.account-btn {
+  background: rgba(255,255,255,0.5);
+  border: 1px solid rgba(255,255,255,0.8);
+  backdrop-filter: blur(8px);
+  padding: 6px 12px;
+  border-radius: 30px;
+  display: flex; align-items: center; gap: 10px;
+  cursor: pointer; transition: all 0.2s ease;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+.account-btn:hover { background: rgba(255,255,255,0.8); transform: translateY(-1px); }
+.user-info { text-align: right; line-height: 1.2; display: none; }
+@media (min-width: 768px) { .user-info { display: block; } }
+.u-name { display: block; font-size: 0.85rem; font-weight: 700; color: #0f4c81; }
+.u-role { display: block; font-size: 0.7rem; color: #6b7280; }
+.avatar-circle { width: 36px; height: 36px; background: #0f4c81; color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; }
+.chevron { font-size: 0.8rem; color: #0f4c81; transition: transform 0.2s; }
+.account-btn.active .chevron { transform: rotate(180deg); }
+
+/* Dropdown */
+.account-dropdown {
+  position: absolute;
+  top: 120%;
+  right: 0;
+  width: 380px; /* wider */
+  background: rgba(255,255,255,0.95);
+  backdrop-filter: blur(12px);
+  border: 1px solid #fff;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+  z-index: 1000;
+  overflow: hidden;
+  animation: slideDown 0.2s ease-out;
+}
+.dropdown-header-info { padding: 16px; background: #f8fafc; }
+.dh-name { font-weight: 700; color: #1f2937; margin-bottom: 2px; }
+.dh-email { font-size: 0.85rem; color: #6b7280; }
+.dropdown-divider { height: 1px; background: #e5e7eb; }
+.history-section { padding: 0; }
+.history-title { padding: 12px 16px; font-size: 0.8rem; font-weight: 700; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.5px; }
+.history-list { list-style: none; max-height: 250px; overflow-y: auto; padding: 0; margin: 0; }
+.history-item { padding: 10px 16px; border-bottom: 1px solid #f3f4f6; display: flex; justify-content: space-between; align-items: center; transition: background 0.15s; }
+.history-item:last-child { border-bottom: none; }
+.history-item:hover { background: #f0f9ff; }
+.h-info { display: flex; flex-direction: column; gap: 2px; }
+.h-name { font-size: 0.85rem; font-weight: 600; color: #374151; }
+.h-date { font-size: 0.75rem; color: #9ca3af; }
+.status-badge { font-size: 0.7rem; padding: 4px 8px; border-radius: 12px; font-weight: 600; }
+.status-success { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+.status-error { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+.status-process { background: #e0f2fe; color: #075985; border: 1px solid #bae6fd; }
+.dropdown-footer { padding: 8px; }
+.logout-link { width: 100%; text-align: left; padding: 10px 12px; background: none; border: none; color: #ef4444; font-weight: 600; cursor: pointer; border-radius: 6px; display: flex; align-items: center; gap: 8px; font-family: inherit; }
+.logout-link:hover { background: #fef2f2; }
+@keyframes slideDown { from { opacity:0; transform: translateY(-10px);} to { opacity:1; transform: translateY(0);} }
+
+/* ============================================= */
+/*          ESTILOS TARJETA CONVOCATORIA         */
+/* ============================================= */
+
+.call-card {
+  max-width: 850px;
+  margin: 40px auto;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+  font-family: 'Montserrat', sans-serif;
+  position: relative;
+}
+
+/* Encabezado corporativo (sin icono) */
+.card-header {
+  display: flex;
+  justify-content: space-between; /* título a la izq, checkbox a la der (absoluto) */
+  align-items: center;
+  padding: 14px 24px;
+  background: #003366; /* Cotecmar blue */
+  color: white;
+}
+.card-header h2 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+/* Cuerpo */
+.card-body { padding: 30px; }
+.card-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #1a202c;
+  margin-bottom: 28px;
+}
+
+/* Grid para detalles */
+.details-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+/* Estilo para las columnas de información */
+.info-column {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+/* Ajustes para pantallas pequeñas */
+@media (max-width: 768px) {
+  .details-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .info-column {
+    gap: 12px;
+  }
+}
+
+/* Estilo base para los ítems de información */
+.info-item { 
+  line-height: 1.6;
+  background: #f9fafb;
+  padding: 12px 16px;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
+}
+
+/* Estilos para listas de beneficios y requisitos */
+.benefits-list,
+.requirements-list {
+  line-height: 1.6;
+}
+
+.benefits-list p,
+.requirements-list p {
+  margin: 4px 0;
+}
+
+/* Estilo para viñetas personalizadas */
+.benefits-list ul,
+.requirements-list ul {
+  list-style: none;
+  padding-left: 5px;
+  margin: 0;
+}
+
+.benefits-list li,
+.requirements-list li {
+  position: relative;
+  padding-left: 20px;
+  margin-bottom: 8px;
+}
+
+.benefits-list li:before {
+  content: '•';
+  color: #2b6cb0;
+  font-weight: bold;
+  position: absolute;
+  left: 0;
+}
+
+.requirements-list li:before {
+  content: '✓';
+  color: #38a169;
+  margin-right: 8px;
+  position: absolute;
+  left: 0;
+}
+
+.info-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+.item-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+.icon-wrapper {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background-color: #eef2f9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--cotecmar-blue, #003366);
+}
+.info-item label {
+  font-weight: 700;
+  color: #718096;
+  font-size: 0.85rem;
+  letter-spacing: 0.5px;
+}
+.info-item p {
+  color: #4a5568;
+  margin: 0;
+  padding-left: 38px;
+}
+.info-item p a {
+  color: var(--cotecmar-blue-hover, #004488);
+  font-weight: 600;
+  text-decoration: none;
+}
+.info-item p a:hover { text-decoration: underline; }
+
+/* ===== 1. Nuevo checkbox con efecto volteo ===== */
+.card-checkbox-container { position: absolute; top: 6px; right: 12px; z-index: 10; }
+.checkbox { display: none; }
+.checkbox-label { position: relative; display: inline-flex; align-items: center; cursor: pointer; }
+.checkbox-flip { width: 36px; height: 36px; perspective: 1000px; display: flex; justify-content: center; align-items: center; position: relative; transition: transform 0.4s ease; }
+.checkbox-front, .checkbox-back { width: 100%; height: 100%; position: absolute; display: flex; justify-content: center; align-items: center; border-radius: 8px; backface-visibility: hidden; transition: transform 0.4s ease; }
+.checkbox-front { background: #003366; box-shadow: 0 2px 4px rgba(0,0,0,0.1); transform: rotateY(0deg); }
+.checkbox-back { background: #10B981; box-shadow: 0 2px 4px rgba(0,0,0,0.1); transform: rotateY(180deg); }
+.checkbox-front svg, .checkbox-back svg { width: 24px; height: 24px; }
+.card-checkbox-container:hover .checkbox-flip { transform: scale(1.1); transition: transform 0.4s ease-out; }
+.checkbox:checked + .checkbox-label .checkbox-front { transform: rotateY(180deg); }
+.checkbox:checked + .checkbox-label .checkbox-back { transform: rotateY(0deg); }
+
+/* ===== 3. Botón animado para acciones clave ===== */
+.btn-animated-icon {
+  font-family: inherit;
+  font-size: 16px;
+  background: #003366;
+  color: white;
+  fill: rgb(200, 200, 200);
+  padding: 0.7em 1.5em; /* padding simétrico */
+  display: flex;
+  align-items: center;
+  justify-content: center; /* centra contenido */
+  cursor: pointer;
+  border: none;
+  border-radius: 15px;
+  font-weight: bold;
+  width: 100%;
+  gap: 0.8em; /* separación limpia entre icono y texto */
+  transition: all 0.5s ease;
+}
+.btn-animated-icon span {
+  display: block;
+  transition: all 0.4s ease-in-out;
+  width: auto;
+  overflow: hidden;
+}
+.btn-animated-icon .svg-wrapper { transition: transform 0.5s ease; }
+.btn-animated-icon svg { display: block; transition: fill 0.3s ease; }
+.btn-animated-icon:hover { background: #002244; }
+.btn-animated-icon:hover .svg-wrapper { transform: scale(1.25); }
+.btn-animated-icon:hover svg { fill: #fff; }
+/* Centrado perfecto del icono: el texto colapsa */
+.btn-animated-icon:hover span { opacity: 0; width: 0; padding: 0; margin: 0; }
+.btn-animated-icon:active { transform: scale(0.95); }
+
+/* =================================================================== */
+/* ===== CSS DEFINITIVO PARA EL LOADER (VERSIÓN A PRUEBA DE BALAS) ===== */
+/* =================================================================== */
+
+/* Contenedores principales (sin cambios) */
+#loading-overlay { 
+    position: fixed; 
+    top: 0; 
+    left: 0; 
+    width: 100%; 
+    height: 100%; 
+    background: rgba(255,255,255,0.5); 
+    backdrop-filter: blur(8px); 
+    -webkit-backdrop-filter: blur(8px); 
+    z-index: 1999; 
+    display: none; 
+    justify-content: center; 
+    align-items: center; 
+}
+#loading-overlay:not(.hidden) { 
+    display: flex; 
+}
+.loading { 
+    position: fixed; 
+    top: 50%; 
+    left: 50%; 
+    transform: translate(-50%, -50%); 
+    z-index: 2000; 
+}
+
+/* Contenedor del spinner y el texto */
+.spinnerContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px; /* Espacio entre el spinner y el texto */
+}
+
+/* El spinner giratorio (el correcto) */
+.spinnerContainer .spinner {
+  width: 56px;
+  height: 56px;
+  display: grid;
+  border: 4.5px solid transparent; /* Usamos transparent en lugar de #0000 */
+  border-radius: 50%;
+  border-right-color: #003366; /* Tu color corporativo */
+  animation: tri-spinner 1s infinite linear;
+}
+
+.spinnerContainer .spinner::before,
+.spinnerContainer .spinner::after {
+  content: "";
+  grid-area: 1/1;
+  margin: 2px;
+  border: inherit;
+  border-radius: 50%;
+  animation: tri-spinner 2s infinite;
+}
+
+.spinnerContainer .spinner::after {
+  margin: 8px;
+  animation-duration: 3s;
+}
+
+@keyframes tri-spinner {
+  100% { transform: rotate(1turn); }
+}
+
+/* --- SECCIÓN DE TEXTO TOTALMENTE CORREGIDA --- */
+
+/* Contenedor que alinea "CARGANDO" y las palabras animadas */
+.spinnerContainer .loader-text-wrapper {
+  display: flex;
+  /* La clave para la alineación del texto: */
+  align-items: baseline; 
+  justify-content: center;
+  font-family: inherit;
+  font-weight: 600; /* Un poco más de grosor */
+  font-size: 24px;
+}
+
+/* El texto estático "CARGANDO" */
+.spinnerContainer .static-word {
+  margin: 0;
+  padding: 0;
+  color: #003366; /* Color corporativo */
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* La "ventana" donde se mueven las palabras */
+.spinnerContainer .animated-words {
+  height: 30px;
+  width: 210px; /* Ancho ajustado para la palabra más larga */
+  overflow: hidden;
+  margin-left: 10px; /* Espacio entre las palabras */
+}
+
+/* Cada una de las palabras que se animan */
+.spinnerContainer .animated-words .word {
+  display: block;
+  height: 100%;
+  line-height: 30px; /* Centra verticalmente */
+  text-align: left;
+  color: #5a7b9d; /* Un color secundario para que contraste sutilmente */
+  font-weight: 500;
+  text-transform: lowercase;
+  animation: cycle-words 12s infinite;
+}
+
+/* Animación de las palabras */
+@keyframes cycle-words {
+  0%   { transform: translateY(0%); opacity: 1; }
+  14%  { transform: translateY(0%); opacity: 1; }
+  16.6%{ transform: translateY(-100%); opacity: 0; }
+  30.6%{ transform: translateY(-100%); opacity: 1; }
+  33.2%{ transform: translateY(-200%); opacity: 0; }
+  47.2%{ transform: translateY(-200%); opacity: 1; }
+  49.8%{ transform: translateY(-300%); opacity: 0; }
+  63.8%{ transform: translateY(-300%); opacity: 1; }
+  66.4%{ transform: translateY(-400%); opacity: 0; }
+  80.4%{ transform: translateY(-400%); opacity: 1; }
+  83%  { transform: translateY(-500%); opacity: 0; }
+  97%  { transform: translateY(-500%); opacity: 1; }
+  100% { transform: translateY(-600%); opacity: 0; }
+}
+@keyframes text-animation76 { 0% { clip-path: inset(0 100% 0 0); } 50% { clip-path: inset(0); } 100% { clip-path: inset(0 0 0 100%); } }
+
+/* ===== Fuentes: centrar botón Agregar ===== */
+.sources-form { display: grid; gap: 12px; }
+/* Hacer el botón Agregar Fuente de ancho completo (igual al de Generar PDF) */
+.sources-form #addSourceBtn { width: 100%; justify-self: stretch; margin-top: 10px; }
+
+/* Responsive */
+@media (max-width: 768px) {
+  .details-grid { grid-template-columns: 1fr; }
+  .card-title { font-size: 1.6rem; }
+}
+
+/* Saved Magazines section */
+#savedMagazines { margin-top: 24px; }
+#savedMagazines h2 { color: #003366; margin-bottom: 12px; }
+/* Ocultar barra de filtros antigua */
+.filters { display: none !important; }
+
+/* ===== Nuevo panel de filtros estilo dashboard ===== */
+.filter-panel { background: #fff; padding: 24px; border-radius: 16px; border: 1px solid #e5e7eb; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 30px; }
+.filter-group { margin-bottom: 20px; }
+.filter-group:last-child { margin-bottom: 0; }
+.filter-group h3 { font-size: 1rem; font-weight: 600; margin: 0 0 12px 0; color: #4b5563; display: flex; align-items: center; gap: 8px; }
+.filter-options { display: flex; flex-wrap: wrap; gap: 10px; }
+.filter-options button { background: #f3f4f6; color: #1f2937; border: 1px solid #d1d5db; border-radius: 8px; padding: 8px 16px; cursor: pointer; font-weight: 600; font-size: 0.9rem; transition: all 0.2s ease; }
+.filter-options button:hover { background: #e5e7eb; border-color: #9ca3af; }
+.filter-options button.active { background: #003366; color: #fff; border-color: #003366; }
+.filters button {
+  background: #f3f4f6;
+  color: #0b1930;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 8px 12px;
+  cursor: pointer;
+}
+.filters button:hover { background: #e5e7ef; }
+
+#magazineGallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
+.magazine-item {
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 12px;
+  background: #fff;
+}
+.magazine-item h3 { margin: 0 0 8px 0; color: #003366; font-size: 1rem; }
+.magazine-item p { margin: 0 0 8px 0; color: #4a5568; font-size: 0.9rem; }
+.magazine-item small { color: #6b7280; }
+
+/* Secondary button */
+.button-secondary {
+  margin-left: 12px;
+  background: #f3f4f6;
+  color: #003366;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  padding: 14px 18px;
+  font-size: 18px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.button-secondary:hover { background: #e5e7ef; }
+
+/* Actions row for main buttons */
+.actions {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  margin-top: 20px;
+  flex-wrap: wrap; /* stack on small screens */
+}
+
+/* Make primary and secondary buttons same size */
+.actions .button-primary,
+.actions .button-secondary {
+    flex-grow: 1; /* Allow them to grow */
+    max-width: 250px; /* But not indefinitely */
+}
+
+/* Small square options button to match height */
+.options-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px; /* Fixed width */
+  height: 52px;
+  padding: 0;
+  flex-shrink: 0; /* Prevent shrinking */
+}
+.options-btn i { font-size: 18px; }
+
+/* Centering helpers */
+.centered { text-align: center; }
+
+/* Center filters and add active state */
+.filters {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin: 10px 0 30px;
+}
+.filters button {
+  background: #edf2f7;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  padding: 6px 14px;
+  cursor: pointer;
+  font-weight: 600;
+  color: #2d3748;
+  transition: all 0.2s ease;
+}
+.filters button:hover { background: #e2e8f0; }
+.filters button.active { background: #003366; color: #fff; }
+
+/* ================================================= */
+/*          5. NUEVO ESTILO PARA BOTONES FLOTANTES   */
+/* ================================================= */
+/* ELIMINAR O REEMPLAZAR los antiguos estilos de .fab y .badge */
+
+.Btn {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  width: 56px; /* Ancho inicial circular */
+  height: 56px; /* Altura inicial circular */
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  position: absolute; /* Dentro del contenedor */
+  top: 0;
+  right: 0; /* expandirá hacia la izquierda */
+  overflow: hidden; /* oculta el texto antes de expandir */
+  transition-duration: .3s;
+  box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.25);
+}
+
+/* Colores específicos para cada botón */
+.Btn.pdf-cart { background-color: #dc2626; /* Rojo para PDF */ }
+.Btn.sources-btn { background-color: #0ea5e9; /* Azul para Sources */ }
+.Btn.email-btn { background-color: #6d28d9; /* Morado para Email */ }
+.Btn.agent-btn { background-color: #10b981; /* Verde para Agent */ }
+
+/* Contenedor fijo para los botones flotantes */
+.fab-container {
+  position: fixed;
+  right: 24px;
+  width: 56px;
+  height: 56px;
+  z-index: 1000;
+}
+.pdf-cart-pos { bottom: 24px; }
+.sources-btn-pos { bottom: 92px; }
+.email-btn-pos { bottom: 160px; }
+.agent-btn-pos { bottom: 228px; }
+
+/* Expand container width on hover so internal absolute button can expand */
+.fab-container:hover { width: 150px; }
+
+/* Icono dentro del botón */
+.sign {
+  width: 100%;
+  transition-duration: .3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.sign svg { width: 20px; }
+.sign svg path { fill: white; }
+
+/* Texto que aparece al hacer hover */
+.text {
+  position: absolute;
+  right: 0%;
+  width: 0%;
+  opacity: 0;
+  color: white;
+  font-size: 1.1em;
+  font-weight: 600;
+  transition-duration: .3s;
+}
+
+/* Efecto hover */
+.Btn:hover {
+  width: 150px; /* Ancho expandido */
+  border-radius: 40px;
+  transition-duration: .3s;
+}
+.Btn:hover .sign {
+  width: 30%;
+  transition-duration: .3s;
+  padding-left: 20px;
+}
+.Btn:hover .text {
+  opacity: 1;
+  width: 70%;
+  transition-duration: .3s;
+  padding-right: 10px;
+}
+
+/* Efecto al hacer clic */
+.Btn:active {
+  transform: translate(2px ,2px);
+}
+
+/* Badge para el contador (integrado con el nuevo estilo) */
+.badge {
+  position: absolute;
+  top: -6px;   /* sobresale encima del botón */
+  right: -6px; /* sobresale a la derecha */
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 9999px;
+  background: #ff3b30; /* rojo minimalista */
+  color: #fff;
+  font-size: 11px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #fff;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+  transform-origin: center;
+  z-index: 10;
+}
+
+/* Animación minimalista para cambios */
+.badge.pop { animation: badge-pop 220ms ease; }
+@keyframes badge-pop {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.22); }
+  100% { transform: scale(1); }
+}
+
+/* Glass panel (liquid glass effect) */
+.glass-panel {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 90%;
+  max-width: 550px; /* Ancho aumentado */
+  background: rgba(255,255,255,0.6);
+  backdrop-filter: blur(14px) saturate(160%);
+  -webkit-backdrop-filter: blur(14px) saturate(160%);
+  border: 1px solid rgba(209, 213, 219, 0.4);
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+  overflow: hidden;
+  z-index: 1100;
+}
+
+/* Overlay para modales (email panel) */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.35);
+  backdrop-filter: blur(1px);
+  -webkit-backdrop-filter: blur(1px);
+  z-index: 1000;
+}
+.modal-overlay.hidden { display: none; }
+
+/* ================================================= */
+/*          1. PANEL DE CORREO MÁS ANCHO             */
+/* ================================================= */
+.glass-panel {
+  max-width: 600px;
+}
+
+/* ================================================= */
+/*          2. NUEVO ESTILO DE INPUT (DE Y PARA)     */
+/* ================================================= */
+.fancy-input-container {
+  position: relative;
+  display: flex;
+  align-items: center; /* Centrado vertical */
+  height: 3rem; /* Revertimos al tamaño original que se ve mejor */
+  width: 100%;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, .05);
+}
+.fancy-input-container input {
+  height: 100%;
+  width: 100%;
+  border-radius: 8px;
+  border: 1px solid rgb(176 190 197);
+  background-color: transparent;
+  /* Padding unificado (De y Para): 0.125rem arriba/abajo, 75px derecha por botón, 0.75rem izquierda */
+  padding: 0.125rem 75px 0.125rem 0.75rem;
+  font-size: 1rem;
+  line-height: 1.25rem;
+  font-weight: 400;
+  color: #1f2937; /* Aseguramos visibilidad del texto */
+  outline: none;
+  transition: all .15s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 1; /* Debajo del botón */
+}
+.fancy-input-container input:focus { border: 2px solid #003366; }
+.fancy-input-container input:read-only { color: #4b5563; background: #f9fafb; }
+.fancy-input-btn {
+  position: absolute;
+  width: auto;
+  min-width: 65px;
+  right: 5px;
+  top: 5px;
+  bottom: 5px;
+  z-index: 10;
+  border-radius: 6px;
+  background-color: #003366;
+  color: #fff;
+  padding: .25rem 0.75rem;
+  text-align: center;
+  vertical-align: middle;
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  border: none;
+  transition: .3s ease;
+  height: calc(100% - 10px); /* Alineación vertical perfecta */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2; /* Encima del input */
+}
+.fancy-input-btn:hover { transform: scale(1.05); }
+.fancy-input-btn.edit-btn { min-width: 40px; }
+.fancy-input-container input:placeholder-shown ~ .fancy-input-btn {
+  pointer-events: none;
+  background-color: #9ca3af;
+  opacity: 0.7;
+}
+
+/* ================================================= */
+/*          3. NUEVO BOTÓN "MOSTRAR FAVORITOS"       */
+/* ================================================= */
+.favorites-btn-uiverse {
+  width: 45px;
+  height: 45px;
+  border: none;
+  border-radius: 50%;
+  background-color: #f3f4f6;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  position: relative;
+  transition-duration: .3s;
+  box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.08);
+  margin-top: 10px;
+}
+.favorites-btn-uiverse .svgIcon { fill: #4b5563; }
+.favorites-btn-uiverse .icon2 { width: 18px; height: 5px; border-bottom: 2px solid #6b7280; border-left: 2px solid #6b7280; border-right: 2px solid #6b7280; }
+.favorites-btn-uiverse .tooltip {
+  position: absolute;
+  bottom: 125%;
+  left: 50%;
+  transform: translateX(-50%);
+  opacity: 0;
+  background-color: #1f2937;
+  color: white;
+  padding: 5px 10px;
+  border-radius: 5px;
+  transition-duration: .2s;
+  pointer-events: none;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+.favorites-btn-uiverse .tooltip::before {
+  position: absolute; content: ""; width: 10px; height: 10px; background-color: #1f2937; transform: rotate(45deg); bottom: -5px; left: 50%; margin-left: -5px;
+}
+.favorites-btn-uiverse:hover .tooltip { opacity: 1; transition-duration: .3s; }
+.favorites-btn-uiverse:hover { background-color: #003366; transition-duration: .3s; }
+.favorites-btn-uiverse:hover .icon2 { border-color: white; }
+.favorites-btn-uiverse:hover .svgIcon { fill: white; animation: slide-in-top 0.6s cubic-bezier(0.250, 0.460, 0.450, 0.940) both; }
+@keyframes slide-in-top { 0% { transform: translateY(-10px); opacity: 0; } 100% { transform: translateY(0px); opacity: 1; } }
+
+/* ================================================= */
+/*          4. MODAL CENTRADO PARA FAVORITOS         */
+/* ================================================= */
+.favorites-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(4px);
+  z-index: 1200;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.favorites-modal {
+  background: white;
+  padding: 24px;
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+  width: 90%;
+  max-width: 450px;
+  /* Updated to allow custom header/body/footer sections */
+  padding: 0;
+  overflow: hidden;
+}
+.favorites-modal h4 { margin: 0 0 16px 0; color: #003366; }
+.favorites-list { list-style: none; padding: 0; max-height: 200px; overflow-y: auto; }
+.favorite-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-radius: 8px; cursor: pointer; transition: background 0.2s; }
+.favorite-item:hover { background: #f3f4f6; }
+
+/* Modal sections for the improved favorites modal */
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 24px;
+  border-bottom: 1px solid #e5e7eb;
+}
+.modal-header h4 { margin: 0; color: #003366; }
+
+.modal-body {
+  padding: 24px;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.modal-footer {
+  padding: 16px 24px;
+  border-top: 1px solid #e5e7eb;
+}
+
+/* ================================================= */
+/*       3. SCROLL HORIZONTAL PARA DESTINATARIOS     */
+/* ================================================= */
+.recipient-tags-container {
+  display: flex;
+  gap: 8px;
+  padding-bottom: 8px; /* Espacio para la barra de scroll */
+  overflow-x: auto;   /* Habilita el scroll horizontal */
+  overflow-y: hidden; /* Evita scroll vertical */
+  flex-wrap: nowrap;  /* Evita salto de línea */
+}
+.recipient-tags-container::-webkit-scrollbar { height: 6px; }
+.recipient-tags-container::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 10px;
+}
+
+/* Enlace simple para mostrar favoritos (diseño sencillo) */
+.link-button {
+  background: none;
+  border: none;
+  color: #003366;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  margin-top: 10px;
+}
+.link-button:hover { text-decoration: underline; }
+
+/* ================================================= */
+/*          4. NUEVO BOTÓN "MOSTRAR FAVORITOS"       */
+/* ================================================= */
+.favorites-btn-container { display: flex; justify-content: center; margin-top: 16px; }
+.favorites-btn-tooltip {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 0.8em;
+  border: none;
+  background-color: rgba(0, 51, 102, 0.08);
+  border-radius: 1.25em;
+  transition: all 0.2s linear;
+  position: relative;
+  cursor: pointer;
+}
+.favorites-btn-tooltip:hover {
+  box-shadow: 3.4px 2.5px 4.9px rgba(0,0,0,0.025), 8.6px 6.3px 12.4px rgba(0,0,0,0.035), 17.5px 12.8px 25.3px rgba(0,0,0,0.045);
+  transform: scale(1.05);
+}
+.favorites-btn-tooltip .tooltiptext {
+  visibility: hidden;
+  width: 10em;
+  background-color: #1f2937;
+  color: #fff;
+  text-align: center;
+  border-radius: 6px;
+  padding: 5px 0;
+  position: absolute;
+  z-index: 1;
+  bottom: 125%;
+  left: 50%;
+  margin-left: -5em;
+}
+.favorites-btn-tooltip .tooltiptext::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  margin-left: -5px;
+  border-width: 5px;
+  border-style: solid;
+  border-color: #1f2937 transparent transparent transparent;
+}
+.favorites-btn-tooltip:hover .tooltiptext { visibility: visible; }
+.favorites-btn-tooltip i { font-size: 22px; color: #facc15; }
+/* File drop area for email uploads */
+.file-drop-area {
+  border: 2px dashed #d1d5db;
+  border-radius: 12px;
+  padding: 24px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: #6b7280;
+}
+.file-drop-area i { font-size: 2rem; margin-bottom: 8px; }
+.file-drop-area p { margin: 0; font-size: 1rem; }
+.file-drop-area:hover, .file-drop-area.drag-over {
+  border-color: #003366;
+  background-color: #f9fafb;
+  color: #003366;
+}
+.file-name { display: block; margin-top: 12px; font-weight: 600; color: #10B981; }
+
+/* ================================================= */
+/*          3. PREVISUALIZACIÓN DE PDF               */
+/* ================================================= */
+.file-preview-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #f3f4f6;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 10px 14px;
+}
+.file-preview-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #003366;
+  overflow: hidden;
+}
+.file-preview-info i { font-size: 1.5rem; }
+.file-preview-info .file-name {
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ================================================= */
+/*          4. NUEVO BOTÓN ELIMINAR (TAGS)           */
+/* ================================================= */
+.remove-tag-btn {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 0.5em;
+  border: none;
+  background-color: rgba(100,77,237,0.08);
+  border-radius: 0.8em;
+  transition: all 0.2s linear;
+  margin-left: 8px;
+  position: relative;
+}
+.remove-tag-btn:hover {
+  transform: scale(1.1);
+  background-color: rgba(220, 38, 38, 0.1);
+}
+.remove-tag-btn svg path { fill: #dc2626; }
+.remove-tag-btn .tooltiptext {
+  visibility: hidden;
+  width: 5em;
+  background-color: rgba(0,0,0,0.5);
+  color: #fff;
+  text-align: center;
+  border-radius: 6px;
+  padding: 5px 0;
+  position: absolute;
+  z-index: 1;
+  top: 125%;
+  left: 50%;
+  margin-left: -2.5em;
+}
+.remove-tag-btn .tooltiptext::after {
+  content: "";
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  margin-left: -5px;
+  border-width: 5px;
+  border-style: solid;
+  border-color: transparent transparent rgba(0,0,0,0.5) transparent;
+}
+.remove-tag-btn:hover .tooltiptext { visibility: visible; }
+.glass-header { display: flex; align-items: center; gap: 8px; padding: 10px 12px; background: rgba(255,255,255,0.6); border-bottom: 1px solid rgba(209,213,219,0.3); }
+.glass-header h3 { margin: 0; font-size: 16px; color: #003366; }
+.icon-btn { background: transparent; border: none; cursor: pointer; padding: 6px; color: #1f2937; }
+.icon-btn:hover { color: #003366; }
+.glass-body { 
+  padding: 24px; 
+}
+.glass-footer { padding: 12px; border-top: 1px solid rgba(209,213,219,0.3); }
+.block-label { display: block; font-weight: 700; color: #374151; margin-bottom: 6px; }
+.options-list { display: grid; gap: 8px; }
+.options-list label { display: flex; align-items: center; gap: 10px; color: #374151; }
+.other-row input[type="text"] { flex: 1; padding: 6px 8px; border: 1px solid #d1d5db; border-radius: 8px; }
+
+/* Sources admin */
+.sources-list { display: grid; gap: 10px; max-height: 300px; overflow: auto; }
+.source-item { display: grid; grid-template-columns: 1fr auto auto; gap: 8px; align-items: center; padding: 8px; border-radius: 10px; background: rgba(255,255,255,0.6); }
+/* Sources tabs */
+.sources-tabs { display: flex; gap: 4px; margin-bottom: 12px; border-bottom: 1px solid rgba(209,213,219,0.5); }
+.tab-btn { padding: 8px 12px; border: none; background: transparent; cursor: pointer; font-weight: 600; color: #4b5563; border-bottom: 2px solid transparent; }
+.tab-btn.active { color: #003366; border-bottom-color: #003366; }
+
+/* ============================================= */
+/*          ESTILOS DE BOTONES PRINCIPALES       */
+/* ============================================= */
+.actions-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin: 20px auto 30px;
+  max-width: 650px;
+  width: 100%;
+}
+.actions-top-row {
+  display: flex;
+  gap: 12px;
+  width: 100%;
+  justify-content: center;
+}
+
+/* Uiverse-styled primary buttons */
+.uiverse-btn {
+  padding: 17px 40px;
+  border-radius: 50px;
+  cursor: pointer;
+  border: 0;
+  box-shadow: rgb(0 0 0 / 5%) 0 0 8px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  font-size: 15px;
+  transition: all 0.5s ease;
+  font-weight: bold;
+}
+.uiverse-btn:hover {
+  letter-spacing: 3px;
+  background-color: #003366;
+  color: #ffffff;
+  box-shadow: #003366 0px 7px 29px 0px;
+}
+.uiverse-btn:active {
+  letter-spacing: 3px;
+  background-color: #003366;
+  color: #ffffff;
+  box-shadow: #002244 0px 0px 0px 0px;
+  transform: translateY(10px);
+  transition: 100ms;
+}
+
+/* ================================ */
+/* Mini Loader (tarjetas en esquina)*/
+/* ================================ */
+#flow-mini-loader {
+  position: fixed;
+  top: 16px;
+  left: 16px;
+  z-index: 2100;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.glass {
+  background: rgba(255,255,255,0.6);
+  backdrop-filter: blur(12px) saturate(160%);
+  -webkit-backdrop-filter: blur(12px) saturate(160%);
+  border: 1px solid rgba(209, 213, 219, 0.4);
+}
+
+.flow-card {
+  width: 280px;
+  border-radius: 14px;
+  box-shadow: 0 10px 24px rgba(0,0,0,0.12);
+  padding: 12px;
+}
+.flow-card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.flow-card .flow-title { font-weight: 700; color: #003366; font-size: 0.95rem; }
+.flow-meta { display: flex; align-items: center; justify-content: space-between; }
+.flow-type { color: #1f2937; font-weight: 600; font-size: 0.85rem; }
+
+/* Small spinner in blue */
+.spinner.sm {
+  width: 20px;
+  height: 20px;
+  border: 3px solid transparent;
+  border-right-color: #2563eb; /* azul */
+  border-radius: 50%;
+  animation: tri-spinner 0.9s linear infinite;
+}
+.spinner.sm.done { border-right-color: #16a34a; }
+.spinner.sm.err { border-right-color: #dc2626; }
+
+/* Badges */
+.badge {
+  padding: 2px 8px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 700;
+}
+.badge.blue { background: rgba(37,99,235,0.12); color: #1d4ed8; border: 1px solid rgba(37,99,235,0.3); }
+.badge.green { background: rgba(22,163,74,0.12); color: #15803d; border: 1px solid rgba(22,163,74,0.3); }
+.badge.red { background: rgba(220,38,38,0.12); color: #b91c1c; border: 1px solid rgba(220,38,38,0.3); }
+
+/* 80/20 split on top row */
+.actions-top-row .button-primary {
+  flex-basis: calc(80% - 6px);
+  flex-grow: 1;
+}
+/* ======================================================= */
+/*         ESTILOS PARA EL PANEL DE ENVÍO DE CORREO (VERSIÓN FINAL)       */
+/* ======================================================= */
+
+/* --- Contenedores y espaciado general --- */
+#sendEmailPanel {
+  max-width: 550px; /* Un poco más ancho */
+  width: 90%;
+  margin: 0 auto;
+}
+.glass-body {
+  padding: 24px; /* Más aire a los lados para que no se vea apretado */
+}
+.email-form-group {
+  margin-bottom: 1.25rem; /* Espacio vertical entre campos */
+}
+.block-label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  color: #2d3748;
+}
+
+/* --- Contenedor de Inputs --- */
+.fancy-input-container {
+  display: flex;
+  align-items: center;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  background-color: #ffffff;
+  padding: 0.25rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.fancy-input-container:focus-within {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.4);
+}
+
+/* --- Inputs "De:" y "Para:" --- */
+#senderInput,
+#recipientInput {
+  flex-grow: 1;
+  width: 100%;
+  padding: 0.65rem 0.75rem;
+  border: none;
+  background: transparent;
+  color: #1f2937;
+  font-size: 1rem;
+  outline: none;
+}
+#senderInput:read-only {
+  color: #4b5563;
+}
+
+/* --- SOLUCIÓN DE COLORES PARA LOS BOTONES --- */
+
+/* Estilo para el botón "ADD" (ID específico para sobreescribir) */
+#addRecipientBtn {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 6px;
+  background-color: #2563eb; /* TU COLOR AZUL */
+  color: white;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background-color 0.2s;
+  margin-left: 0.5rem;
+}
+#addRecipientBtn:hover {
+  background-color: #1d4ed8; /* Azul más oscuro */
+}
+
+/* Estilo para el botón de Editar (ID específico para sobreescribir) */
+#editSenderBtn {
+  padding: 0.5rem 0.75rem;
+  border: none;
+  border-radius: 6px;
+  background-color: transparent; /* SIN FONDO */
+  color: #3b82f6; /* ICONO AZUL */
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+#editSenderBtn:hover {
+  opacity: 0.7;
+}
+
+/* Contenedor de etiquetas de destinatarios (Scroll) */
+.recipient-tags-container {
+  display: flex;
+  gap: 8px;
+  padding-bottom: 8px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  flex-wrap: nowrap;
+  min-height: 44px;
+}
+.recipient-tags-container::-webkit-scrollbar { height: 6px; }
+.recipient-tags-container::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 10px;
+}
+
+/* Etiqueta de destinatario */
+.recipient-tag {
+  display: inline-flex;
+  align-items: center;
+  background-color: rgba(0, 123, 255, 0.2);
+  padding: 0.125rem 0.75rem;
+  border-radius: 16px;
+  font-size: 0.875rem;
+  gap: 0.5rem;
+}
+.recipient-tag .favorite-star {
+  color: #ffc107;
+  cursor: pointer;
+  font-size: 0.9em;
+}
+
+/* Checklist styles */
+#checklist { max-height: 300px; overflow-y: auto; padding: 8px 0; }
+#checklist .uv-checkbox-wrapper { display: block; margin-bottom: 15px; padding-left: 5px; }
+.uv-checkbox { display: none; }
+.uv-checkbox-label { display: flex; align-items: center; cursor: pointer; font-size: 16px; padding: 4px 0; transition: all 0.2s ease; }
+.uv-checkbox-icon { position: relative; width: 1.5em; height: 1.5em; border: 2px solid #4A5568; border-radius: 4px; transition: border-color 0.3s ease, background-color 0.3s ease; margin-right: 12px; display: flex; align-items: center; justify-content: center; }
+.uv-checkmark { position: absolute; top: 0; left: 0; width: 1.5em; height: 1.5em; fill: none; stroke: #ffffff; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 24; stroke-dashoffset: 24; transition: stroke-dashoffset 0.4s cubic-bezier(0.45, 0.05, 0.55, 0.95); }
+.uv-checkbox-text { color: #2D3748; transition: color 0.3s ease; font-size: 14px; line-height: 1.5; }
+.uv-checkbox:checked + .uv-checkbox-label .uv-checkbox-icon { background-color: #0F5A9C; border-color: #0F5A9C; }
+.uv-checkbox:checked + .uv-checkbox-label .uv-checkmark { stroke-dashoffset: 0; }
+.uv-checkbox:checked + .uv-checkbox-label .uv-checkbox-text { color: #0F5A9C; font-weight: 500; }
+.uv-checkbox-label:hover .uv-checkbox-icon, .uv-checkbox-label:hover .uv-checkbox-text { color: #0F5A9C; border-color: #0F5A9C; }
+#fav-check-all + .uv-checkbox-label .uv-checkbox-text { font-weight: 600; }
+#checklist hr { border: none; border-top: 1px solid #e5e7eb; margin: 12px 0; }
+#sendEmailBtn { margin: 0 auto; padding: 0.75rem 2rem; }
+
+/* Grupo de formulario de correo */
+.email-form-group {
+  margin-bottom: 1.5rem;
+}
+
+/* Etiquetas de bloque */
+.block-label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  color: #2d3748;
+}
+
+/* Fila del remitente */
+.sender-email-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  margin-bottom: 1rem;
+}
+
+/* Contenedor de etiquetas de destinatarios - ESTILO CORREGIDO PARA SCROLL HORIZONTAL */
+.recipient-tags-container {
+  display: flex;
+  gap: 8px;
+  padding-bottom: 8px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  flex-wrap: nowrap;
+  min-height: 44px;
+}
+.recipient-tags-container::-webkit-scrollbar { height: 6px; }
+.recipient-tags-container::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 10px;
+}
+
+/* Etiqueta de destinatario */
+.recipient-tag {
+  display: inline-flex;
+  align-items: center;
+  background-color: rgba(0, 123, 255, 0.2);
+  padding: 0.125rem 0.75rem;
+  border-radius: 16px;
+  font-size: 0.875rem;
+  gap: 0.5rem;
+}
+
+.recipient-tag .remove-tag {
+  background: none;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.125rem;
+  border-radius: 50%;
+  transition: background-color 0.2s;
+}
+
+.recipient-tag .remove-tag:hover {
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+.recipient-tag .favorite-star {
+  color: #ffc107;
+  cursor: pointer;
+  font-size: 0.9em;
+  margin-left: 0.25rem;
+}
+
+/* Contenedor que agrupa el input y el botón */
+.fancy-input-container {
+  display: flex;
+  align-items: center;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+  background-color: rgba(255, 255, 255, 0.1);
+  padding: 0.25rem 0.5rem;
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+/* Estilo de foco para el CONTENEDOR cuando el input de adentro esté activo */
+.fancy-input-container:focus-within {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.4);
+}
+
+/* Input de correo (ahora sin estilos propios de borde/fondo) */
+#recipientInput, #senderInput {
+  flex-grow: 1;
+  width: 100%;
+  padding: 0.5rem;
+  border: none;
+  background: transparent;
+  color: black;
+  font-size: 0.9375rem;
+  outline: none;
+}
+
+/* Botón dentro del contenedor */
+.fancy-input-btn {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 6px;
+  background-color: #d1d5db;
+  color: #1f2937;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background-color 0.2s;
+  margin-left: 0.5rem;
+}
+
+.fancy-input-btn:hover {
+  background-color: #b0b5bc;
+}
+
+/* Estilo para el botón de editar */
+.fancy-input-btn.edit-btn {
+  background: none;
+  color: #6b7280;
+  padding: 0.25rem 0.5rem;
+  margin-left: 0.25rem;
+}
+
+.fancy-input-btn.edit-btn:hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: #3b82f6;
+}
+
+/* Botón de mostrar favoritos */
+.link-button {
+  background: none;
+  border: none;
+  color: #007bff;
+  cursor: pointer;
+  font-size: 0.875rem;
+  padding: 0.5rem 0;
+  margin-bottom: 0.5rem;
+  transition: color 0.2s;
+}
+
+.link-button:hover {
+  color: #0056b3;
+  text-decoration: underline;
+}
+
+/* Dropdown de favoritos */
+.favorites-dropdown {
+  position: relative;
+  margin-top: 0.5rem;
+}
+
+.favorites-dropdown.hidden {
+  display: none;
+}
+
+/* --- CSS MODIFICADO PARA EL CHECKBOX CON ANIMACIÓN Y ESTILO PERSONALIZADO --- */
+
+/* Contenedor de la lista */
+#checklist {
+  max-height: 300px;
+  overflow-y: auto;
+  padding: 8px 0;
+}
+
+/* Contenedor de cada elemento de la lista (checkbox + texto) */
+#checklist .uv-checkbox-wrapper {
+  display: block;      /* Asegura que cada elemento esté en su propia línea */
+  margin-bottom: 15px; /* Aumenta el espacio entre los checkboxes */
+  padding-left: 5px;   /* Un pequeño margen para alinear mejor */
+}
+
+/* Ocultamos el checkbox real, ya que lo reemplazamos con nuestro diseño */
+.uv-checkbox {
+  display: none;
+}
+
+/* El label es el contenedor clickeable para nuestro checkbox personalizado */
+.uv-checkbox-label {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  font-size: 16px; /* Tamaño de fuente legible */
+  padding: 4px 0;
+  transition: all 0.2s ease;
+}
+
+/* El ícono del checkbox (el cuadro que se marca) */
+.uv-checkbox-icon {
+  position: relative;
+  width: 1.5em;  /* Ancho del cuadro */
+  height: 1.5em; /* Alto del cuadro */
+  /* ESTADO SIN MARCAR: Borde oscuro */
+  border: 2px solid #4A5568; /* Un gris oscuro y neutro */
+  border-radius: 4px; /* Esquinas redondeadas para un look moderno */
+  transition: border-color 0.3s ease, background-color 0.3s ease; /* Animación suave de color */
+  margin-right: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* La marca de verificación (el "check") */
+.uv-checkmark {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1.5em;
+  height: 1.5em;
+  fill: none;
+  stroke: #ffffff; /* La marca es de color blanco */
+  stroke-width: 2.5; /* Un poco más gruesa para que se vea bien */
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  /* LA MAGIA DE LA ANIMACIÓN: La marca se "dibuja" a sí misma */
+  stroke-dasharray: 24;
+  stroke-dashoffset: 24; /* La marca empieza invisible */
+  transition: stroke-dashoffset 0.4s cubic-bezier(0.45, 0.05, 0.55, 0.95);
+}
+
+/* El texto que acompaña al checkbox */
+.uv-checkbox-text {
+  color: #2D3748; /* Color de texto estándar */
+  transition: color 0.3s ease;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* --- ESTILOS CUANDO EL CHECKBOX ESTÁ MARCADO --- */
+
+/* Cuando el input (.uv-checkbox) está :checked, aplicamos estos estilos a su label hermano */
+.uv-checkbox:checked + .uv-checkbox-label .uv-checkbox-icon {
+  /* ESTADO MARCADO: El azul distintivo que querías */
+  background-color: #0F5A9C; /* Un azul profesional, similar al de tu botón */
+  border-color: #0F5A9C;     /* El borde también cambia a azul */
+}
+
+.uv-checkbox:checked + .uv-checkbox-label .uv-checkmark {
+  stroke-dashoffset: 0; /* La animación se completa, haciendo visible la marca */
+}
+
+.uv-checkbox:checked + .uv-checkbox-label .uv-checkbox-text {
+  color: #0F5A9C; /* El texto también se colorea para mayor consistencia */
+  font-weight: 500;
+}
+
+/* Efecto hover */
+.uv-checkbox-label:hover .uv-checkbox-icon {
+  border-color: #0F5A9C;
+}
+
+.uv-checkbox-label:hover .uv-checkbox-text {
+  color: #0F5A9C;
+}
+
+/* Estilo para el checkbox "Seleccionar Todos" */
+#fav-check-all + .uv-checkbox-label .uv-checkbox-text {
+  font-weight: 600;
+}
+
+/* Ajuste para el separador */
+#checklist hr {
+  border: none;
+  border-top: 1px solid #e5e7eb;
+  margin: 12px 0;
+}
+
+.favorites-list {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background-color: #2d3748;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  max-height: 200px;
+  overflow-y: auto;
+  padding: 0.5rem 0;
+}
+
+.favorite-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.favorite-item:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.favorite-item .favorite-email {
+  flex-grow: 1;
+}
+
+.favorite-item .favorite-actions {
+  display: flex;
+  gap: 0.5rem;
+  color: #a0aec0;
+}
+
+.favorite-item .favorite-actions button {
+  background: none;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 4px;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.favorite-item .favorite-actions button:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+/* Estilos para el botón de enviar en el pie del panel */
+#sendEmailBtn {
+  margin: 0 auto;
+  padding: 0.75rem 2rem;
+}
+
+/* Estilos para el botón de editar remitente */
+#editSenderBtn {
+  color: #a0aec0;
+  transition: color 0.2s;
+}
+
+#editSenderBtn:hover {
+  color: #007bff;
+}
+
+/* Estilos para el input de edición de remitente */
+#senderEmailInput {
+  flex-grow: 1;
+  background: none;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  color: #fff;
+  padding: 0.15rem 0.5rem;
+  font-size: 0.9375rem;
+}
+
+#senderEmailInput:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+.actions-top-row .options-btn {
+  flex-basis: calc(20% - 6px);
+  flex-grow: 1;
+}
+
+/* Bottom button full width within wrapper */
+.actions-wrapper > .button-secondary {
+  width: 100%;
+}
+
+/* Options button look aligned with Uiverse */
+.options-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border-radius: 50px;
+  border: 1px solid #e5e7eb;
+  background: #f9fafb;
+  min-height: 58px;
+  transition: all 0.3s ease;
+}
+
+#checklist input[type="checkbox"]:checked::before {
+  animation: check-01 0.3s ease forwards;
+}
+
+#checklist input[type="checkbox"]:checked::after {
+  animation: check-02 0.3s ease forwards;
+}
+
+#checklist input[type="checkbox"]:checked + label {
+  color: var(--disabled);
+  animation: move 0.3s ease 0.05s forwards;
+}
+
+#checklist input[type="checkbox"]:checked + label::before {
+  background: var(--disabled);
+  animation: slice 0.3s ease forwards;
+}
+
+#checklist input[type="checkbox"]:checked + label::after {
+  animation: firework 0.4s ease forwards 0.1s;
+}
+
+@keyframes move {
+  50% { padding-left: 6px; }
+  100% { color: var(--disabled); padding-left: 0; }
+}
+
+@keyframes slice {
+  60% { width: 100%; left: -27px; }
+}
+
+/* ======================================================= */
+/*      NUEVO ESTILO PARA RADIO BUTTONS (VERSIÓN FINAL)    */
+/* ======================================================= */
+
+/* Contenedor principal de cada opción (el <label>) */
+.custom-radio-label {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  padding: 8px 0;
+}
+
+/* Ocultamos el radio button original */
+.hidden-radio {
+  display: none;
+}
+
+/* El círculo exterior visible que simula el botón */
+.custom-radio-button {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  position: relative;
+  flex-shrink: 0;
+  transition: 0.2s ease all;
+  
+  /* Estilo "plano" para el estado no seleccionado */
+  background-color: transparent;
+  border: 2.5px solid #1436f76b; /* Borde ROJO sólido */
+}
+
+/* Efecto hover sobre el botón no seleccionado */
+.custom-radio-label:hover .custom-radio-button {
+  background-color: #fff0f0; /* Un fondo rojo muy sutil al pasar el mouse */
+}
+
+/* Efecto al hacer clic */
+.custom-radio-label:active .custom-radio-button {
+  transform: scale(0.9);
+}
+
+/* Contenedor de la marca de verificación (el "check") */
+.tick-mark {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  
+  /* Geometría y centrado perfectos del check */
+  width: 12px;
+  height: 12px;
+  transform: translate(-50%, -50%) rotate(-45deg); /* Centra y rota el contenedor */
+}
+
+/* Las dos partes que forman la marca de verificación */
+.tick-mark::before,
+.tick-mark::after {
+  content: "";
+  position: absolute;
+  background-color: #fff;
+  border-radius: 2px;
+  opacity: 0;
+  transition: 0.3s ease all;
+}
+
+/* La parte corta del "check" (vertical) */
+.tick-mark::before {
+  left: 0;
+  bottom: 0;
+  width: 3px;
+  height: 100%; /* Ocupa toda la altura del contenedor */
+  transform: translateY(-15px);
+}
+
+/* La parte larga del "check" (horizontal) */
+.tick-mark::after {
+  left: 0;
+  bottom: 0;
+  width: 100%; /* Ocupa todo el ancho del contenedor */
+  height: 3px;
+  transform: translateX(15px);
+}
+
+/* El texto al lado del botón */
+.radio-text {
+  color: #374151;
+  font-weight: 500;
+}
+
+/* --- ESTILOS CUANDO EL RADIO BUTTON ESTÁ SELECCIONADO --- */
+
+.hidden-radio:checked + .custom-radio-button {
+  background-color: #07d410; /* VERDE */
+  border-color: #07d410;     /* El borde también se vuelve verde */
+}
+
+/* La marca de verificación aparece animada */
+.hidden-radio:checked + .custom-radio-button .tick-mark::before,
+.hidden-radio:checked + .custom-radio-button .tick-mark::after {
+  transform: translate(0);
+  opacity: 1;
+}
+
+/* Estilo para la fila especial "Otra" */
+.other-row {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.other-row input[type="text"] {
+  margin-left: 8px;
+  padding: 6px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  flex-grow: 1;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.other-row input[type="text"]:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Asegurar que el texto de "Otra" no se desborde */
+.other-row .radio-text {
+  white-space: nowrap;
+}
+
+/* ======================================================= */
+/*      NUEVO BOTÓN DE FAVORITOS CON ANIMACIÓN             */
+/* ======================================================= */
+
+/* Contenedor principal del botón (la etiqueta <label>) */
+.favorite-button-ui {
+  display: block;
+  width: fit-content; /* Se ajusta al contenido */
+  cursor: pointer;
+  position: relative;
+}
+
+/* El checkbox real lo ocultamos */
+.hidden-checkbox {
+  display: none;
+}
+
+/* El div visible que contiene el texto y la estrella */
+.favorite-button-ui .button-content {
+  display: flex;
+  align-items: center;
+  gap: 8px; /* Espacio entre texto y estrella */
+  padding: 8px 16px;
+  border: 1.5px solid #f59e0b; /* Borde color ámbar/dorado */
+  border-radius: 9999px; /* Forma de píldora */
+  color: #f59e0b; /* Color del texto y del borde de la estrella */
+  font-weight: 600; /* Texto en negrita */
+  transition: all 0.4s ease;
+  overflow: hidden; /* ¡MUY IMPORTANTE! Oculta la estrella cuando se agranda */
+  position: relative; /* Necesario para el z-index */
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+}
+
+/* El texto "Favoritos" */
+.favorite-button-ui .button-text {
+  z-index: 10; /* Se asegura que el texto esté por encima de la estrella animada */
+  transition: transform 0.4s ease;
+  font-size: 0.9rem;
+  letter-spacing: 0.5px;
+}
+
+/* La estrella SVG */
+.favorite-button-ui .button-star {
+  width: 20px;
+  height: 20px;
+  stroke: currentColor; /* Hereda el color ámbar */
+  fill: none; /* Por defecto no tiene relleno */
+  transition: transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275), fill 0.3s ease;
+  flex-shrink: 0;
+}
+
+/* Tooltip */
+.favorite-button-ui .tooltiptext {
+  visibility: hidden;
+  width: 120px;
+  background-color: #333;
+  color: #fff;
+  text-align: center;
+  border-radius: 6px;
+  padding: 5px;
+  position: absolute;
+  z-index: 1;
+  bottom: 125%;
+  left: 50%;
+  transform: translateX(-50%);
+  opacity: 0;
+  transition: opacity 0.3s;
+  font-size: 0.8rem;
+  font-weight: normal;
+}
+
+.favorite-button-ui:hover .tooltiptext {
+  visibility: visible;
+  opacity: 1;
+}
+
+/* --- EFECTOS DE INTERACCIÓN (VERSIÓN SIMPLIFICADA) --- */
+
+/* 1. Al pasar el mouse por encima (hover) */
+.favorite-button-ui:hover .button-content {
+  background-color: #f59e0b; /* El fondo del botón se vuelve ámbar */
+  color: white; /* El texto y el borde de la estrella se vuelven blancos */
+}
+
+/* 2. Cuando el checkbox está marcado (estado "activo") */
+.hidden-checkbox:checked + .button-content .button-star {
+  fill: #f59e0b; /* La estrella SE RELLENA de color ámbar */
+}
+
+/* Cuando está marcado Y pasas el mouse por encima, el relleno de la estrella también se vuelve blanco */
+.hidden-checkbox:checked + .button-content:hover .button-star {
+  fill: white;
+}
+
+/* 3. Pequeño efecto al hacer clic */
+.favorite-button-ui:active {
+  transform: scale(0.95);
+}
+
+/* Ajustes para el contenedor del botón */
+.favorites-btn-container {
+  display: flex;
+  justify-content: center;
+  margin: 16px 0;
+}
+
+@keyframes check-01 {
+  0% { width: 0; transform: rotate(0deg); right: 60%; top: 8px; }
+  100% { width: 6px; transform: rotate(45deg); right: 55%; top: 9px; }
+}
+
+@keyframes check-02 {
+  0% { width: 0; transform: rotate(0deg); left: 40%; top: 9px; }
+  100% { width: 12px; transform: rotate(-45deg); left: 40%; top: 9px; }
+}
+
+@keyframes firework {
+  0% { box-shadow:
+        0 -10px 0 -6px var(--check),
+        10px -5px 0 -6px var(--check),
+        10px 5px 0 -6px var(--check),
+        0 10px 0 -6px var(--check),
+        -10px 5px 0 -6px var(--check),
+        -10px -5px 0 -6px var(--check);
+      }
+  100% { box-shadow:
+        0 -10px 0 0 var(--check),
+        10px -5px 0 0 var(--check),
+        10px 5px 0 0 var(--check),
+        0 10px 0 0 var(--check),
+        -10px 5px 0 0 var(--check),
+        -10px -5px 0 0 var(--check);
+      }
+}
+
+/* ======================================================= */
+/*      ANIMACIÓN PARA EL BOTÓN DE FAVORITOS (ESTRELLA)    */
+/* ======================================================= */
+
+/* 1. Define la animación del "salto" */
+@keyframes subtle-bounce {
+  0%, 100% {
+    transform: translateY(0); /* Posición original */
+  }
+  50% {
+    transform: translateY(-6px); /* Sube 6 píxeles */
+  }
+}
+
+/* 2. Aplica la animación al botón de la estrella */
+#showFavoritesBtn {
+  /* Propiedades de la animación */
+  animation: subtle-bounce 1.5s ease-in-out infinite 2s;
+  will-change: transform;
+}
+
+/* ======================================================= */
+/*      ESTILOS BOTÓN SPARKLE - GENERAR MAGAZINE          */
+/* ======================================================= */
+
+.sparkle-button {
+  --active: 0;
+  --transition: 0.3s;
+  --spark: 2s;
+  --cut: 0.1em;
+  --cotecmar-blue: #003366;
+  --electric-blue: #0080ff;
+  --bg: radial-gradient(
+			40% 50% at center 100%,
+			hsl(210 calc(var(--active) * 100%) 65% / var(--active)),
+			transparent
+		),
+		radial-gradient(
+			80% 100% at center 120%,
+			hsl(210 calc(var(--active) * 100%) 55% / var(--active)),
+			transparent
+		),
+		#003366;
+  background: var(--bg);
+  font-size: 18px;
+  font-weight: 700;
+  border: 0;
+  cursor: pointer;
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  gap: 0.25em;
+  white-space: nowrap;
+  border-radius: 10px;
+  position: relative;
+  width: 100%;
+  justify-content: center;
+  box-shadow: 0 0 calc(var(--active) * 3em) calc(var(--active) * 1em) hsl(210 100% 50% / 0.75),
+		0 0em 0 0 hsl(210 calc(var(--active) * 100%) calc((var(--active) * 50%) + 30%)) inset,
+		0 -0.05em 0 0 hsl(210 calc(var(--active) * 100%) calc(var(--active) * 60%)) inset;
+  transition: box-shadow var(--transition), scale var(--transition), background var(--transition);
+  scale: calc(1 + (var(--active) * 0.1));
+}
+
+.sparkle-button:active {
+  scale: 1;
+  transition: .3s;
+}
+
+.sparkle path {
+  color: hsl(0 0% calc((var(--active, 0) * 70%) + var(--base)));
+  transform-box: fill-box;
+  transform-origin: center;
+  fill: currentColor;
+  stroke: currentColor;
+  animation-delay: calc((var(--transition) * 1.5) + (var(--delay) * 1s));
+  animation-duration: 0.6s;
+  transition: color var(--transition);
+}
+
+.sparkle-button:is(:hover, :focus-visible) path {
+  animation-name: bounce;
+}
+
+@keyframes bounce {
+  35%, 65% {
+    scale: var(--scale);
+  }
+}
+
+.sparkle path:nth-of-type(1) {
+  --scale: 0.5;
+  --delay: 0.1;
+  --base: 40%;
+}
+
+.sparkle path:nth-of-type(2) {
+  --scale: 1.5;
+  --delay: 0.2;
+  --base: 20%;
+}
+
+.sparkle path:nth-of-type(3) {
+  --scale: 2.5;
+  --delay: 0.35;
+  --base: 30%;
+}
+
+.sparkle-button:before {
+  content: "";
+  position: absolute;
+  inset: -0.2em;
+  z-index: -1;
+  border: 0.25em solid hsl(210 97% 50% / 0.5);
+  border-radius: 10px;
+  opacity: var(--active, 0);
+  transition: opacity var(--transition);
+}
+
+.spark {
+  position: absolute;
+  inset: 0;
+  border-radius: 10px;
+  rotate: 0deg;
+  overflow: hidden;
+  -webkit-mask: linear-gradient(white, transparent 50%);
+  mask: linear-gradient(white, transparent 50%);
+  animation: flip calc(var(--spark) * 2) infinite steps(2, end);
+  z-index: 0;
+}
+
+@keyframes flip {
+  to {
+    rotate: 360deg;
+  }
+}
+
+.spark:before {
+  content: "";
+  position: absolute;
+  width: 200%;
+  aspect-ratio: 1;
+  top: 0%;
+  left: 50%;
+  z-index: -1;
+  translate: -50% -15%;
+  rotate: 0;
+  transform: rotate(-90deg);
+  opacity: calc((var(--active)) + 0.4);
+  background: conic-gradient(
+		from 0deg,
+		transparent 0 340deg,
+		white 360deg
+	);
+  transition: opacity var(--transition);
+  animation: rotate var(--spark) linear infinite both;
+}
+
+.spark:after {
+  content: "";
+  position: absolute;
+  inset: var(--cut);
+  border-radius: 10px;
+}
+
+.backdrop {
+  position: absolute;
+  inset: var(--cut);
+  background: var(--bg);
+  border-radius: 10px;
+  transition: background var(--transition);
+  z-index: 0;
+}
+
+@keyframes rotate {
+  to {
+    transform: rotate(90deg);
+  }
+}
+
+.bodydrop {
+  display: none;
+}
+
+.sparkle-button:is(:hover, :focus-visible) {
+  --active: 1;
+  --play-state: running;
+}
+
+.sparkle-button:is(:hover, :focus-visible) ~ .particle-pen {
+  --active: 1;
+  --play-state: running;
+}
+
+.sp {
+  position: relative;
+  width: 100%;
+  overflow: visible;
+}
+
+.particle-pen {
+  position: absolute;
+  width: 200%;
+  aspect-ratio: 1;
+  top: 50%;
+  left: 50%;
+  translate: -50% -50%;
+  -webkit-mask: radial-gradient(white, transparent 65%);
+  mask: radial-gradient(white, transparent 65%);
+  z-index: 0;
+  opacity: var(--active, 0);
+  transition: opacity var(--transition);
+  pointer-events: none;
+}
+
+.particle {
+  fill: white;
+  width: calc(var(--size, 0.25) * 1rem);
+  aspect-ratio: 1;
+  position: absolute;
+  top: calc(var(--y) * 1%);
+  left: calc(var(--x) * 1%);
+  opacity: var(--alpha, 1);
+  animation: float-out calc(var(--duration, 1) * 1s) calc(var(--delay) * -1s) infinite linear;
+  transform-origin: var(--origin-x, 1000%) var(--origin-y, 1000%);
+  z-index: -1;
+  animation-play-state: var(--play-state, paused);
+}
+
+.particle path {
+  fill: hsl(0 0% 90%);
+  stroke: none;
+}
+
+.particle:nth-of-type(even) {
+  animation-direction: reverse;
+}
+
+@keyframes float-out {
+  to {
+    rotate: 360deg;
+  }
+}
+
+/* Posiciones y propiedades de cada partícula */
+.particle:nth-of-type(1) { --y: 10; --x: 20; --duration: 3; --delay: 0; --alpha: 0.8; --origin-x: -100%; --origin-y: -100%; --size: 0.3; }
+.particle:nth-of-type(2) { --y: 15; --x: 80; --duration: 2.5; --delay: 0.5; --alpha: 0.9; --origin-x: 100%; --origin-y: -50%; --size: 0.25; }
+.particle:nth-of-type(3) { --y: 80; --x: 10; --duration: 3.5; --delay: 1; --alpha: 0.7; --origin-x: -50%; --origin-y: 100%; --size: 0.35; }
+.particle:nth-of-type(4) { --y: 85; --x: 90; --duration: 2.8; --delay: 1.5; --alpha: 0.85; --origin-x: 150%; --origin-y: 150%; --size: 0.28; }
+.particle:nth-of-type(5) { --y: 50; --x: 5; --duration: 3.2; --delay: 2; --alpha: 0.75; --origin-x: -150%; --origin-y: 50%; --size: 0.32; }
+.particle:nth-of-type(6) { --y: 45; --x: 95; --duration: 2.6; --delay: 2.5; --alpha: 0.8; --origin-x: 200%; --origin-y: -100%; --size: 0.27; }
+.particle:nth-of-type(7) { --y: 25; --x: 50; --duration: 3.3; --delay: 3; --alpha: 0.9; --origin-x: 50%; --origin-y: -150%; --size: 0.3; }
+.particle:nth-of-type(8) { --y: 75; --x: 50; --duration: 2.9; --delay: 3.5; --alpha: 0.85; --origin-x: 50%; --origin-y: 200%; --size: 0.26; }
+.particle:nth-of-type(9) { --y: 35; --x: 30; --duration: 3.1; --delay: 4; --alpha: 0.7; --origin-x: -50%; --origin-y: -50%; --size: 0.33; }
+.particle:nth-of-type(10) { --y: 65; --x: 70; --duration: 2.7; --delay: 4.5; --alpha: 0.8; --origin-x: 100%; --origin-y: 100%; --size: 0.29; }
+
+.Text {
+  letter-spacing: 0.01ch;
+  color: #ffffff;
+  font-weight: 700;
+  position: relative;
+  z-index: 10;
+  transition: color var(--transition);
+  display: inline-block;
+}
+
+.sparkle-button:is(:hover, :focus-visible) .Text {
+  color: #ffffff;
+  text-shadow: 0 0 8px rgba(255, 255, 255, 0.8);
+}
+
+.sparkle-button svg {
+  inline-size: 1.25em;
+  position: relative;
+  z-index: 10;
+}
+
+/* Estado deshabilitado del botón sparkle */
+.sparkle-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  --active: 0 !important;
+}

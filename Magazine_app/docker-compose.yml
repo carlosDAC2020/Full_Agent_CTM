@@ -1,0 +1,63 @@
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: magazine_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+
+  api:
+    build: .
+    container_name: magazine_api
+    command: uvicorn backend.app.main:app --host 0.0.0.0 --port 8000 --reload --reload-exclude outputs/*
+    user: "${UID:-1000}:${GID:-1000}"
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+      - DATABASE_URL=postgresql+psycopg2://mag_user:mag_pass@postgres:5432/mag_db
+      - WORKER_TOKEN=${WORKER_TOKEN:-change-me-strong}
+    volumes:
+      - ./:/app
+      - ./outputs:/app/outputs
+    depends_on:
+      - redis
+      - postgres
+
+  worker:
+    build: .
+    container_name: magazine_worker
+    command: celery -A backend.celery_app worker -l info -c 1
+    user: "${UID:-1000}:${GID:-1000}"
+    env_file:
+      - .env
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+      - DATABASE_URL=postgresql+psycopg2://mag_user:mag_pass@postgres:5432/mag_db
+      - WORKER_TOKEN=${WORKER_TOKEN:-change-me-strong}
+      - API_INTERNAL_URL=http://api:8000
+    volumes:
+      - ./:/app
+      - ./outputs:/app/outputs
+    depends_on:
+      - redis
+      - postgres
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: magazine_postgres
+    environment:
+      - POSTGRES_USER=mag_user
+      - POSTGRES_PASSWORD=mag_pass
+      - POSTGRES_DB=mag_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg-data:/var/lib/postgresql/data
+
+volumes:
+  redis-data:
+  pg-data:

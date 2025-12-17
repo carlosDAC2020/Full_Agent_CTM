@@ -1,0 +1,49 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyd
+*.so
+*.egg-info/
+.eggs/
+.dist/
+dist/
+build/
+.python-version
+
+# Virtual environments
+venv/
+venv_wsl/
+.venv/
+ENV/
+.envrc
+
+# Environment & secrets
+.env
+.env.*
+
+# Caches & tooling
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+.coverage
+coverage.xml
+*.log
+
+# OS / Editors
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Project outputs
+# Ignore everything in outputs, but allow JSON datasets
+outputs/*
+!outputs/*.json
+!outputs/.gitkeep
+
+# Node (if any future tooling)
+node_modules/
+
+# Notes
+notas.md
+prueba.py

@@ -1,0 +1,165 @@
+version: '3.8'
+
+services:
+  # ==========================================
+  # SHARED INFRASTRUCTURE
+  # ==========================================
+  
+  shared_redis:
+    image: redis:7-alpine
+    container_name: shared_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - shared_redis_data:/data
+    networks:
+      - agent_network
+
+  shared_postgres:
+    image: postgres:15-alpine
+    container_name: shared_postgres
+    environment:
+      - POSTGRES_USER=shared_user
+      - POSTGRES_PASSWORD=shared_pass
+      - POSTGRES_DB=postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - shared_postgres_data:/var/lib/postgresql/data
+      - ./init-databases.sql:/docker-entrypoint-initdb.d/init-databases.sql
+    networks:
+      - agent_network
+
+  shared-minio:
+    image: minio/minio
+    container_name: shared-minio
+    ports:
+      - "9000:9000"   # Puerto API S3
+      - "9001:9001"   # Consola Web (UI)
+    environment:
+      - MINIO_ROOT_USER=minioadmin
+      - MINIO_ROOT_PASSWORD=minioadmin
+    command: server /data --console-address ":9001"
+    volumes:
+      - shared_minio_data:/data
+    networks:
+      - agent_network
+
+  # ==========================================
+  # MAGAZINE APP SERVICES
+  # ==========================================
+
+  magazine_api:
+    build: 
+      context: ./Magazine_app
+    container_name: magazine_api
+    command: uvicorn backend.app.main:app --host 0.0.0.0 --port 8000 --reload --reload-exclude outputs/*
+    user: "${UID:-1000}:${GID:-1000}"
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      - PYTHONPATH=/app
+      - REDIS_URL=redis://shared_redis:6379/0
+      - DATABASE_URL=postgresql+psycopg2://shared_user:shared_pass@shared_postgres:5432/mag_db
+      - WORKER_TOKEN=${WORKER_TOKEN:-change-me-strong}
+      - JWT_SECRET=${JWT_SECRET:-change-me}
+    volumes:
+      - ./Magazine_app:/app
+      - ./Magazine_app/outputs:/app/outputs
+    depends_on:
+      - shared_redis
+      - shared_postgres
+    networks:
+      - agent_network
+
+  magazine_worker:
+    build: 
+      context: ./Magazine_app
+    container_name: magazine_worker
+    command: celery -A backend.celery_app worker -Q magazine -l info -c 1
+    user: "${UID:-1000}:${GID:-1000}"
+    env_file:
+      - .env
+    environment:
+      - PYTHONPATH=/app
+      - REDIS_URL=redis://shared_redis:6379/0
+      - DATABASE_URL=postgresql+psycopg2://shared_user:shared_pass@shared_postgres:5432/mag_db
+      - WORKER_TOKEN=${WORKER_TOKEN:-change-me-strong}
+      - API_INTERNAL_URL=http://magazine_api:8000
+    volumes:
+      - ./Magazine_app:/app
+      - ./Magazine_app/outputs:/app/outputs
+    depends_on:
+      - shared_redis
+      - shared_postgres
+    networks:
+      - agent_network
+
+  # ==========================================
+  # API AGENT SERVICES
+  # ==========================================
+
+  agent-api:
+    build: 
+      context: ./api_agent/backend
+    container_name: agent-api
+    volumes:
+      - ./api_agent/backend/src:/app/src
+    ports:
+      - "8001:8000"
+    env_file: 
+      - .env
+    environment:
+      - CELERY_BROKER_URL=redis://shared_redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://shared_redis:6379/0
+      - MINIO_ENDPOINT=http://shared-minio:9000
+      - MINIO_ACCESS_KEY=minioadmin
+      - MINIO_SECRET_KEY=minioadmin
+      - MINIO_BUCKET=agent-results
+      - MINIO_PUBLIC_ENDPOINT=http://localhost:9000 
+      - DATABASE_URL=postgresql://shared_user:shared_pass@shared_postgres:5432/mag_db
+      - JWT_SECRET=${JWT_SECRET:-change-me}
+    depends_on:
+      - shared_redis
+      - shared-minio
+      - shared_postgres
+    networks:
+      - agent_network
+
+  agent-worker:
+    build: 
+      context: ./api_agent/backend
+    container_name: agent-worker
+    command: celery -A src.celery_worker.celery_app worker -Q agent -l info
+    volumes:
+      - ./api_agent/backend/src:/app/src
+      - ./api_agent/backend/shared_data:/app/shared_data
+    env_file: 
+      - .env
+    environment:
+      - CELERY_BROKER_URL=redis://shared_redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://shared_redis:6379/0
+      - SHARED_DATA_PATH=/app/shared_data
+      - MINIO_ENDPOINT=http://shared-minio:9000
+      - MINIO_ACCESS_KEY=minioadmin
+      - MINIO_SECRET_KEY=minioadmin
+      - MINIO_BUCKET=agent-results
+      - DATABASE_URL=postgresql://shared_user:shared_pass@shared_postgres:5432/mag_db
+      - JWT_SECRET=${JWT_SECRET:-change-me}
+    depends_on:
+      - shared_redis
+      - shared-minio
+      - shared_postgres
+    networks:
+      - agent_network
+
+volumes:
+  shared_redis_data:
+  shared_postgres_data:
+  shared_minio_data:
+
+networks:
+  agent_network:
+    driver: bridge

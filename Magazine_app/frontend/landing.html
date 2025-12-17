@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vigilancia Tecnológica | COTECMAR</title>
+  <link rel="icon" href="/assets/logo-cotecmar.png" type="image/png">
+  
+  <!-- Fuentes -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Iconos -->
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+  <style>
+    :root {
+      /* PALETA DARK MODE */
+      --bg-body: #050a14; /* Azul muy oscuro, casi negro */
+      --bg-card: rgba(20, 30, 50, 0.6);
+      --primary: #2c93d8; /* Azul más brillante para resaltar en oscuro */
+      --primary-dark: #0f4c81;
+      --text-main: #f1f5f9;
+      --text-light: #94a3b8;
+      --border-color: rgba(255, 255, 255, 0.1);
+      --radius: 16px;
+      
+      /* Variables dinámicas para el mouse */
+      --mouse-x: 50%;
+      --mouse-y: 50%;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Montserrat', sans-serif;
+      color: var(--text-main);
+      background-color: var(--bg-body);
+      /* Fondo base con patrón de grilla sutil */
+      background-image: 
+        linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    /* --- EFECTO SPOTLIGHT MOUSE --- */
+    /* Esta capa crea el brillo que sigue al mouse */
+    body::before {
+      content: "";
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: radial-gradient(
+        600px circle at var(--mouse-x) var(--mouse-y), 
+        rgba(44, 147, 216, 0.15), 
+        transparent 40%
+      );
+      pointer-events: none; /* Para que puedas dar click a través de la luz */
+      z-index: 9999; /* Por encima del fondo, por debajo del contenido */
+      mix-blend-mode: screen;
+    }
+
+    /* --- NAVBAR --- */
+    .navbar {
+      position: fixed;
+      top: 0; left: 0; width: 100%;
+      padding: 1rem 5%;
+      display: flex; justify-content: space-between; align-items: center;
+      background: rgba(5, 10, 20, 0.7); /* Oscuro translúcido */
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border-color);
+      z-index: 1000;
+    }
+
+    .nav-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; color: white; }
+    /* Invertimos el logo si es negro originalmente, o usa uno blanco */
+    .nav-logo img { height: 40px; filter: brightness(0) invert(1); } 
+    .nav-logo span { font-weight: 700; font-size: 1.2rem; letter-spacing: -0.5px; }
+
+    .nav-links { display: flex; gap: 30px; list-style: none; }
+    .nav-links a { text-decoration: none; color: #cbd5e1; font-weight: 500; font-size: 0.95rem; transition: color 0.2s; }
+    .nav-links a:hover { color: var(--primary); text-shadow: 0 0 10px rgba(44, 147, 216, 0.5); }
+
+    .btn-cta {
+      background: var(--primary); color: white;
+      padding: 10px 24px; border-radius: 30px;
+      text-decoration: none; font-weight: 600;
+      transition: all 0.3s ease;
+      box-shadow: 0 0 15px rgba(44, 147, 216, 0.3);
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    .btn-cta:hover { 
+      background: white; color: var(--primary-dark);
+      box-shadow: 0 0 25px rgba(255, 255, 255, 0.5);
+      transform: translateY(-2px); 
+    }
+
+    /* --- HERO SECTION --- */
+    .hero {
+      height: 100vh;
+      display: flex; align-items: center; justify-content: center;
+      text-align: center;
+      padding: 0 20px;
+      padding-top: 60px;
+      position: relative;
+    }
+
+    /* Manchas de color de fondo */
+    .glow-blob {
+      position: absolute; width: 500px; height: 500px;
+      background: var(--primary);
+      filter: blur(180px); opacity: 0.2; border-radius: 50%; z-index: -1;
+      animation: float 10s infinite ease-in-out;
+    }
+    .blob-1 { top: -100px; right: -100px; background: #0f4c81; }
+    .blob-2 { bottom: -100px; left: -100px; background: #2c93d8; animation-delay: 5s; }
+
+    @keyframes float {
+      0%, 100% { transform: translate(0, 0); }
+      50% { transform: translate(30px, 40px); }
+    }
+
+    .hero-content { z-index: 2; max-width: 800px; animation: fadeInUp 0.8s ease-out; }
+    
+    .hero-badge {
+      display: inline-block; padding: 6px 16px;
+      background: rgba(44, 147, 216, 0.15); color: #60a5fa;
+      border: 1px solid rgba(44, 147, 216, 0.3);
+      border-radius: 20px; font-size: 0.85rem; font-weight: 600;
+      margin-bottom: 20px;
+      box-shadow: 0 0 10px rgba(44, 147, 216, 0.2);
+    }
+
+    .hero h1 { font-size: 3.5rem; line-height: 1.1; font-weight: 800; margin-bottom: 1.5rem; color: white; }
+    .hero h1 span { 
+      background: linear-gradient(to right, #60a5fa, #c084fc); 
+      background-clip: text;          /* standard */
+      -webkit-background-clip: text;  /* WebKit fallback */
+      color: transparent;             /* standard way to hide text color */
+      -webkit-text-fill-color: transparent; /* WebKit-specific */
+    }
+    
+    .hero p { font-size: 1.2rem; color: #94a3b8; margin-bottom: 2.5rem; line-height: 1.6; }
+
+    .hero-buttons { display: flex; gap: 16px; justify-content: center; }
+    .btn-secondary {
+      background: rgba(255,255,255,0.05); color: white;
+      border: 1px solid rgba(255,255,255,0.2); padding: 10px 24px; border-radius: 30px;
+      text-decoration: none; font-weight: 600; transition: all 0.2s;
+    }
+    .btn-secondary:hover { border-color: white; background: rgba(255,255,255,0.1); }
+
+    /* --- SECCIONES COMUNES --- */
+    .section { padding: 80px 5%; position: relative; z-index: 2; }
+    .section-title { text-align: center; margin-bottom: 60px; }
+    .section-title h2 { font-size: 2.2rem; font-weight: 700; color: white; margin-bottom: 10px; }
+    .section-title p { color: var(--text-light); max-width: 600px; margin: 0 auto; }
+
+    .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; }
+
+    /* --- TARJETAS (Glassmorphism Dark) --- */
+    .feature-card {
+      background: var(--bg-card);
+      padding: 30px; border-radius: var(--radius);
+      border: 1px solid var(--border-color);
+      transition: all 0.3s;
+      position: relative; overflow: hidden;
+      backdrop-filter: blur(5px);
+    }
+    /* Efecto hover suave */
+    .feature-card:hover { 
+      transform: translateY(-5px); 
+      border-color: rgba(44, 147, 216, 0.5);
+      box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+    }
+    
+    .icon-box { 
+      width: 50px; height: 50px; 
+      background: rgba(44, 147, 216, 0.2); 
+      color: #60a5fa; 
+      display: flex; align-items: center; justify-content: center; 
+      border-radius: 12px; font-size: 1.5rem; margin-bottom: 20px; 
+      border: 1px solid rgba(44, 147, 216, 0.2);
+    }
+    .feature-card h3 { font-size: 1.25rem; margin-bottom: 10px; font-weight: 700; color: white; }
+    .feature-card p { color: #94a3b8; line-height: 1.5; font-size: 0.95rem; }
+
+    /* --- ALIADOS (Logos) --- */
+    .partners-section { 
+      background: rgba(0,0,0,0.2); 
+      border-top: 1px solid var(--border-color); 
+      border-bottom: 1px solid var(--border-color); 
+    }
+    .partners-grid {
+      display: flex; flex-wrap: wrap; justify-content: center; gap: 50px; align-items: center; 
+    }
+    
+    /* Estilo para las imágenes de los logos */
+    .partner-img {
+      height: 90px; /* Altura fija para uniformidad */
+      width: auto;
+      object-fit: contain;
+      filter: grayscale(100%) brightness(1.5); /* Se ven blanco/gris */
+      opacity: 0.6;
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+    .partner-img:hover {
+      filter: grayscale(0%) brightness(1); /* Color original al hover */
+      opacity: 1;
+      transform: scale(1.1);
+    }
+
+    /* --- RESEÑAS --- */
+    .review-card {
+      background: rgba(255, 255, 255, 0.03); 
+      padding: 25px; border-radius: var(--radius); 
+      border: 1px solid var(--border-color);
+    }
+    .stars { color: #fbbf24; margin-bottom: 15px; font-size: 0.9rem; }
+    .review-text { font-style: italic; color: #cbd5e1; margin-bottom: 20px; line-height: 1.6; }
+    .reviewer { display: flex; align-items: center; gap: 12px; }
+    .avatar { width: 40px; height: 40px; background: #334155; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; border: 1px solid var(--border-color); }
+    .reviewer-info h4 { font-size: 0.95rem; font-weight: 700; color: white; }
+    .reviewer-info span { font-size: 0.8rem; color: #64748b; }
+
+    /* --- FOOTER --- */
+    .footer { background: #02040a; color: white; padding: 60px 5% 20px; border-top: 1px solid var(--border-color); }
+    .footer-content { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 40px; margin-bottom: 40px; }
+    .footer-col h3 { font-size: 1.1rem; margin-bottom: 20px; font-weight: 700; color: white; }
+    .footer-links { list-style: none; }
+    .footer-links li { margin-bottom: 10px; }
+    .footer-links a { color: #94a3b8; text-decoration: none; transition: color 0.2s; font-size: 0.9rem; }
+    .footer-links a:hover { color: var(--primary); }
+    
+    .social-btn { width: 36px; height: 36px; background: rgba(255,255,255,0.05); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; text-decoration: none; transition: all 0.2s; border: 1px solid transparent; }
+    .social-btn:hover { background: var(--primary); box-shadow: 0 0 10px var(--primary); border-color: white; }
+
+    .copyright { text-align: center; border-top: 1px solid var(--border-color); padding-top: 20px; font-size: 0.85rem; color: #64748b; }
+
+    @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    @media (max-width: 768px) { .hero h1 { font-size: 2.5rem; } .nav-links { display: none; } }
+  </style>
+</head>
+<body>
+
+  <!-- Elementos de fondo flotantes -->
+  <div class="glow-blob blob-1"></div>
+  <div class="glow-blob blob-2"></div>
+
+  <!-- NAVBAR -->
+  <nav class="navbar">
+    <a href="#" class="nav-logo">
+      <!-- Filtro brightness para volver el logo blanco -->
+      <img src="/assets/logo-cotecmar.png" onerror="this.src='https://placehold.co/40?text=C'" alt="Logo">
+      <span>COTECMAR</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="#about">¿Qué es?</a></li>
+      <li><a href="#partners">Aliados</a></li>
+      <li><a href="#reviews">Reseñas</a></li>
+    </ul>
+    <a href="login.html" class="btn-cta">Probar Ahora</a>
+  </nav>
+
+  <!-- HERO SECTION -->
+  <header class="hero">
+    <div class="hero-content">
+      <div class="hero-badge">Nueva Versión Disponible</div>
+      <h1>Navegando Hacia El Futuro<br><span>Vigilancia Tecnológica</span></h1>
+      <p>
+        Plataforma integral para rastrear convocatorias, monitorear tendencias y generar insights estratégicos automatizados.
+      </p>
+      <div class="hero-buttons">
+        <a href="login.html" class="btn-cta">
+          Ingresar al Sistema <i class="ph-bold ph-arrow-right"></i>
+        </a>
+        <a href="#about" class="btn-secondary">Conocer más</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- FEATURES -->
+  <section id="about" class="section">
+    <div class="section-title">
+      <h2>Potencia tu Investigación</h2>
+      <p>Diseñado para investigadores, gestores de proyectos y tomadores de decisiones.</p>
+    </div>
+
+    <div class="grid-3">
+      <div class="feature-card">
+        <div class="icon-box"><i class="ph ph-brain"></i></div>
+        <h3>IA Generativa</h3>
+        <p>Procesamiento de lenguaje natural para leer, clasificar y resumir miles de documentos técnicos en segundos.</p>
+      </div>
+      <div class="feature-card">
+        <div class="icon-box"><i class="ph ph-files"></i></div>
+        <h3>Reportes Automáticos</h3>
+        <p>Crea "Magazines" en PDF con diseño corporativo, listos para ser presentados a la alta gerencia.</p>
+      </div>
+      <div class="feature-card">
+        <div class="icon-box"><i class="ph ph-chart-line-up"></i></div>
+        <h3>Detección de Oportunidades</h3>
+        <p>Alertas tempranas sobre financiación, eventos científicos y avances tecnológicos en el sector marítimo.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ALIADOS ESTRATÉGICOS (IMÁGENES) -->
+  <section id="partners" class="section partners-section">
+    <div class="section-title">
+      <h2>Nuestros Aliados</h2>
+      <p>Trabajamos articuladamente con el ecosistema de defensa e innovación.</p>
+    </div>
+    <div class="partners-grid">
+        <!-- 
+           IMPORTANTE: Guarda las imágenes de logos en assets/aliados/
+           Deben ser PNG con fondo transparente.
+        -->
+        <img src="/assets/aliados/Zabud.png" onerror="this.style.display='none'" alt="Zabud" class="partner-img">
+        <img src="/assets/aliados/Camara.png" onerror="this.style.display='none'" alt="Camara" class="partner-img">
+        <img src="/assets/aliados/UTB.png" onerror="this.style.display='none'" alt="UTB" class="partner-img">
+        <img src="/assets/aliados/IEEE.webp" onerror="this.style.display='none'" alt="IEEE" class="partner-img">
+        <img src="/assets/aliados/ACIEM.webp" onerror="this.style.display='none'" alt="ACIEM" class="partner-img">
+        <img src="/assets/aliados/CEIPA.png" onerror="this.style.display='none'" alt="CEIPA" class="partner-img">
+        <img src="/assets/logo-cotecmar.png" onerror="this.style.display='none'" alt="Cotecmar" class="partner-img">
+        
+    </div>
+  </section>
+
+  <!-- RESEÑAS -->
+  <section id="reviews" class="section">
+    <div class="section-title">
+      <h2>Experiencias de Usuario</h2>
+    </div>
+    <div class="grid-3">
+      <div class="review-card">
+        <div class="stars"><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i></div>
+        <p class="review-text">"La automatización de la búsqueda de fondos nos ha permitido aplicar a 3 veces más convocatorias este año."</p>
+        <div class="reviewer">
+          <div class="avatar">LG</div>
+          <div class="reviewer-info">
+            <h4>Laura García</h4>
+            <span>Líder de I+D+i</span>
+          </div>
+        </div>
+      </div>
+      <div class="review-card">
+        <div class="stars"><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star-half-stroke"></i></div>
+        <p class="review-text">"La interfaz oscura es muy cómoda para largas sesiones de trabajo. La información es precisa y relevante."</p>
+        <div class="reviewer">
+          <div class="avatar">AM</div>
+          <div class="reviewer-info">
+            <h4>Andrés Martínez</h4>
+            <span>Analista Tecnológico</span>
+          </div>
+        </div>
+      </div>
+      <div class="review-card">
+        <div class="stars"><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i></div>
+        <p class="review-text">"Excelente integración con las bases de datos científicas. Ahorra semanas de revisión bibliográfica."</p>
+        <div class="reviewer">
+          <div class="avatar">DP</div>
+          <div class="reviewer-info">
+            <h4>Diana Perea</h4>
+            <span>Investigadora Senior</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="footer-content">
+      <div class="footer-col">
+        <h3>COTECMAR</h3>
+        <p style="color: #94a3b8; font-size: 0.9rem; line-height: 1.6;">
+          Ciencia y Tecnología para el Desarrollo de la Industria Naval Marítima y Fluvial.
+        </p>
+      </div>
+      <div class="footer-col">
+        <h3>Plataforma</h3>
+        <ul class="footer-links">
+          <li><a href="login.html">Iniciar Sesión</a></li>
+          <li><a href="#">Documentación</a></li>
+          <li><a href="#">Soporte</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h3>Conéctate</h3>
+        <div class="social-icons" style="display:flex; gap:10px;">
+          <a href="https://www.linkedin.com/company/cotecmarcolombia/" class="social-btn"><i class="fa-brands fa-linkedin-in"></i></a>
+          <a href="https://twitter.com/cotecmar" class="social-btn"><i class="fa-brands fa-twitter"></i></a>
+          <a href="https://www.instagram.com/cotecmar/" class="social-btn"><i class="fa-brands fa-instagram"></i></a>
+          <a href="https://www.youtube.com/channel/UCSTCFvikz0oN2xlfXdZ81oQ" class="social-btn"><i class="fa-brands fa-youtube"></i></a>
+        </div>
+      </div>
+    </div>
+    <div class="copyright">
+      &copy; 2025 COTECMAR. Todos los derechos reservados.
+    </div>
+  </footer>
+
+  <script>
+    // --- EFECTO DE SEGUIMIENTO DEL MOUSE ---
+    // Actualizamos las variables CSS --mouse-x y --mouse-y con la posición del cursor
+    document.addEventListener('mousemove', (e) => {
+      const x = e.clientX;
+      const y = e.clientY;
+      
+      // Asignamos las variables al body para que el gradiente se mueva
+      document.body.style.setProperty('--mouse-x', x + 'px');
+      document.body.style.setProperty('--mouse-y', y + 'px');
+    });
+  </script>
+
+</body>
+</html>

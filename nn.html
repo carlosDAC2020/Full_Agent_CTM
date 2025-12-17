@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cotecmar AI - Flujo Completo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+    <!-- AUTH GUARD: Check for token before loading page -->
+    <script>
+        (function () {
+            const token = localStorage.getItem('auth_token');
+            if (!token) {
+                // Redirect to Magazine App login
+                window.location.href = 'http://localhost:8000/frontend/login.html';
+                return;
+            }
+        })();
+    </script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        cotecmar: {
+                            dark: '#002B49',
+                            mid: '#004B78',
+                            light: '#005A8D',
+                            gray: '#F4F6F8',
+                        }
+                    },
+                    animation: {
+                        'fade-out': 'fadeOut 0.5s ease-out forwards',
+                        'slide-up': 'slideUp 0.6s ease-out forwards',
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    },
+                    keyframes: {
+                        fadeOut: {
+                            '0%': { opacity: '1', transform: 'scale(1)' },
+                            '100%': { opacity: '0', transform: 'scale(0.95)', visibility: 'hidden' },
+                        },
+                        slideUp: {
+                            '0%': { opacity: '0', transform: 'translateY(20px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #CBD5E1;
+            border-radius: 10px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #94A3B8;
+        }
+
+        /* Estilos para el documento simulado */
+        .doc-page {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            min-height: 400px;
+            background: white;
+            font-family: 'Times New Roman', Times, serif;
+        }
+    </style>
+</head>
+
+<body class="bg-cotecmar-gray h-screen flex overflow-hidden font-sans text-slate-800">
+
+    <!-- SIDEBAR (Sin Cambios) -->
+    <aside id="sidebar"
+        class="bg-cotecmar-dark text-white w-64 flex-shrink-0 flex flex-col transition-all duration-300 relative z-30 overflow-hidden whitespace-nowrap">
+        <div class="p-5 flex items-center gap-3 border-b border-blue-900/50 min-w-[16rem]">
+            <i class="ph ph-anchor-simple text-2xl text-blue-300"></i>
+            <span class="font-bold tracking-wider text-sm">COTECMAR AI</span>
+        </div>
+        <div class="p-4 min-w-[16rem]">
+            <button onclick="resetInterface()"
+                class="w-full flex items-center gap-2 bg-blue-900/40 hover:bg-blue-800 border border-blue-700/50 rounded-lg p-3 transition-all text-sm group">
+                <i class="ph ph-plus-circle text-lg text-blue-300 group-hover:text-white"></i>
+                <span>Nueva Convocatoria</span>
+            </button>
+        </div>
+        <div class="flex-1 overflow-y-auto px-3 py-2 space-y-1 min-w-[16rem]">
+            <div class="text-[10px] font-bold text-blue-400 uppercase tracking-widest mb-2 px-2 mt-2">Historial Reciente
+            </div>
+            <div id="history-list" class="space-y-1">
+                <!-- Items dinámicos -->
+            </div>
+        </div>
+        <div class="p-4 bg-black/20 flex items-center gap-3 text-sm min-w-[16rem]">
+            <div id="user-avatar"
+                class="w-8 h-8 rounded-full bg-gradient-to-tr from-blue-500 to-cyan-400 flex items-center justify-center font-bold text-xs flex-shrink-0">
+                U</div>
+            <div class="leading-tight">
+                <div id="user-name" class="font-medium">Cargando...</div>
+                <div id="user-role" class="text-[10px] text-blue-300 opacity-80">Usuario</div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- MAIN AREA -->
+    <main class="flex-1 flex flex-col relative w-full h-full bg-white/50 backdrop-blur-sm transition-all duration-300">
+
+        <header class="absolute top-0 w-full p-4 flex justify-between items-center z-20">
+            <button onclick="toggleSidebar()" class="text-cotecmar-dark hover:bg-gray-200 p-2 rounded-lg transition"
+                title="Alternar Menú">
+                <i class="ph ph-sidebar-simple text-xl"></i>
+            </button>
+            <div class="ml-auto flex items-center gap-3">
+                <!-- Indicador de pasos global (opcional) -->
+                <div id="global-stepper"
+                    class="hidden flex items-center gap-2 text-xs font-bold text-gray-400 bg-white px-3 py-1 rounded-full shadow-sm border border-gray-100">
+                    <span id="step-dot-1" class="text-cotecmar-mid">Evaluación</span> <i class="ph ph-caret-right"></i>
+                    <span id="step-dot-2">Ideas</span> <i class="ph ph-caret-right"></i>
+                    <span id="step-dot-3">Esquema</span> <i class="ph ph-caret-right"></i>
+                    <span id="step-dot-4">Final</span>
+                </div>
+                <div class="text-xs text-gray-400 font-mono">Agent: TechSurveillance_v1.2</div>
+            </div>
+        </header>
+
+        <div class="flex-1 relative overflow-hidden flex flex-col">
+
+            <!-- VISTA A: BUSCADOR (Sin cambios mayores) -->
+            <div id="initial-view"
+                class="absolute inset-0 flex flex-col items-center pt-24 md:pt-32 p-4 transition-all duration-500 z-10 overflow-y-auto custom-scrollbar">
+
+                <div class="mb-8 text-center animate-slide-up">
+                    <div
+                        class="w-16 h-16 bg-cotecmar-dark rounded-2xl mx-auto flex items-center justify-center shadow-xl shadow-blue-900/20 mb-4">
+                        <i class="ph ph-boat text-3xl text-white"></i>
+                    </div>
+                    <h1 class="text-2xl md:text-3xl font-bold text-cotecmar-dark mb-2">Gestión de Convocatorias</h1>
+                    <p class="text-gray-500 text-sm max-w-md mx-auto">Busque o seleccione una convocatoria para comenzar
+                        el flujo de generación de propuestas.</p>
+                </div>
+
+                <div class="w-full max-w-2xl relative z-50 animate-slide-up" style="animation-delay: 0.1s;">
+                    <div
+                        class="bg-white rounded-2xl shadow-xl shadow-blue-900/10 border border-gray-200 p-2 flex items-center gap-2 relative ring-offset-2 focus-within:ring-2 focus-within:ring-cotecmar-light/50 transition-all">
+                        <div class="pl-4 text-cotecmar-light flex-shrink-0">
+                            <i class="ph ph-magnifying-glass text-2xl"></i>
+                        </div>
+                        <div class="flex-1 relative group">
+                            <input type="text" id="search-input"
+                                class="w-full h-14 bg-transparent outline-none text-gray-700 text-lg font-medium placeholder-gray-400"
+                                placeholder="Escriba para buscar..." onfocus="openDropdown()" oninput="filterOptions()"
+                                autocomplete="off">
+                            <div class="absolute right-2 top-0 h-full flex items-center pointer-events-none">
+                                <i id="dropdown-arrow"
+                                    class="ph ph-caret-down text-gray-400 transition-transform duration-300"></i>
+                            </div>
+                            <div id="dropdown-options"
+                                class="hidden absolute top-full left-0 w-full mt-4 bg-white border border-gray-100 rounded-xl shadow-2xl py-2 overflow-hidden transition-all z-50 max-h-64 overflow-y-auto">
+                            </div>
+                        </div>
+                        <button onclick="startAnalysis()"
+                            class="bg-cotecmar-dark hover:bg-cotecmar-mid text-white h-12 w-12 rounded-xl flex-shrink-0 flex items-center justify-center transition-colors shadow-lg group">
+                            <i
+                                class="ph ph-paper-plane-right text-xl font-bold group-hover:translate-x-0.5 transition-transform"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Preview Panel -->
+                <div id="preview-panel"
+                    class="hidden w-full max-w-2xl mt-6 animate-slide-up bg-white/90 backdrop-blur-md border border-gray-200 rounded-2xl p-6 shadow-xl z-10 relative">
+                    <div
+                        class="absolute -top-3 left-8 w-6 h-6 bg-white border-t border-l border-gray-200 transform rotate-45 z-0">
+                    </div>
+                    <div class="relative z-10">
+                        <div class="flex items-start gap-4 mb-6 border-b border-gray-100 pb-6">
+                            <div
+                                class="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-cotecmar-dark flex items-center justify-center text-white shadow-lg shadow-blue-500/30 flex-shrink-0">
+                                <i class="ph ph-file-text text-2xl"></i>
+                            </div>
+                            <div>
+                                <h3 id="prev-title" class="font-bold text-gray-800 text-lg leading-tight">Título</h3>
+                                <p id="prev-desc" class="text-sm text-gray-500 mt-2 leading-relaxed">Desc...</p>
+                            </div>
+                        </div>
+                        <div>
+                            <label
+                                class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 block flex items-center gap-2"><i
+                                    class="ph ph-paperclip"></i> Adjuntar Documentación</label>
+                            <div class="relative group">
+                                <input type="file" id="file-upload"
+                                    class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20" multiple
+                                    onchange="updateFileStatus()">
+                                <div id="drop-zone"
+                                    class="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center transition-all duration-300 group-hover:border-cotecmar-mid group-hover:bg-blue-50/50 bg-gray-50/50">
+                                    <div id="upload-icon-wrapper"
+                                        class="w-10 h-10 bg-white rounded-full shadow-sm mx-auto flex items-center justify-center mb-2 text-cotecmar-light group-hover:scale-110 transition-transform">
+                                        <i class="ph ph-upload-simple text-xl"></i>
+                                    </div>
+                                    <h4 id="upload-text-main" class="text-sm font-medium text-gray-700">Arrastra
+                                        archivos aquí</h4>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VISTA B: FLUJO DE RESULTADOS (WIZARD) -->
+            <div id="results-view"
+                class="absolute inset-0 overflow-y-auto hidden flex-col items-center pt-10 px-4 md:px-0 bg-gray-50/50 custom-scrollbar pb-20">
+
+                <div class="w-full max-w-4xl">
+
+                    <!-- HEADER DEL PROYECTO ACTUAL -->
+                    <div class="flex justify-center mb-6 opacity-0 animate-slide-up">
+                        <div
+                            class="bg-white border border-gray-200 px-6 py-2 rounded-full shadow-sm flex items-center gap-3">
+                            <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                            <span class="text-sm text-gray-500">Convocatoria:</span>
+                            <span id="selected-label" class="text-sm font-bold text-cotecmar-dark">...</span>
+                        </div>
+                    </div>
+
+                    <!-- LOADING GENÉRICO (Se reutiliza entre pasos) -->
+                    <div id="generic-loader" class="hidden mb-8 w-full max-w-xl mx-auto">
+                        <div
+                            class="bg-white p-6 rounded-2xl border border-blue-100 shadow-lg flex flex-col items-center gap-4 text-center animate-slide-up">
+                            <div
+                                class="w-14 h-14 rounded-full bg-orange-50 flex items-center justify-center text-orange-600">
+                                <i class="ph ph-cpu text-3xl animate-spin"></i>
+                            </div>
+                            <div>
+                                <h4 id="loader-text" class="text-lg font-bold text-gray-800">Procesando Información...
+                                </h4>
+                                <p class="text-sm text-gray-500">El agente está analizando documentos y conectando con
+                                    la base de conocimiento.</p>
+                            </div>
+                            <div class="w-full bg-gray-100 h-1.5 rounded-full mt-2 overflow-hidden max-w-xs">
+                                <div class="bg-orange-400 h-full w-2/3 animate-pulse"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- PASO 1: RESULTADO INGESTA -->
+                    <div id="step-1-ingest" class="hidden animate-slide-up">
+                        <div
+                            class="bg-white border border-gray-200 rounded-2xl shadow-xl overflow-hidden relative mb-6">
+                            <div class="h-1 bg-cotecmar-dark w-full"></div>
+                            <div class="p-8">
+                                <div class="flex justify-between items-start">
+                                    <div>
+                                        <div
+                                            class="inline-block px-3 py-1 bg-blue-50 text-blue-600 rounded-full text-xs font-bold mb-3 border border-blue-100">
+                                            PASO 1: ANÁLISIS DE CONVOCATORIA</div>
+                                        <h2 id="res-title" class="text-2xl font-bold text-gray-800">Título</h2>
+                                    </div>
+                                    <!-- NUEVO: Link a la presentación generada -->
+                                    <a href="#"
+                                        class="group flex items-center gap-3 bg-red-50 hover:bg-red-100 border border-red-200 pr-4 pl-3 py-2 rounded-xl transition-all">
+                                        <div
+                                            class="w-8 h-8 rounded-full bg-red-500 text-white flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
+                                            <i class="ph ph-presentation text-lg"></i>
+                                        </div>
+                                        <div class="text-left">
+                                            <div class="text-[10px] text-red-400 font-bold uppercase">Evaluación</div>
+                                            <div class="text-sm font-bold text-red-700">Ver Presentación</div>
+                                        </div>
+                                    </a>
+                                </div>
+
+                                <p id="res-objective"
+                                    class="text-gray-600 mt-4 text-sm bg-blue-50/30 p-4 rounded-lg border border-blue-50">
+                                    ---</p>
+
+                                <div class="grid grid-cols-2 gap-4 mt-6">
+                                    <div class="p-3 bg-gray-50 rounded border">
+                                        <div class="text-xs font-bold text-gray-500 mb-1">DINERO</div>
+                                        <div id="res-funding" class="text-sm font-mono text-gray-800">---</div>
+                                    </div>
+                                    <div class="p-3 bg-gray-50 rounded border">
+                                        <div class="text-xs font-bold text-gray-500 mb-1">FECHA</div>
+                                        <div id="res-dates" class="text-sm text-gray-800">---</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="bg-gray-50 p-4 flex justify-between items-center border-t border-gray-100">
+                                <div id="res-keywords" class="flex gap-2 text-xs text-gray-500"></div>
+                                <button onclick="goToStep2()"
+                                    class="bg-cotecmar-mid hover:bg-cotecmar-light text-white px-6 py-2 rounded-lg font-medium shadow-lg shadow-blue-900/10 flex items-center gap-2 transition-transform active:scale-95">
+                                    Generar Ideas de Proyecto <i class="ph ph-lightbulb"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- PASO 2: IDEACIÓN -->
+                    <div id="step-2-ideas" class="hidden">
+                        <div class="flex justify-between items-center mb-4 animate-slide-up">
+                            <h3 class="text-xl font-bold text-gray-800 flex items-center gap-2">
+                                <i class="ph ph-lightbulb text-yellow-500"></i> Ideas Generadas
+                            </h3>
+                            <span class="text-xs text-gray-500 bg-white px-3 py-1 rounded-full border">Selecciona una
+                                para editar y continuar</span>
+                        </div>
+
+                        <!-- Grid de Ideas -->
+                        <div id="ideas-container" class="grid grid-cols-1 md:grid-cols-2 gap-4 animate-slide-up">
+                            <!-- Se llena con JS -->
+                        </div>
+
+                        <!-- Editor de Idea (Modal Inline) -->
+                        <div id="idea-editor"
+                            class="hidden mt-6 bg-white rounded-2xl shadow-xl border-2 border-cotecmar-light overflow-hidden animate-slide-up relative">
+                            <div class="bg-cotecmar-light text-white p-4 flex justify-between items-center">
+                                <h3 class="font-bold flex items-center gap-2"><i class="ph ph-pencil-simple"></i> Editar
+                                    Propuesta</h3>
+                                <button onclick="cancelEdit()" class="hover:bg-white/20 p-1 rounded"><i
+                                        class="ph ph-x"></i></button>
+                            </div>
+                            <div class="p-6 space-y-4">
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-500 mb-1">TÍTULO DEL
+                                        PROYECTO</label>
+                                    <input type="text" id="edit-title"
+                                        class="w-full bg-gray-50 border border-gray-200 rounded-lg p-3 text-sm font-bold text-gray-800 focus:ring-2 focus:ring-cotecmar-light outline-none">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-500 mb-1">DESCRIPCIÓN</label>
+                                    <textarea id="edit-desc" rows="3"
+                                        class="w-full bg-gray-50 border border-gray-200 rounded-lg p-3 text-sm text-gray-600 focus:ring-2 focus:ring-cotecmar-light outline-none resize-none"></textarea>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-500 mb-1">OBJETIVOS (Separados por
+                                        línea)</label>
+                                    <textarea id="edit-objectives" rows="4"
+                                        class="w-full bg-gray-50 border border-gray-200 rounded-lg p-3 text-sm text-gray-600 focus:ring-2 focus:ring-cotecmar-light outline-none resize-none"></textarea>
+                                </div>
+                            </div>
+                            <div class="bg-gray-50 p-4 flex justify-end gap-3 border-t border-gray-100">
+                                <button onclick="cancelEdit()"
+                                    class="text-gray-500 hover:text-gray-700 text-sm font-medium px-4">Cancelar</button>
+                                <button onclick="confirmIdea()"
+                                    class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg font-medium shadow-md flex items-center gap-2">
+                                    Aprobar y Generar Esquema <i class="ph ph-check-circle"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- PASO 3: ESQUEMA INICIAL -->
+                    <div id="step-3-schema" class="hidden">
+                        <div class="flex justify-between items-center mb-4 animate-slide-up">
+                            <h3 class="text-xl font-bold text-gray-800 flex items-center gap-2">
+                                <i class="ph ph-file-text text-blue-500"></i> Esquema Inicial del Proyecto
+                            </h3>
+                        </div>
+
+                        <div
+                            class="bg-gray-200 p-8 rounded-xl animate-slide-up border border-gray-300 overflow-hidden relative">
+                            <!-- Documento Simulado -->
+                            <div class="doc-page max-w-2xl mx-auto p-12 text-black relative">
+                                <div class="absolute top-0 right-0 p-4 opacity-50"><i
+                                        class="ph ph-anchor-simple text-4xl text-cotecmar-mid"></i></div>
+                                <h1 id="schema-title" class="text-2xl font-bold mb-6 text-center text-black">Título del
+                                    Proyecto</h1>
+
+                                <div class="mb-6">
+                                    <h2 class="text-sm font-bold uppercase border-b border-black mb-2">1. Resumen
+                                        Ejecutivo</h2>
+                                    <p id="schema-desc" class="text-xs text-justify leading-relaxed text-gray-800">...
+                                    </p>
+                                </div>
+
+                                <div class="mb-6">
+                                    <h2 class="text-sm font-bold uppercase border-b border-black mb-2">2. Objetivos
+                                        Específicos</h2>
+                                    <ul id="schema-objs" class="list-disc pl-5 text-xs space-y-1 text-gray-800"></ul>
+                                </div>
+
+                                <div class="mb-6">
+                                    <h2 class="text-sm font-bold uppercase border-b border-black mb-2">3. Metodología
+                                        Propuesta</h2>
+                                    <p class="text-xs text-gray-400 italic">[Contenido generado por IA basado en
+                                        investigación preliminar...]</p>
+                                </div>
+                            </div>
+
+                            <!-- Barra de Acción Flotante -->
+                            <div class="absolute bottom-4 left-0 w-full flex justify-center">
+                                <div
+                                    class="bg-cotecmar-dark text-white rounded-full px-6 py-3 shadow-2xl flex items-center gap-4 hover:scale-105 transition-transform">
+                                    <span class="text-sm font-medium">¿El esquema es correcto?</span>
+                                    <div class="h-4 w-px bg-white/20"></div>
+                                    <button onclick="generateFinal()"
+                                        class="font-bold text-green-400 hover:text-white flex items-center gap-2">
+                                        Proceder a Investigación Final <i class="ph ph-arrow-right"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- PASO 4: RESULTADO FINAL -->
+                    <div id="step-4-final" class="hidden text-center pt-10">
+                        <div
+                            class="inline-flex items-center justify-center w-24 h-24 rounded-full bg-green-100 text-green-600 mb-6 animate-slide-up">
+                            <i class="ph ph-check text-5xl"></i>
+                        </div>
+                        <h2 class="text-3xl font-bold text-gray-800 mb-2 animate-slide-up">¡Propuesta Generada!</h2>
+                        <p class="text-gray-500 mb-10 max-w-lg mx-auto animate-slide-up">El agente ha completado la
+                            investigación profunda y ha generado los documentos finales para la postulación.</p>
+
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 animate-slide-up"
+                            style="animation-delay: 0.2s">
+                            <!-- Card PDF -->
+                            <div
+                                class="bg-white p-6 rounded-2xl border border-gray-100 shadow-xl hover:shadow-2xl transition-shadow group cursor-pointer relative overflow-hidden">
+                                <div
+                                    class="absolute top-0 right-0 bg-red-500 text-white text-[10px] font-bold px-2 py-1 rounded-bl-lg">
+                                    PDF</div>
+                                <div
+                                    class="w-16 h-16 bg-red-50 text-red-500 rounded-xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
+                                    <i class="ph ph-file-pdf text-3xl"></i>
+                                </div>
+                                <h4 class="font-bold text-gray-800">Propuesta Técnica</h4>
+                                <p class="text-xs text-gray-400 mb-4">Formato completo MinCiencias</p>
+                                <button
+                                    class="w-full py-2 bg-red-500 text-white rounded-lg text-sm font-bold hover:bg-red-600 transition">Descargar</button>
+                            </div>
+
+                            <!-- Card MD -->
+                            <div
+                                class="bg-white p-6 rounded-2xl border border-gray-100 shadow-xl hover:shadow-2xl transition-shadow group cursor-pointer relative overflow-hidden">
+                                <div
+                                    class="absolute top-0 right-0 bg-gray-800 text-white text-[10px] font-bold px-2 py-1 rounded-bl-lg">
+                                    MD</div>
+                                <div
+                                    class="w-16 h-16 bg-gray-100 text-gray-600 rounded-xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
+                                    <i class="ph ph-markdown-logo text-3xl"></i>
+                                </div>
+                                <h4 class="font-bold text-gray-800">Fuente Markdown</h4>
+                                <p class="text-xs text-gray-400 mb-4">Editable para Wiki/Docs</p>
+                                <button
+                                    class="w-full py-2 bg-gray-700 text-white rounded-lg text-sm font-bold hover:bg-gray-800 transition">Descargar</button>
+                            </div>
+
+                            <!-- Card IMG -->
+                            <div
+                                class="bg-white p-6 rounded-2xl border border-gray-100 shadow-xl hover:shadow-2xl transition-shadow group cursor-pointer relative overflow-hidden">
+                                <div
+                                    class="absolute top-0 right-0 bg-purple-500 text-white text-[10px] font-bold px-2 py-1 rounded-bl-lg">
+                                    IMG</div>
+                                <div
+                                    class="w-16 h-16 bg-purple-50 text-purple-500 rounded-xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
+                                    <i class="ph ph-image text-3xl"></i>
+                                </div>
+                                <h4 class="font-bold text-gray-800">Poster Científico</h4>
+                                <p class="text-xs text-gray-400 mb-4">Resumen visual del proyecto</p>
+                                <button
+                                    class="w-full py-2 bg-purple-600 text-white rounded-lg text-sm font-bold hover:bg-purple-700 transition">Ver
+                                    Imagen</button>
+                            </div>
+                        </div>
+
+                        <div class="mt-12">
+                            <button onclick="resetInterface()"
+                                class="text-cotecmar-mid font-medium hover:underline text-sm">Iniciar nuevo
+                                proceso</button>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <script>
+        // --- DATOS MOCK ---
+        const mockDB = {
+            'minciencias': {
+                title: "Convocatoria 966 Colombia Inteligente",
+                objective: "Impulsar proyectos en tecnologías cuánticas e IA que generen un impacto medible en territorios.",
+                funding: "No especificado",
+                dates: "Cierre: Pendiente",
+                tags: ["IA", "Cuántica", "Territorio"],
+            }
+        };
+
+        const mockIdeas = [
+            {
+                id: 1,
+                title: "Sistema de Monitoreo Fluvial con IA",
+                desc: "Implementación de redes neuronales convolucionales para la detección de obstáculos en ríos de bajo calado.",
+                objectives: ["Diseñar el modelo de visión por computadora.", "Validar datasets con imágenes satelitales.", "Prototipar dashboard de alertas."]
+            },
+            {
+                id: 2,
+                title: "Optimización Energética Cuántica Naval",
+                desc: "Uso de algoritmos cuánticos para optimizar la distribución de carga y consumo de combustible en buques OPV.",
+                objectives: ["Simular escenarios de carga con Qiskit.", "Comparar eficiencia vs algoritmos clásicos.", "Proponer arquitectura híbrida."]
+            },
+            {
+                id: 3,
+                title: "Gemelos Digitales para Astilleros 4.0",
+                desc: "Creación de un entorno virtual para simular procesos de soldadura robótica utilizando aprendizaje por refuerzo.",
+                objectives: ["Escanear planta física.", "Entrenar agentes de RL.", "Reducir desperdicio de material en un 15%."]
+            }
+        ];
+
+        let selectedValue = "";
+        let currentSelectedIdea = null;
+
+        // --- DOM Elements Generales ---
+        const initialView = document.getElementById('initial-view');
+        const resultsView = document.getElementById('results-view');
+        const previewPanel = document.getElementById('preview-panel');
+        const globalStepper = document.getElementById('global-stepper');
+        const loader = document.getElementById('generic-loader');
+        const loaderText = document.getElementById('loader-text');
+
+        // --- Funciones de Búsqueda (Heredadas y simplificadas) ---
+        function openDropdown() { document.getElementById('dropdown-options').classList.remove('hidden'); }
+        function filterOptions() {
+            const input = document.getElementById('search-input');
+            const opts = document.getElementById('dropdown-options');
+            opts.innerHTML = `
+                <div onclick="selectOption('minciencias')" class="px-4 py-3 hover:bg-blue-50 cursor-pointer flex items-center gap-3 border-l-4 border-transparent hover:border-cotecmar-light">
+                    <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center"><i class="ph ph-atom"></i></div>
+                    <div><div class="font-bold text-gray-800 text-sm">Convocatoria 966 Colombia Inteligente</div><div class="text-xs text-gray-400">IA, Cuántica</div></div>
+                </div>
+            `;
+            opts.classList.remove('hidden');
+        }
+
+        function selectOption(val) {
+            selectedValue = val;
+            document.getElementById('search-input').value = mockDB[val].title;
+            document.getElementById('dropdown-options').classList.add('hidden');
+
+            // Show preview
+            document.getElementById('prev-title').innerText = mockDB[val].title;
+            document.getElementById('prev-desc').innerText = mockDB[val].objective;
+            previewPanel.classList.remove('hidden');
+        }
+
+        function updateFileStatus() {
+            const input = document.getElementById('file-upload');
+            const dropZone = document.getElementById('drop-zone');
+            if (input.files.length > 0) {
+                dropZone.classList.add('border-green-400', 'bg-green-50/50');
+                document.getElementById('upload-text-main').innerText = input.files.length + " Archivo(s)";
+            }
+        }
+
+        // --- FLUJO DE PROCESO ---
+
+        // 1. Iniciar Análisis (Paso 1)
+        function startAnalysis() {
+            if (!selectedValue) return;
+
+            initialView.classList.add('animate-fade-out');
+            setTimeout(() => {
+                initialView.classList.add('hidden');
+                resultsView.classList.remove('hidden');
+                resultsView.classList.add('flex');
+                globalStepper.classList.remove('hidden');
+
+                document.getElementById('selected-label').innerText = mockDB[selectedValue].title;
+                runStep1();
+            }, 500);
+        }
+
+        function runStep1() {
+            loader.classList.remove('hidden');
+            loaderText.innerText = "Ingestando Convocatoria y Generando Evaluación...";
+            updateStepper(1);
+
+            setTimeout(() => {
+                loader.classList.add('hidden');
+                const data = mockDB[selectedValue];
+
+                // Poblar datos Paso 1
+                document.getElementById('res-title').innerText = data.title;
+                document.getElementById('res-objective').innerText = data.objective;
+                document.getElementById('res-funding').innerText = data.funding;
+                document.getElementById('res-dates').innerText = data.dates;
+                const tagsDiv = document.getElementById('res-keywords');
+                tagsDiv.innerHTML = '';
+                data.tags.forEach(t => tagsDiv.innerHTML += `<span class="bg-gray-100 px-2 py-1 rounded">#${t}</span>`);
+
+                document.getElementById('step-1-ingest').classList.remove('hidden');
+            }, 2000);
+        }
+
+        // 2. Generar Ideas (Paso 2)
+        function goToStep2() {
+            document.getElementById('step-1-ingest').classList.add('hidden');
+            loader.classList.remove('hidden');
+            loaderText.innerText = "Analizando oportunidades y generando ideas innovadoras...";
+            updateStepper(2);
+
+            setTimeout(() => {
+                loader.classList.add('hidden');
+                document.getElementById('step-2-ideas').classList.remove('hidden');
+                renderIdeas();
+            }, 2000);
+        }
+
+        function renderIdeas() {
+            const container = document.getElementById('ideas-container');
+            container.innerHTML = '';
+            mockIdeas.forEach(idea => {
+                const card = document.createElement('div');
+                card.className = "bg-white p-5 rounded-xl border border-gray-200 hover:border-cotecmar-mid hover:shadow-lg transition-all cursor-pointer group relative";
+                card.onclick = () => openEditIdea(idea);
+                card.innerHTML = `
+                    <div class="flex justify-between items-start mb-2">
+                        <div class="font-bold text-gray-800 group-hover:text-cotecmar-mid transition-colors">${idea.title}</div>
+                        <i class="ph ph-pencil-simple text-gray-300 group-hover:text-cotecmar-mid"></i>
+                    </div>
+                    <p class="text-xs text-gray-500 line-clamp-2">${idea.desc}</p>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function openEditIdea(idea) {
+            currentSelectedIdea = idea;
+            // Ocultar grid, mostrar editor
+            document.getElementById('ideas-container').classList.add('hidden');
+            const editor = document.getElementById('idea-editor');
+            editor.classList.remove('hidden');
+
+            document.getElementById('edit-title').value = idea.title;
+            document.getElementById('edit-desc').value = idea.desc;
+            document.getElementById('edit-objectives').value = idea.objectives.join('\n');
+        }
+
+        function cancelEdit() {
+            document.getElementById('idea-editor').classList.add('hidden');
+            document.getElementById('ideas-container').classList.remove('hidden');
+        }
+
+        // 3. Confirmar Idea y Generar Esquema (Paso 3)
+        function confirmIdea() {
+            // Guardar cambios (simulado)
+            currentSelectedIdea.title = document.getElementById('edit-title').value;
+            currentSelectedIdea.desc = document.getElementById('edit-desc').value;
+            const objsRaw = document.getElementById('edit-objectives').value;
+            currentSelectedIdea.objectives = objsRaw.split('\n');
+
+            document.getElementById('step-2-ideas').classList.add('hidden');
+            loader.classList.remove('hidden');
+            loaderText.innerText = "Estructurando esquema inicial del proyecto...";
+            updateStepper(3);
+
+            setTimeout(() => {
+                loader.classList.add('hidden');
+                document.getElementById('step-3-schema').classList.remove('hidden');
+
+                // Poblar Documento Mock
+                document.getElementById('schema-title').innerText = currentSelectedIdea.title;
+                document.getElementById('schema-desc').innerText = currentSelectedIdea.desc + " Este proyecto busca alinearse con los objetivos estratégicos de la convocatoria mediante la implementación de tecnología de vanguardia...";
+                const ul = document.getElementById('schema-objs');
+                ul.innerHTML = '';
+                currentSelectedIdea.objectives.forEach(o => {
+                    if (o.trim()) ul.innerHTML += `<li>${o}</li>`;
+                });
+            }, 2000);
+        }
+
+        // 4. Generación Final (Paso 4)
+        function generateFinal() {
+            document.getElementById('step-3-schema').classList.add('hidden');
+            loader.classList.remove('hidden');
+            loaderText.innerText = "Realizando investigación profunda y redactando documentos finales...";
+            updateStepper(4);
+
+            setTimeout(() => {
+                loader.classList.add('hidden');
+                document.getElementById('step-4-final').classList.remove('hidden');
+            }, 3000); // Un poco más largo para simular trabajo pesado
+        }
+
+        // --- Utilidades ---
+        function updateStepper(step) {
+            for (let i = 1; i <= 4; i++) {
+                const el = document.getElementById(`step-dot-${i}`);
+                if (i === step) el.className = "text-cotecmar-mid font-bold underline decoration-2 underline-offset-4";
+                else if (i < step) el.className = "text-gray-800";
+                else el.className = "text-gray-300";
+            }
+        }
+
+        function resetInterface() {
+            location.reload(); // Simple reset
+        }
+
+        function toggleSidebar() {
+            const sb = document.getElementById('sidebar');
+            sb.classList.toggle('w-64');
+            sb.classList.toggle('w-0');
+            sb.classList.toggle('p-0');
+        }
+
+        // ===== NEW: Load User Info from /me endpoint =====
+        async function loadUserInfo() {
+            const token = localStorage.getItem('auth_token');
+            if (!token) {
+                window.location.href = 'http://localhost:8000/frontend/login.html';
+                return;
+            }
+
+            try {
+                const res = await fetch('http://localhost:8001/api/me', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (!res.ok) {
+                    throw new Error('Auth failed');
+                }
+
+                const user = await res.json();
+
+                // Update sidebar user info
+                document.getElementById('user-name').textContent = user.name || 'Usuario';
+                document.getElementById('user-role').textContent = user.role || 'Usuario';
+
+                // Update avatar with initials
+                const initials = (user.name || 'U').split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+                document.getElementById('user-avatar').textContent = initials;
+
+            } catch (err) {
+                console.error('Failed to load user:', err);
+                localStorage.removeItem('auth_token');
+                window.location.href = 'http://localhost:8000/frontend/login.html';
+            }
+        }
+
+        // Load user info on page load
+        document.addEventListener('DOMContentLoaded', loadUserInfo);
+    </script>
+</body>
+
+</html>
+```

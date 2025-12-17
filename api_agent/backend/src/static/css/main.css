@@ -1,0 +1,25 @@
+.custom-scrollbar::-webkit-scrollbar { 
+    width: 5px; 
+}
+
+.custom-scrollbar::-webkit-scrollbar-track { 
+    background: rgba(30, 58, 138, 0.2); 
+    border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb { 
+    background: rgba(96, 165, 250, 0.3); 
+    border-radius: 10px; 
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover { 
+    background: rgba(96, 165, 250, 0.5); 
+}
+
+/* Estilos para el documento simulado */
+.doc-page {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    min-height: 400px;
+    background: white;
+    font-family: 'Times New Roman', Times, serif;
+}
