@@ -9,6 +9,7 @@ from backend.app.db.session import get_db
 from backend.app.db import models
 from backend.app.core.security import get_current_user
 from backend.app.schemas.magazine import GenerateRequest, IdsRequest, SavedCreate
+from backend.app.schemas.convocatoria import ConvocatoriaOut
 from backend.app.services.redis_service import get_redis, task_key
 from backend.app.services.agent_service import run_magazine_generation_stream
 from backend.app.services.pdf_engine import generate_pdf
@@ -123,15 +124,40 @@ async def generate_pdf_from_ids(
     db: Session = Depends(get_db),
 ):
     try:
-        convocatorias_path = settings.CONVOCATORIAS_FILE
-        if not os.path.exists(convocatorias_path):
-             raise HTTPException(status_code=404, detail="Archivo convocatorias.json no encontrado")
-             
-        items = load_json_list(convocatorias_path)
-        selected = [it for it in items if it.get("id") in payload.ids]
-        
-        if not selected:
-             raise HTTPException(status_code=400, detail="No se encontraron convocatorias para los IDs enviados")
+        if not payload.ids:
+            raise HTTPException(status_code=400, detail="Debes enviar al menos un ID")
+
+        rows = (
+            db.query(models.Convocatoria)
+            .filter(models.Convocatoria.id.in_(payload.ids))
+            .all()
+        )
+
+        if not rows:
+            raise HTTPException(status_code=400, detail="No se encontraron convocatorias para los IDs enviados")
+
+        # Convert SQLAlchemy objects to plain dicts compatible with PDF engine expectations
+        selected = []
+        for r in rows:
+            item = {
+                "id": r.id,
+                "title": r.title,
+                "description": r.description,
+                "keywords": r.keywords or [],
+                "source": r.source,
+                "type": r.type,
+                "url": r.url,
+                "created_at": r.created_at.isoformat() if r.created_at else None,
+                "fecha_inicio": r.fecha_inicio.isoformat() if r.fecha_inicio else None,
+                "deadline": r.deadline.isoformat() if r.deadline else None,
+                "fecha_cierre": r.fecha_cierre.isoformat() if r.fecha_cierre else None,
+                "type_financy": r.type_financy,
+                "monto": r.monto,
+                "requisitos": r.requisitos or [],
+                "beneficios": r.beneficios or [],
+                "lugar": r.lugar,
+            }
+            selected.append(item)
 
         # Use Service
         pdf_path, pdf_name = generate_pdf(selected)
