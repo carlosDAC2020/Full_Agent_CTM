@@ -31,6 +31,20 @@ async def list_my_saved(current_user: models.User = Depends(get_current_user), d
         for r in rows
     ]
 
+
+@router.get("/convocatorias", response_model=List[ConvocatoriaOut])
+async def list_convocatorias(db: Session = Depends(get_db)):
+    """Lista todas las convocatorias guardadas en la tabla 'convocatorias'."""
+    rows = (
+        db.query(models.Convocatoria)
+        .order_by(
+            models.Convocatoria.created_db_at.desc(),
+            models.Convocatoria.created_at.desc().nullslast(),
+        )
+        .all()
+    )
+    return rows
+
 @router.post("/saved", status_code=201)
 async def create_saved(payload: SavedCreate, current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
     if not (payload.item_ref or "").strip():
