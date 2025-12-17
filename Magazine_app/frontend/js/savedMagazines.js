@@ -34,27 +34,12 @@ document.addEventListener("DOMContentLoaded", () => {
     updateButtonText();
     try { savedSection.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch {}
 
-    // Carga de JSON (con fallback)
-    let lastAttemptUrl = '';
-    let lastStatus = '';
+    // Carga desde API: GET /magazines/convocatorias
     try {
-      const urlPrimary = `${API_URL}/outputs/convocatorias.json?t=${Date.now()}`;
-      lastAttemptUrl = urlPrimary;
-      let res = await fetch(urlPrimary);
+      const url = `${API_URL}/magazines/convocatorias`;
+      const res = await fetch(url);
       if (!res.ok) {
-        lastStatus = `HTTP ${res.status}`;
-        const urlFallback = `${window.location.origin}/outputs/convocatorias.json?t=${Date.now()}`;
-        lastAttemptUrl = urlFallback;
-        const res2 = window.location.origin.startsWith('http') ? await fetch(urlFallback) : { ok: false, status: 'origen no http' };
-        if (res2.ok) res = res2; else {
-          const urlRelative = `outputs/convocatorias.json?t=${Date.now()}`;
-          lastAttemptUrl = urlRelative;
-          const res3 = await fetch(urlRelative);
-          if (res3.ok) res = res3; else {
-            lastStatus = `${lastStatus} / ${res2.status} / HTTP ${res3.status}`;
-            throw new Error('Fallo al cargar JSON con primario, fallback y relativo');
-          }
-        }
+        throw new Error(`HTTP ${res.status}`);
       }
       const data = await res.json();
       const mapped = mapSavedToCards(data);
@@ -62,13 +47,15 @@ document.addEventListener("DOMContentLoaded", () => {
         window.renderConvocatorias(mapped);
       }
     } catch (e) {
-      const baseMsg = e && e.message ? e.message : String(e);
-      const msg = `${lastStatus || 'Error de red'} en ${lastAttemptUrl} :: ${baseMsg}`;
-      if (convocatoriasContainer) convocatoriasContainer.innerHTML = `<p style="color:#b91c1c">No fue posible cargar las convocatorias guardadas. Detalle: ${escapeHtml(msg)}</p>`;
+      const msg = e && e.message ? e.message : String(e);
+      if (convocatoriasContainer) {
+        convocatoriasContainer.innerHTML = `<p style="color:#b91c1c">No fue posible cargar las convocatorias guardadas desde la base de datos. Detalle: ${escapeHtml(msg)}</p>`;
+      }
     }
   });
 
   function mapSavedToCards(items) {
+    // items viene del endpoint /magazines/convocatorias (ConvocatoriaOut)
     return (Array.isArray(items) ? items : []).map((it) => ({
       id: it.id,
       tipo: it.type || 'general',
@@ -76,13 +63,13 @@ document.addEventListener("DOMContentLoaded", () => {
       descripcion: it.description || '',
       objetivo: it.description || '',
       beneficios: it.beneficios || 'No especificado',
-      dirigido_a: (it.keywords || []).join(', '),
-      fecha_inicio: it.fecha_inicio || it.inicio || '',
+      dirigido_a: Array.isArray(it.keywords) ? it.keywords.join(', ') : '',
+      fecha_inicio: it.fecha_inicio || '',
       fecha_cierre: it.fecha_cierre || it.deadline || 'No especificado',
-      fecha: it.fecha || '',
+      fecha: it.created_at || '',
       lugar: it.lugar || '',
-      monto: it.monto || it.monto_financiacion || it.financiacion || '',
-      keywords: it.keywords || it.palabras_clave || it.tags || [],
+      monto: it.monto || '',
+      keywords: it.keywords || [],
       url_original: it.url || it.source || '',
       created_at: it.created_at || new Date().toISOString(),
     }));

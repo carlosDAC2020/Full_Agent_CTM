@@ -13,6 +13,8 @@ class Settings:
     
     # Paths
     OUTPUTS_DIR = os.getenv("OUTPUTS_DIR", "/app/outputs")
+    SOURCES_FILE = os.getenv("SOURCES_FILE", os.path.join(OUTPUTS_DIR, "sources.json"))
+    CONVOCATORIAS_FILE = os.getenv("CONVOCATORIAS_FILE", os.path.join(OUTPUTS_DIR, "convocatorias.json"))
     
     # Security / Workers
     WORKER_TOKEN = os.getenv("WORKER_TOKEN", "change-me-strong")
