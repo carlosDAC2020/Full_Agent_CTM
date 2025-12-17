@@ -24,8 +24,14 @@ class Settings:
     
     API_INTERNAL_URL = os.getenv("API_INTERNAL_URL", "http://localhost:8000")
     
-    # Email
-    EMAIL_SETTINGS_FILE = os.getenv("EMAIL_SETTINGS_FILE", "email_settings.json")
-    DEFAULT_SENDER_EMAIL = os.getenv("DEFAULT_SENDER_EMAIL", "noreply@cotecmar.com")
+    # SMTP / Demo mode
+    DEMO_MODE = os.getenv("DEMO_MODE", "true").lower() == "true"
+    SMTP_HOST = os.getenv("SMTP_HOST", "")
+    SMTP_PORT = int(os.getenv("SMTP_PORT", "587"))
+    SMTP_TLS = os.getenv("SMTP_TLS", "true").lower() == "true"
+    SMTP_USER = os.getenv("SMTP_USER", "")
+    SMTP_PASS = os.getenv("SMTP_PASS", "")
+    # Por defecto, el remitente es el usuario SMTP si está definido
+    DEFAULT_SENDER_EMAIL = os.getenv("DEFAULT_SENDER_EMAIL", SMTP_USER or "noreply@cotecmar.com")
 
 settings = Settings()

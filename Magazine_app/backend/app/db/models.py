@@ -95,3 +95,11 @@ class Convocatoria(Base):
     lugar = Column(String(512), nullable=True)
     created_db_at = Column(DateTime, default=datetime.utcnow)
 
+
+class EmailConfig(Base):
+    __tablename__ = "email_config"
+    __table_args__ = {"extend_existing": True}
+
+    id = Column(Integer, primary_key=True)
+    sender_email = Column(String(255), nullable=False)
+    favorite_emails = Column(JSON, nullable=False, default=list)

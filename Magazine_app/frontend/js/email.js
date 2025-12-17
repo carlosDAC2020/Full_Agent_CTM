@@ -27,7 +27,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // State
     let recipients = [];
     let favorites = [];
-    let currentSenderEmail = 'harithodevoz@gmail.com'; // Default sender email
+    let currentSenderEmail = '';
     let currentPdfUrl = '';
     let suppressDocumentClickClose = false; // evita cierre inmediato al abrir
 
@@ -534,7 +534,7 @@ document.addEventListener('DOMContentLoaded', () => {
             console.log('Datos de email recibidos (estandarizados):', data);
 
             // Leemos solo las claves estándar, con fallback por compatibilidad
-            currentSenderEmail = data.sender || data.sender_email || 'harithodevoz@gmail.com';
+            currentSenderEmail = data.sender || data.sender_email || '';
             favorites = Array.isArray(data.favorites)
                 ? data.favorites
                 : (Array.isArray(data.favorite_emails) ? data.favorite_emails : []);
@@ -544,7 +544,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (error) {
             console.error('Error cargando la configuración de email:', error);
             // Aplicar valores por defecto en caso de error
-            currentSenderEmail = 'harithodevoz@gmail.com';
+            currentSenderEmail = '';
             favorites = [];
             if (senderInput) senderInput.value = currentSenderEmail;
         }
