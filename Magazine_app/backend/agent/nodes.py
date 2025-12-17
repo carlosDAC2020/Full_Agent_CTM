@@ -289,6 +289,18 @@ def nodo_guardado_db(state: AgentState) -> AgentState:
     now_utc = datetime.now(timezone.utc)
     created = 0
 
+    def _clean_date(value):
+        """Normaliza valores de fecha tipo string, devolviendo None para valores no válidos."""
+        if value is None:
+            return None
+        text = str(value).strip()
+        if not text:
+            return None
+        lowered = text.lower()
+        if lowered in {"no especificado", "no aplica", "n/a", "n.a.", "na"}:
+            return None
+        return value
+
     try:
         for item in state.get("contenido_curado", []):
             # Verificar fechas (filtro de eventos/convocatorias pasadas)
@@ -354,9 +366,9 @@ def nodo_guardado_db(state: AgentState) -> AgentState:
                 type=str(tipo_norm),
                 url=url,
                 created_at=now_utc,
-                fecha_inicio=item.get("fecha_inicio") or item.get("inicio"),
-                deadline=None,  # deadline detallado no se parsea aquí; ya se filtró por fecha_cierre_raw
-                fecha_cierre=item.get("fecha_cierre") or None,
+                fecha_inicio=_clean_date(item.get("fecha_inicio") or item.get("inicio")),
+                deadline=_clean_date(item.get("deadline")),
+                fecha_cierre=_clean_date(item.get("fecha_cierre")),
                 type_financy=item.get("type_financy"),
                 monto=item.get("monto"),
                 requisitos=item.get("requisitos") or ["No especificado"],
