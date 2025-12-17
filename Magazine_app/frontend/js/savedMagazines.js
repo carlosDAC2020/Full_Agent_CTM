@@ -34,9 +34,9 @@ document.addEventListener("DOMContentLoaded", () => {
     updateButtonText();
     try { savedSection.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch {}
 
-    // Carga desde API: GET /magazines/convocatorias
+    // Carga desde API: GET /convocatorias
     try {
-      const url = `${API_URL}/magazines/convocatorias`;
+      const url = `${API_URL}/convocatorias`;
       const res = await fetch(url);
       if (!res.ok) {
         throw new Error(`HTTP ${res.status}`);
