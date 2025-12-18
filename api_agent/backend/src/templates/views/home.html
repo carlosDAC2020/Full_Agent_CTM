@@ -21,11 +21,11 @@
 
                 <div class="relative group">
                     <div
-                        class="absolute left-4 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg bg-cotecmar-dark text-white flex items-center justify-center shadow-lg shadow-blue-900/20 group-focus-within:scale-110 transition-all z-10">
-                        <i class="ph ph-magnifying-glass font-bold"></i>
+                        class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-cotecmar-mid transition-all z-10">
+                        <i class="ph ph-magnifying-glass text-xl font-bold"></i>
                     </div>
                     <input type="text" id="search-input" oninput="filterOptions()"
-                        class="w-full bg-white border border-blue-100 rounded-2xl py-4 pl-16 pr-6 outline-none focus:border-cotecmar-mid focus:ring-4 focus:ring-blue-500/5 transition-all text-sm font-medium text-slate-700 shadow-sm shadow-blue-900/5"
+                        class="w-full bg-white border border-blue-100 rounded-2xl py-4 pl-12 pr-6 outline-none focus:border-cotecmar-mid focus:ring-4 focus:ring-blue-500/5 transition-all text-sm font-medium text-slate-700 shadow-sm shadow-blue-900/5"
                         placeholder="Buscar por título o palabras clave..." autocomplete="off">
                 </div>
 
@@ -127,8 +127,12 @@
                                     <div class="flex flex-wrap gap-3">
                                         <span id="prev-type"
                                             class="px-4 py-1.5 bg-blue-600 text-white rounded-xl text-[10px] font-bold uppercase tracking-widest shadow-sm shadow-blue-900/10">INVESTIGACIÓN</span>
-                                        <span id="prev-source"
-                                            class="px-4 py-1.5 bg-white text-cotecmar-dark border border-blue-100 rounded-xl text-[10px] font-bold uppercase tracking-widest shadow-sm shadow-blue-900/5">MINCIENCIAS</span>
+                                        <a id="prev-url" href="#" target="_blank"
+                                            class="px-4 py-1.5 bg-white text-cotecmar-dark border border-blue-200 rounded-xl text-[10px] font-extrabold uppercase tracking-widest shadow-sm shadow-blue-900/5 hover:bg-blue-50 hover:border-cotecmar-mid transition-all flex items-center gap-2 group/link">
+                                            <span id="prev-source">MINCIENCIAS</span>
+                                            <i
+                                                class="ph ph-arrow-square-out font-bold text-blue-400 group-hover/link:text-cotecmar-mid"></i>
+                                        </a>
                                         <span id="prev-deadline"
                                             class="px-4 py-1.5 bg-orange-500 text-white rounded-xl text-[10px] font-bold uppercase tracking-widest shadow-sm shadow-orange-900/10">DICIEMBRE
                                             2024</span>

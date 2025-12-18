@@ -157,10 +157,12 @@
         <!-- HEADER COMÚN -->
         <!-- HEADER COMÚN -->
         <header class="absolute top-0 w-full p-4 flex justify-between items-center z-20">
-            <!-- Left: Sidebar Toggle (DEPRECATED - ALWAYS VISIBLE) -->
-            <div class="p-2 rounded-lg opacity-20">
-                <i class="ph ph-sidebar-simple text-xl text-cotecmar-dark"></i>
-            </div>
+            <!-- Left: Sidebar Toggle -->
+            <button onclick="toggleSidebar()"
+                class="text-cotecmar-dark hover:bg-gray-100 p-2 rounded-lg transition-all duration-300 active:scale-90"
+                title="Alternar Menú">
+                <i class="ph ph-sidebar-simple text-xl"></i>
+            </button>
 
             <!-- Center: Global Stepper -->
             <div id="global-stepper"

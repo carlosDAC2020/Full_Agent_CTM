@@ -169,7 +169,20 @@ export function selectOption(id) {
     document.getElementById('prev-title').innerText = item.title;
     document.getElementById('prev-desc').innerText = item.description || item.objective || "Sin descripción disponible.";
     document.getElementById('prev-type').innerText = item.type || 'N/A';
-    document.getElementById('prev-source').innerText = item.source || 'N/A';
+    document.getElementById('prev-source').innerText = item.source || 'Fuente N/A';
+
+    const urlEl = document.getElementById('prev-url');
+    if (urlEl) {
+        if (item.url) {
+            urlEl.href = item.url;
+            urlEl.classList.remove('pointer-events-none', 'opacity-50');
+            urlEl.title = "Visitar sitio oficial";
+        } else {
+            urlEl.href = "#";
+            urlEl.classList.add('pointer-events-none', 'opacity-50');
+            urlEl.title = "Enlace no disponible";
+        }
+    }
 
     // Deadline / Date
     const deadlineEl = document.getElementById('prev-deadline');
