@@ -1,6 +1,6 @@
 // Main Entry Point
 import { loadHistory, toggleSidebar } from './ui/sidebar.js';
-import { initInitialView, filterOptions, selectOption } from './ui/search.js';
+import { initInitialView, filterOptions, selectOption, setStatusFilter, setCategoryFilter } from './ui/search.js';
 import {
     startAnalysis,
     updateFileStatus,
@@ -79,6 +79,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     window.filterOptions = filterOptions;
     window.selectOption = selectOption;
+    window.setStatusFilter = setStatusFilter;
+    window.setCategoryFilter = setCategoryFilter;
 
     window.startAnalysis = startAnalysis;
     window.updateFileStatus = updateFileStatus;

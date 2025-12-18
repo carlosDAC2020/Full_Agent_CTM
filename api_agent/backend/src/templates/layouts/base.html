@@ -151,16 +151,16 @@
     </aside>
 
     <!-- MAIN AREA -->
-    <main class="flex-1 flex flex-col relative w-full h-full bg-white/50 backdrop-blur-sm transition-all duration-300">
+    <main
+        class="flex-1 flex flex-col relative w-full h-full bg-blue-50/30 backdrop-blur-sm transition-all duration-300">
 
         <!-- HEADER COMÚN -->
         <!-- HEADER COMÚN -->
         <header class="absolute top-0 w-full p-4 flex justify-between items-center z-20">
-            <!-- Left: Sidebar Toggle -->
-            <button onclick="toggleSidebar()" class="text-cotecmar-dark hover:bg-gray-200 p-2 rounded-lg transition"
-                title="Alternar Menú">
-                <i class="ph ph-sidebar-simple text-xl"></i>
-            </button>
+            <!-- Left: Sidebar Toggle (DEPRECATED - ALWAYS VISIBLE) -->
+            <div class="p-2 rounded-lg opacity-20">
+                <i class="ph ph-sidebar-simple text-xl text-cotecmar-dark"></i>
+            </div>
 
             <!-- Center: Global Stepper -->
             <div id="global-stepper"

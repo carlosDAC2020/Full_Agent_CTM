@@ -5,5 +5,7 @@ export const store = {
     sessionId: null,      // New: Store the session ID
     currentSelectedIdea: null,
     maxReachedStep: 1,
-    convocatorias: []     // Real convocatorias from DB
+    convocatorias: [],     // Real convocatorias from DB
+    statusFilter: 'active',
+    categoryFilter: 'all'
 };

@@ -12,9 +12,44 @@ export async function initInitialView() {
     }
 }
 
+// Global Filter Setters
+export function setStatusFilter(value) {
+    store.statusFilter = value;
+    updatePillStyles('status-pill', value);
+    filterOptions();
+}
+
+export function setCategoryFilter(value) {
+    store.categoryFilter = value;
+    updatePillStyles('category-pill', value);
+    filterOptions();
+}
+
+function updatePillStyles(pillClass, activeValue) {
+    const pills = document.querySelectorAll(`.${pillClass}`);
+    pills.forEach(pill => {
+        const onclick = pill.getAttribute('onclick');
+        if (onclick && onclick.includes(`'${activeValue}'`)) {
+            pill.classList.remove('border-gray-200', 'text-gray-500');
+            pill.classList.add('border-blue-200', 'bg-blue-50', 'text-cotecmar-mid', 'active-filter', 'shadow-blue-900/5');
+        } else {
+            pill.classList.remove('border-blue-200', 'bg-blue-50', 'text-cotecmar-mid', 'active-filter', 'shadow-blue-900/5');
+            pill.classList.add('border-gray-200', 'text-gray-500');
+        }
+    });
+}
+
 async function refreshConvocatorias() {
     try {
-        store.convocatorias = await getConvocatorias();
+        const raw = await getConvocatorias();
+        // User request: "no traigas eventos"
+        store.convocatorias = raw.filter(c => {
+            const type = (c.type || '').toLowerCase();
+            const title = (c.title || '').toLowerCase();
+            const desc = (c.description || '').toLowerCase();
+            return !type.includes('evento') && !title.includes('evento') && !desc.includes('evento');
+        });
+
         populateFilters();
         filterOptions();
     } catch (err) {
@@ -27,25 +62,12 @@ async function refreshConvocatorias() {
 }
 
 function populateFilters() {
-    const types = [...new Set(store.convocatorias.map(c => c.type).filter(Boolean))];
-    const sources = [...new Set(store.convocatorias.map(c => c.source).filter(Boolean))];
     const periods = [...new Set(store.convocatorias.map(c => {
         const date = c.deadline || c.fecha_inicio || c.fecha_cierre || c.created_at;
         return date ? new Date(date).getFullYear() : null;
     }).filter(Boolean))].sort((a, b) => b - a);
 
-    const typeSelect = document.getElementById('filter-type');
-    const sourceSelect = document.getElementById('filter-source');
     const periodSelect = document.getElementById('filter-period');
-
-    if (typeSelect) {
-        typeSelect.innerHTML = '<option value="">Tipos</option>' +
-            types.map(t => `<option value="${t}">${t}</option>`).join('');
-    }
-    if (sourceSelect) {
-        sourceSelect.innerHTML = '<option value="">Fuentes</option>' +
-            sources.map(s => `<option value="${s}">${s}</option>`).join('');
-    }
     if (periodSelect) {
         periodSelect.innerHTML = '<option value="">Periodo</option>' +
             periods.map(p => `<option value="${p}">${p}</option>`).join('');
@@ -54,21 +76,42 @@ function populateFilters() {
 
 export function filterOptions() {
     const query = document.getElementById('search-input').value.toLowerCase();
-    const type = document.getElementById('filter-type').value;
-    const source = document.getElementById('filter-source').value;
+    const status = store.statusFilter;
+    const category = store.categoryFilter;
     const period = document.getElementById('filter-period').value;
     const { convocatoriasList } = getElements();
 
+    const now = new Date();
+
     const filtered = store.convocatorias.filter(c => {
+        // Query search
         const matchesQuery = c.title.toLowerCase().includes(query) ||
             (c.description && c.description.toLowerCase().includes(query)) ||
             (c.keywords && c.keywords.some(k => k.toLowerCase().includes(query)));
-        const matchesType = !type || c.type === type;
-        const matchesSource = !source || c.source === source;
+
+        // Status Filter
+        let matchesStatus = true;
+        const deadline = c.deadline ? new Date(c.deadline) : null;
+        if (status === 'active') {
+            matchesStatus = !deadline || deadline >= now;
+        } else if (status === 'closed') {
+            matchesStatus = deadline && deadline < now;
+        }
+
+        // Category Filter
+        let matchesCategory = true;
+        const type = (c.type || '').toLowerCase();
+        if (category === 'nac') {
+            matchesCategory = type.includes('nac');
+        } else if (category === 'int') {
+            matchesCategory = type.includes('int');
+        }
+
+        // Period Filter
         const cDate = c.deadline || c.fecha_inicio || c.fecha_cierre || c.created_at;
         const matchesPeriod = !period || (cDate && new Date(cDate).getFullYear().toString() === period);
 
-        return matchesQuery && matchesType && matchesSource && matchesPeriod;
+        return matchesQuery && matchesStatus && matchesCategory && matchesPeriod;
     });
 
     if (filtered.length === 0) {
@@ -83,17 +126,23 @@ export function filterOptions() {
 
     convocatoriasList.innerHTML = filtered.map(c => {
         const isSelected = store.selectedValue === c.id;
+        const date = c.deadline ? new Date(c.deadline).toLocaleDateString('es-ES', { day: '2-digit', month: 'short' }) : 'S/F';
+
         return `
-            <div onclick="selectOption(${c.id})" class="p-4 rounded-2xl border ${isSelected ? 'border-cotecmar-light bg-blue-50 shadow-md transform scale-[1.02]' : 'border-gray-100 bg-white hover:border-gray-300 hover:shadow-sm'} cursor-pointer transition-all duration-300 group">
+            <div onclick="selectOption(${c.id})" class="p-4 rounded-2xl border ${isSelected ? 'border-cotecmar-light bg-blue-50/80 shadow-md transform scale-[1.02]' : 'border-gray-100 bg-white hover:border-gray-300 hover:shadow-sm'} cursor-pointer transition-all duration-300 group">
                 <div class="flex items-center gap-3">
-                    <div class="w-8 h-8 rounded-lg ${isSelected ? 'bg-cotecmar-dark text-white' : 'bg-gray-100 text-gray-400 group-hover:bg-blue-100 group-hover:text-cotecmar-light'} flex items-center justify-center transition-colors">
-                        <i class="ph ph-article"></i>
+                    <div class="w-10 h-10 rounded-xl ${isSelected ? 'bg-cotecmar-dark text-white' : 'bg-blue-50 text-cotecmar-light group-hover:bg-blue-100'} flex items-center justify-center transition-colors shadow-sm">
+                        <i class="ph ph-article text-lg"></i>
                     </div>
                     <div class="flex-1 overflow-hidden">
-                        <div class="font-bold text-gray-800 text-xs truncate">${c.title}</div>
-                        <div class="text-[10px] text-gray-400 mt-0.5">${c.source || 'Fuente N/A'} • ${c.type || 'Tipo N/A'}</div>
+                        <div class="font-bold text-gray-800 text-[11px] truncate leading-tight">${c.title}</div>
+                        <div class="flex items-center gap-2 mt-1">
+                            <span class="text-[9px] text-gray-400 font-medium">${c.source || 'Fuente'}</span>
+                            <span class="w-1 h-1 bg-gray-200 rounded-full"></span>
+                            <span class="text-[9px] text-orange-500 font-bold uppercase">${date}</span>
+                        </div>
                     </div>
-                    ${isSelected ? '<i class="ph ph-check-circle-fill text-cotecmar-light"></i>' : ''}
+                    ${isSelected ? '<i class="ph ph-check-circle-fill text-cotecmar-light text-lg"></i>' : '<i class="ph ph-caret-right text-gray-300 group-hover:text-cotecmar-light transition-colors"></i>'}
                 </div>
             </div>
         `;
