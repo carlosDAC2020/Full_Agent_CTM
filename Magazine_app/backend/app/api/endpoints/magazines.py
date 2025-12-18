@@ -1,7 +1,7 @@
 import os
 from typing import List, Optional, Dict, Any
 from datetime import datetime
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
 from sqlalchemy.orm import Session
 
 from backend.app.core.config import settings
@@ -13,6 +13,7 @@ from backend.app.schemas.convocatoria import ConvocatoriaOut
 from backend.app.services.redis_service import get_redis, task_key
 from backend.app.services.agent_service import run_magazine_generation_stream
 from backend.app.services.pdf_engine import generate_pdf
+from backend.app.services.minio_storage import minio_storage
 from backend.app.utils.files import load_json_list, save_json_dict
 
 router = APIRouter()
@@ -134,6 +135,7 @@ async def generate_magazine(req: GenerateRequest | None = None):
 @router.post("/generate_pdf_from_ids")
 async def generate_pdf_from_ids(
     payload: IdsRequest,
+    background_tasks: BackgroundTasks,
     current_user: models.User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -205,6 +207,23 @@ async def generate_pdf_from_ids(
             save_json_dict(sidecar_path, meta)
         except Exception as e:
             print(f"No se pudo guardar sidecar JSON: {e}")
+
+        # Upload to MinIO in background (non-blocking for the user)
+        try:
+            if pdf_path and os.path.exists(pdf_path):
+                with open(pdf_path, "rb") as f:
+                    pdf_bytes = f.read()
+
+                user_folder = f"{current_user.email}/Magazines"
+                background_tasks.add_task(
+                    minio_storage.upload_file,
+                    file_data=pdf_bytes,
+                    folder=user_folder,
+                    filename=pdf_name,
+                )
+        except Exception as e:
+            # No interrumpe la respuesta al usuario si falla el upload
+            print(f"No se pudo subir el PDF a MinIO: {e}")
             
         return {
             "status": "success", 

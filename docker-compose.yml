@@ -65,6 +65,11 @@ services:
       - DATABASE_URL=postgresql+psycopg2://shared_user:shared_pass@shared_postgres:5432/mag_db
       - WORKER_TOKEN=${WORKER_TOKEN:-change-me-strong}
       - JWT_SECRET=${JWT_SECRET:-change-me}
+      - MINIO_ENDPOINT=shared-minio:9000
+      - MINIO_ACCESS_KEY=minioadmin
+      - MINIO_SECRET_KEY=minioadmin
+      - MINIO_SECURE=False
+      - MINIO_BUCKET_USERS=users
     volumes:
       - ./Magazine_app:/app
       - ./Magazine_app/outputs:/app/outputs
@@ -88,6 +93,11 @@ services:
       - DATABASE_URL=postgresql+psycopg2://shared_user:shared_pass@shared_postgres:5432/mag_db
       - WORKER_TOKEN=${WORKER_TOKEN:-change-me-strong}
       - API_INTERNAL_URL=http://magazine_api:8000
+      - MINIO_ENDPOINT=shared-minio:9000
+      - MINIO_ACCESS_KEY=minioadmin
+      - MINIO_SECRET_KEY=minioadmin
+      - MINIO_SECURE=False
+      - MINIO_BUCKET_USERS=users
     volumes:
       - ./Magazine_app:/app
       - ./Magazine_app/outputs:/app/outputs
