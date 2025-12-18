@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 
 class Settings:
     PROJECT_NAME = "Magazine App"
@@ -13,6 +14,7 @@ class Settings:
     
     # Paths
     OUTPUTS_DIR = os.getenv("OUTPUTS_DIR", "/app/outputs")
+    UPLOADS_DIR = os.path.join(OUTPUTS_DIR, "uploads")
     SOURCES_FILE = os.getenv("SOURCES_FILE", os.path.join(OUTPUTS_DIR, "sources.json"))
     CONVOCATORIAS_FILE = os.getenv("CONVOCATORIAS_FILE", os.path.join(OUTPUTS_DIR, "convocatorias.json"))
     
@@ -33,5 +35,9 @@ class Settings:
     SMTP_PASS = os.getenv("SMTP_PASS", "")
     # Por defecto, el remitente es el usuario SMTP si está definido
     DEFAULT_SENDER_EMAIL = os.getenv("DEFAULT_SENDER_EMAIL", SMTP_USER or "noreply@cotecmar.com")
+
+# Crear directorios necesarios al importar el módulo
+for directory in [Settings.OUTPUTS_DIR, Settings.UPLOADS_DIR]:
+    Path(directory).mkdir(parents=True, exist_ok=True)
 
 settings = Settings()
