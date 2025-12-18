@@ -4,5 +4,6 @@ export const store = {
     selectedCallText: "", // New: Store the full text
     sessionId: null,      // New: Store the session ID
     currentSelectedIdea: null,
-    maxReachedStep: 1
+    maxReachedStep: 1,
+    convocatorias: []     // Real convocatorias from DB
 };

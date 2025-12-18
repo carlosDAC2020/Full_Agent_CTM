@@ -8,6 +8,19 @@ function getAuthHeaders() {
 }
 
 // Basic wrapper expecting a JSON response
+export async function getConvocatorias() {
+    try {
+        const response = await fetch('/api/agent/convocatorias', {
+            headers: getAuthHeaders()
+        });
+        if (!response.ok) throw new Error('Error fetching convocatorias');
+        return await response.json();
+    } catch (error) {
+        console.error('API Convocatorias Error:', error);
+        throw error;
+    }
+}
+
 export async function ingestCall(text, title = "") {
     try {
         const response = await fetch('/api/agent/ingest', {

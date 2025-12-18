@@ -4,7 +4,7 @@ from fastapi.staticfiles import StaticFiles
 
 # Importar configuración de DB
 from src.core.database import engine, Base
-from src.models import history 
+from src.models import history, convocatoria
 
 # Importar los routers nuevos
 from src.routers import agent, tasks, views, sessions, auth

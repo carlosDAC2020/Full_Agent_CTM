@@ -41,6 +41,7 @@ https://minciencias.gov.co/convocatorias/convocatoria-colombia-inteligente-cienc
 pendientes 
 
 - revizar el sistema de logout para q sea compartido entre las aplicaciones 
+        parcielamente resuelto con la navegacion en una sola pestaña 
 
 - guardar la informaciond e las convocatorias en base de datos y traer la informacion a la api de agente 
 

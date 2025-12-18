@@ -10,10 +10,19 @@ from src.models.history import AgentSession, AgentStep
 from src.core.auth import get_current_user, User  # NEW: Import auth and local User
 
 import json
+from typing import List
 from src.services.storage import MinioService
+from src.models.convocatoria import Convocatoria
+from src.schemas.requests import IngestRequest, SelectionRequest, NextStepRequest, ConvocatoriaOut
 
 router = APIRouter(prefix="/api/agent", tags=["Agent Actions"])
 storage_service = MinioService()
+
+@router.get("/convocatorias", response_model=List[ConvocatoriaOut])
+async def list_convocatorias(db: Session = Depends(get_db)):
+    """Lista todas las convocatorias guardadas en la base de datos."""
+    rows = db.query(Convocatoria).order_by(Convocatoria.created_db_at.desc()).all()
+    return rows
 
 @router.post("/ingest")
 async def start_ingest(
