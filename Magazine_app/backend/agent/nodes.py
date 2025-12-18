@@ -23,27 +23,24 @@ llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", api_key=_api_key)
 
 # --- DEFINICIÓN DE NODOS ---
 
-# Fuentes institucionales solicitadas (se gestionan vía JSON externo)
 INSTITUTIONAL_SOURCES = []
 
-def _load_institutional_sources_json() -> list:
-    """Carga `outputs/sources.json` y devuelve la lista de fuentes visibles.
-    Cada fuente debe tener al menos: {"id", "name", "type", "url", "hidden"}.
-    Si el archivo no existe o está vacío, retorna lista vacía.
+def _load_institutional_sources_db() -> list:
+    """Carga las fuentes institucionales desde la base de datos (tabla sources).
+    Devuelve solo las que tienen is_active = True.
     """
+    db = SessionLocal()
     try:
-        src_path = os.path.join("outputs", "sources.json")
-        if not os.path.exists(src_path):
-            return []
-        with open(src_path, "r", encoding="utf-8") as f:
-            data = json.load(f)
-        if isinstance(data, list):
-            # Filtrar ocultas
-            visibles = [s for s in data if not str(s.get("hidden", False)).lower() in ("true", "1")]
-            return visibles
-        return []
+        rows = db.query(models.Source).filter(models.Source.is_active == True).all()  # type: ignore
+        return [
+            {"id": s.id, "name": s.name, "type": s.type, "url": s.url}
+            for s in rows
+            if getattr(s, "url", None)
+        ]
     except Exception:
         return []
+    finally:
+        db.close()
 
 def nodo_planificador(state: AgentState) -> AgentState:
     print("--- 🧠 PLANIFICANDO ---")
@@ -80,8 +77,8 @@ def nodo_busqueda(state: AgentState) -> AgentState:
         # Combinar Tavily + Brave, deduplicado
         combinados = search_all(query, tavily_max=1, brave_max=1)
         resultados.extend(combinados)
-    # Añadir fuentes institucionales como semillas (dinámicas desde JSON)
-    dynamic_sources = _load_institutional_sources_json() or INSTITUTIONAL_SOURCES
+    # Añadir fuentes institucionales como semillas (dinámicas desde BD)
+    dynamic_sources = _load_institutional_sources_db() or INSTITUTIONAL_SOURCES
     for src in dynamic_sources:
         resultados.append({
             "url": src["url"],
@@ -226,17 +223,12 @@ def nodo_guardado_db(state: AgentState) -> AgentState:
 
     db = SessionLocal()
 
-    # Cargar fuentes para inferir tipo por host si es necesario
-    sources_list = []
+    # Cargar fuentes para inferir tipo por host si es necesario (desde BD)
+    db_sources = []
     try:
-        src_path = settings.SOURCES_FILE or os.path.join(settings.OUTPUTS_DIR, "sources.json")
-        if os.path.exists(src_path):
-            with open(src_path, "r", encoding="utf-8") as f:
-                data = json.load(f)
-                if isinstance(data, list):
-                    sources_list = data
+        db_sources = _load_institutional_sources_db()
     except Exception:
-        sources_list = []
+        db_sources = []
 
     def _host(u: str) -> str:
         try:
@@ -256,8 +248,8 @@ def nodo_guardado_db(state: AgentState) -> AgentState:
             return "convocatoria_nacional"
         # fallback por fuente
         h_item = _host(url_original)
-        if h_item and sources_list:
-            for s in sources_list:
+        if h_item and db_sources:
+            for s in db_sources:
                 su = str(s.get("url") or "")
                 hs = _host(su)
                 if hs and hs == h_item:

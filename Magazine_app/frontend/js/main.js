@@ -66,7 +66,19 @@ document.addEventListener('DOMContentLoaded', () => {
         const name = c.getAttribute('data-title') || '';
         const url = c.getAttribute('data-url') || '';
         if (!url) continue;
-        await fetch(`${API_URL}/sources`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, url, type: '' }) });
+        const res = await fetch(`${API_URL}/sources`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, url, type: '' })
+        });
+        if (!res.ok) {
+          let msg = 'No se pudo agregar la fuente desde IA';
+          try {
+            const err = await res.json();
+            if (err && err.detail) msg = String(err.detail);
+          } catch {}
+          throw new Error(msg);
+        }
       }
       await refreshSources();
       // Aviso de cuántas se añadieron
@@ -650,8 +662,19 @@ document.addEventListener('DOMContentLoaded', () => {
       const url = srcUrl.value.trim();
       if (!name || !url) return;
       try {
-        const res = await fetch(`${API_URL}/sources`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, type, url }) });
-        if (!res.ok) throw new Error('No se pudo agregar la fuente');
+        const res = await fetch(`${API_URL}/sources`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, type, url })
+        });
+        if (!res.ok) {
+          let msg = 'No se pudo agregar la fuente';
+          try {
+            const err = await res.json();
+            if (err && err.detail) msg = String(err.detail);
+          } catch {}
+          throw new Error(msg);
+        }
         srcName.value = ''; srcType.value = ''; srcUrl.value = '';
         const viewTabBtn = document.querySelector('.sources-tabs .tab-btn[data-tab="view"]');
         if (viewTabBtn) viewTabBtn.click();
