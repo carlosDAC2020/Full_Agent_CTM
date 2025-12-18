@@ -11,6 +11,11 @@ import time
 from datetime import datetime, timezone
 from pathlib import Path
 from dateutil import parser
+from urllib.parse import urlparse
+
+from backend.app.db.session import SessionLocal
+from backend.app.db import models
+from backend.app.core.config import settings
 
 # Configuración del LLM que usaremos (Gemini)
 _api_key = os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY")
@@ -18,27 +23,24 @@ llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", api_key=_api_key)
 
 # --- DEFINICIÓN DE NODOS ---
 
-# Fuentes institucionales solicitadas (se gestionan vía JSON externo)
 INSTITUTIONAL_SOURCES = []
 
-def _load_institutional_sources_json() -> list:
-    """Carga `outputs/sources.json` y devuelve la lista de fuentes visibles.
-    Cada fuente debe tener al menos: {"id", "name", "type", "url", "hidden"}.
-    Si el archivo no existe o está vacío, retorna lista vacía.
+def _load_institutional_sources_db() -> list:
+    """Carga las fuentes institucionales desde la base de datos (tabla sources).
+    Devuelve solo las que tienen is_active = True.
     """
+    db = SessionLocal()
     try:
-        src_path = os.path.join("outputs", "sources.json")
-        if not os.path.exists(src_path):
-            return []
-        with open(src_path, "r", encoding="utf-8") as f:
-            data = json.load(f)
-        if isinstance(data, list):
-            # Filtrar ocultas
-            visibles = [s for s in data if not str(s.get("hidden", False)).lower() in ("true", "1")]
-            return visibles
-        return []
+        rows = db.query(models.Source).filter(models.Source.is_active == True).all()  # type: ignore
+        return [
+            {"id": s.id, "name": s.name, "type": s.type, "url": s.url}
+            for s in rows
+            if getattr(s, "url", None)
+        ]
     except Exception:
         return []
+    finally:
+        db.close()
 
 def nodo_planificador(state: AgentState) -> AgentState:
     print("--- 🧠 PLANIFICANDO ---")
@@ -75,8 +77,8 @@ def nodo_busqueda(state: AgentState) -> AgentState:
         # Combinar Tavily + Brave, deduplicado
         combinados = search_all(query, tavily_max=1, brave_max=1)
         resultados.extend(combinados)
-    # Añadir fuentes institucionales como semillas (dinámicas desde JSON)
-    dynamic_sources = _load_institutional_sources_json() or INSTITUTIONAL_SOURCES
+    # Añadir fuentes institucionales como semillas (dinámicas desde BD)
+    dynamic_sources = _load_institutional_sources_db() or INSTITUTIONAL_SOURCES
     for src in dynamic_sources:
         resultados.append({
             "url": src["url"],
@@ -192,24 +194,6 @@ def nodo_curacion(state: AgentState) -> AgentState:
     return {"contenido_curado": convocatorias_curadas}
 
 
-def _ensure_outputs_dir():
-    Path("outputs").mkdir(parents=True, exist_ok=True)
-
-def _load_existing_json(path: str):
-    try:
-        with open(path, "r", encoding="utf-8") as f:
-            return json.load(f)
-    except Exception:
-        return []
-
-def _next_id(items: list) -> int:
-    if not items:
-        return 1
-    try:
-        return max(int(it.get("id", 0)) for it in items) + 1
-    except Exception:
-        return len(items) + 1
-
 def is_future_date(date_str: str) -> bool:
     """Verifica si una fecha es futura. Acepta múltiples formatos."""
     if not date_str or date_str.lower() == 'no especificado':
@@ -230,26 +214,21 @@ def is_future_date(date_str: str) -> bool:
         # Si hay error al parsear, asumir que es futura
         return True
 
-def nodo_guardado_json(state: AgentState) -> AgentState:
-    """
-    Persiste cada convocatoria/evento en outputs/convocatorias.json con el esquema solicitado.
+
+def nodo_guardado_db(state: AgentState) -> AgentState:
+    """Persiste cada convocatoria/evento en la tabla "convocatorias".
     Filtra eventos pasados y asegura que los datos tengan el formato correcto.
     """
-    print("--- 💾 GUARDANDO JSON ---")
-    _ensure_outputs_dir()
-    json_path = os.path.join("outputs", "convocatorias.json")
-    existing = _load_existing_json(json_path)
+    print("--- 💾 GUARDANDO EN BASE DE DATOS (convocatorias) ---")
 
-    nuevos = []
-    now_iso = datetime.now(timezone.utc).isoformat()
+    db = SessionLocal()
 
-    # Cargar fuentes para inferir tipo por host si es necesario
-    sources_path = os.path.join("outputs", "sources.json")
+    # Cargar fuentes para inferir tipo por host si es necesario (desde BD)
+    db_sources = []
     try:
-        with open(sources_path, "r", encoding="utf-8") as f:
-            sources_list = json.load(f) if f else []
+        db_sources = _load_institutional_sources_db()
     except Exception:
-        sources_list = []
+        db_sources = []
 
     def _host(u: str) -> str:
         try:
@@ -269,8 +248,8 @@ def nodo_guardado_json(state: AgentState) -> AgentState:
             return "convocatoria_nacional"
         # fallback por fuente
         h_item = _host(url_original)
-        if h_item and sources_list:
-            for s in sources_list:
+        if h_item and db_sources:
+            for s in db_sources:
                 su = str(s.get("url") or "")
                 hs = _host(su)
                 if hs and hs == h_item:
@@ -282,99 +261,125 @@ def nodo_guardado_json(state: AgentState) -> AgentState:
         # default conservador
         return "convocatoria_nacional"
 
-    for item in state.get('contenido_curado', []):
-        # Verificar fechas (filtro de eventos/convocatorias pasadas)
-        fecha_cierre = item.get('fecha_cierre') or item.get('deadline') or item.get('fecha_fin')
-        if not is_future_date(fecha_cierre):
-            print(f"⚠️  Omitiendo evento/convocatoria pasada: {item.get('titulo', 'Sin título')} - Fecha: {fecha_cierre}")
-            continue
-            
-        # Procesar campos básicos
-        titulo = item.get('titulo') or 'Sin título'
-        desc = item.get('resumen_magazine') or item.get('objetivo') or item.get('descripcion') or 'Sin descripción'
-        
-        # Procesar keywords (solo palabras o frases cortas)
-        def _normalize_kw(s: str) -> str:
-            s = re.sub(r"\s+", " ", s.strip())
-            # quitar puntuación de cola y cabeza
-            s = re.sub(r"^[\-–—•·\s]+|[\-–—•·\s]+$", "", s)
-            return s
+    def _normalize_kw(s: str) -> str:
+        s = re.sub(r"\s+", " ", s.strip())
+        s = re.sub(r"^[\-–—•·\s]+|[\-–—•·\s]+$", "", s)
+        return s
 
-        def _is_short_phrase(s: str) -> bool:
-            if not s: return False
-            if len(s) > 40: return False
-            # máximo 3 palabras
-            words = [w for w in re.split(r"\s+", s) if w]
-            if len(words) == 0 or len(words) > 3: return False
-            # evitar frases con signos de puntuación fuertes o verbos típicos
-            if re.search(r"[\.!?]", s): return False
-            return True
+    def _is_short_phrase(s: str) -> bool:
+        if not s:
+            return False
+        if len(s) > 40:
+            return False
+        words = [w for w in re.split(r"\s+", s) if w]
+        if len(words) == 0 or len(words) > 3:
+            return False
+        if re.search(r"[\.!?]", s):
+            return False
+        return True
 
-        kws = []
-        if 'dirigido_a' in item and item['dirigido_a']:
-            dirigido_a = item['dirigido_a']
-            if isinstance(dirigido_a, list):
-                dirigido_a = ', '.join(str(x) for x in dirigido_a if x)
-            for part in re.split(r"[,\n;]", str(dirigido_a)):
-                kw = _normalize_kw(part)
-                if not kw or kw.lower() == 'no especificado':
-                    continue
-                if _is_short_phrase(kw):
-                    # normalizar a minúsculas para deduplicar semánticamente
-                    norm = kw.lower()
-                    if norm not in [k.lower() for k in kws]:
-                        kws.append(kw)
-        
-        # Determinar tipo normalizado y agregar a keywords
-        url_original = item.get('url_original', '')
-        tipo_norm = _normalize_tipo(item.get('tipo', ''), url_original)
-        if tipo_norm and tipo_norm not in kws:
-            kws.append(tipo_norm)
-            
-        # Añadir tipo de financiamiento a keywords si existe
-        if 'type_financy' in item and item['type_financy'] and item['type_financy'].lower() != 'no especificado':
-            if item['type_financy'] not in kws:
-                kws.append(item['type_financy'])
+    now_utc = datetime.now(timezone.utc)
+    created = 0
 
-        # Construir el objeto con los nuevos campos
-        new_obj = {
-            "id": None,  # se asigna más abajo
-            "title": str(titulo),
-            "description": str(desc),
-            "keywords": kws,
-            "source": item.get('url_original', ''),
-            "type": str(tipo_norm),
-            "url": item.get('url_original', ''),
-            "created_at": now_iso,
-            "fecha_inicio": item.get('fecha_inicio', item.get('inicio', '')),
-            "deadline": item.get('deadline', 'No especificado'),
-            "fecha_cierre": item.get('fecha_cierre', 'No especificado'),
-            "type_financy": item.get('type_financy', 'No especificado'),
-            "monto": item.get('monto', 'No especificado'),
-            "requisitos": item.get('requisitos', ['No especificado']),
-            "beneficios": item.get('beneficios', ['No especificados']),
-            "lugar": item.get('lugar', 'No especificado')
-        }
-        nuevos.append(new_obj)
+    def _clean_date(value):
+        """Normaliza valores de fecha tipo string, devolviendo None para valores no válidos."""
+        if value is None:
+            return None
+        text = str(value).strip()
+        if not text:
+            return None
+        lowered = text.lower()
+        if lowered in {"no especificado", "no aplica", "n/a", "n.a.", "na"}:
+            return None
+        return value
 
-    # Asignar IDs autoincrementales basados en existing
-    current_items = list(existing)
-    next_id_val = _next_id(current_items)
-    for obj in nuevos:
-        obj["id"] = next_id_val
-        next_id_val += 1
-        current_items.append(obj)
-
-    # Guardar archivo
     try:
-        with open(json_path, "w", encoding="utf-8") as f:
-            json.dump(current_items, f, ensure_ascii=False, indent=2)
-        print(f"✅ Guardado JSON en {json_path} ({len(nuevos)} nuevos)")
+        for item in state.get("contenido_curado", []):
+            # Verificar fechas (filtro de eventos/convocatorias pasadas)
+            fecha_cierre_raw = item.get("fecha_cierre") or item.get("deadline") or item.get("fecha_fin")
+            if not is_future_date(fecha_cierre_raw):
+                print(
+                    f"⚠️  Omitiendo evento/convocatoria pasada: {item.get('titulo', 'Sin título')} - Fecha: {fecha_cierre_raw}"
+                )
+                continue
+
+            titulo = item.get("titulo") or "Sin título"
+            desc = (
+                item.get("resumen_magazine")
+                or item.get("objetivo")
+                or item.get("descripcion")
+                or "Sin descripción"
+            )
+
+            # Keywords
+            kws: list[str] = []
+            if "dirigido_a" in item and item["dirigido_a"]:
+                dirigido_a = item["dirigido_a"]
+                if isinstance(dirigido_a, list):
+                    dirigido_a = ", ".join(str(x) for x in dirigido_a if x)
+                for part in re.split(r"[,\n;]", str(dirigido_a)):
+                    kw = _normalize_kw(part)
+                    if not kw or kw.lower() == "no especificado":
+                        continue
+                    if _is_short_phrase(kw):
+                        norm = kw.lower()
+                        if norm not in [k.lower() for k in kws]:
+                            kws.append(kw)
+
+            url_original = item.get("url_original", "")
+            tipo_norm = _normalize_tipo(item.get("tipo", ""), url_original)
+            if tipo_norm and tipo_norm not in kws:
+                kws.append(tipo_norm)
+
+            if (
+                "type_financy" in item
+                and item["type_financy"]
+                and str(item["type_financy"]).lower() != "no especificado"
+            ):
+                if item["type_financy"] not in kws:
+                    kws.append(item["type_financy"])
+
+            url = url_original or None
+
+            # Evitar duplicados por URL o por título si no hay URL
+            q = db.query(models.Convocatoria)
+            if url:
+                q = q.filter(models.Convocatoria.url == url)
+            else:
+                q = q.filter(models.Convocatoria.title == titulo)
+            if q.first():
+                continue
+
+            conv = models.Convocatoria(
+                title=str(titulo),
+                description=str(desc),
+                keywords=kws,
+                source=url_original or None,
+                type=str(tipo_norm),
+                url=url,
+                created_at=now_utc,
+                fecha_inicio=_clean_date(item.get("fecha_inicio") or item.get("inicio")),
+                deadline=_clean_date(item.get("deadline")),
+                fecha_cierre=_clean_date(item.get("fecha_cierre")),
+                type_financy=item.get("type_financy"),
+                monto=item.get("monto"),
+                requisitos=item.get("requisitos") or ["No especificado"],
+                beneficios=item.get("beneficios") or ["No especificados"],
+                lugar=item.get("lugar") or "No especificado",
+            )
+            db.add(conv)
+            created += 1
+
+        if created:
+            db.commit()
+        print(f"✅ Guardado en BD: {created} nuevas convocatorias")
     except Exception as e:
-        print(f"⚠️ No se pudo guardar JSON: {e}")
+        print(f"⚠️ Error guardando convocatorias en BD: {e}")
+        db.rollback()
+    finally:
+        db.close()
 
     # Importante: devolver una actualización válida del estado
-    # para cumplir con LangGraph (evitar InvalidUpdateError)
     return {"contenido_curado": state.get("contenido_curado", [])}
 
 # nodo_generador_pdf eliminado: el backend genera PDF directamente en main_api.py

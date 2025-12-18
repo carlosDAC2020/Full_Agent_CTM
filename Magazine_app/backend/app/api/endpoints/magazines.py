@@ -1,7 +1,7 @@
 import os
 from typing import List, Optional, Dict, Any
 from datetime import datetime
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
 from sqlalchemy.orm import Session
 
 from backend.app.core.config import settings
@@ -9,9 +9,11 @@ from backend.app.db.session import get_db
 from backend.app.db import models
 from backend.app.core.security import get_current_user
 from backend.app.schemas.magazine import GenerateRequest, IdsRequest, SavedCreate
+from backend.app.schemas.convocatoria import ConvocatoriaOut
 from backend.app.services.redis_service import get_redis, task_key
 from backend.app.services.agent_service import run_magazine_generation_stream
 from backend.app.services.pdf_engine import generate_pdf
+from backend.app.services.minio_storage import minio_storage
 from backend.app.utils.files import load_json_list, save_json_dict
 
 router = APIRouter()
@@ -29,6 +31,20 @@ async def list_my_saved(current_user: models.User = Depends(get_current_user), d
         }
         for r in rows
     ]
+
+
+@router.get("/convocatorias", response_model=List[ConvocatoriaOut])
+async def list_convocatorias(db: Session = Depends(get_db)):
+    """Lista todas las convocatorias guardadas en la tabla 'convocatorias'."""
+    rows = (
+        db.query(models.Convocatoria)
+        .order_by(
+            models.Convocatoria.created_db_at.desc(),
+            models.Convocatoria.created_at.desc().nullslast(),
+        )
+        .all()
+    )
+    return rows
 
 @router.post("/saved", status_code=201)
 async def create_saved(payload: SavedCreate, current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
@@ -119,19 +135,45 @@ async def generate_magazine(req: GenerateRequest | None = None):
 @router.post("/generate_pdf_from_ids")
 async def generate_pdf_from_ids(
     payload: IdsRequest,
+    background_tasks: BackgroundTasks,
     current_user: models.User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     try:
-        convocatorias_path = settings.CONVOCATORIAS_FILE
-        if not os.path.exists(convocatorias_path):
-             raise HTTPException(status_code=404, detail="Archivo convocatorias.json no encontrado")
-             
-        items = load_json_list(convocatorias_path)
-        selected = [it for it in items if it.get("id") in payload.ids]
-        
-        if not selected:
-             raise HTTPException(status_code=400, detail="No se encontraron convocatorias para los IDs enviados")
+        if not payload.ids:
+            raise HTTPException(status_code=400, detail="Debes enviar al menos un ID")
+
+        rows = (
+            db.query(models.Convocatoria)
+            .filter(models.Convocatoria.id.in_(payload.ids))
+            .all()
+        )
+
+        if not rows:
+            raise HTTPException(status_code=400, detail="No se encontraron convocatorias para los IDs enviados")
+
+        # Convert SQLAlchemy objects to plain dicts compatible with PDF engine expectations
+        selected = []
+        for r in rows:
+            item = {
+                "id": r.id,
+                "title": r.title,
+                "description": r.description,
+                "keywords": r.keywords or [],
+                "source": r.source,
+                "type": r.type,
+                "url": r.url,
+                "created_at": r.created_at.isoformat() if r.created_at else None,
+                "fecha_inicio": r.fecha_inicio.isoformat() if r.fecha_inicio else None,
+                "deadline": r.deadline.isoformat() if r.deadline else None,
+                "fecha_cierre": r.fecha_cierre.isoformat() if r.fecha_cierre else None,
+                "type_financy": r.type_financy,
+                "monto": r.monto,
+                "requisitos": r.requisitos or [],
+                "beneficios": r.beneficios or [],
+                "lugar": r.lugar,
+            }
+            selected.append(item)
 
         # Use Service
         pdf_path, pdf_name = generate_pdf(selected)
@@ -165,6 +207,23 @@ async def generate_pdf_from_ids(
             save_json_dict(sidecar_path, meta)
         except Exception as e:
             print(f"No se pudo guardar sidecar JSON: {e}")
+
+        # Upload to MinIO in background (non-blocking for the user)
+        try:
+            if pdf_path and os.path.exists(pdf_path):
+                with open(pdf_path, "rb") as f:
+                    pdf_bytes = f.read()
+
+                user_folder = f"{current_user.email}/Magazines"
+                background_tasks.add_task(
+                    minio_storage.upload_file,
+                    file_data=pdf_bytes,
+                    folder=user_folder,
+                    filename=pdf_name,
+                )
+        except Exception as e:
+            # No interrumpe la respuesta al usuario si falla el upload
+            print(f"No se pudo subir el PDF a MinIO: {e}")
             
         return {
             "status": "success", 

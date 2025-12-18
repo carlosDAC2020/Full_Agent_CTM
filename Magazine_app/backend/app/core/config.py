@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 
 class Settings:
     PROJECT_NAME = "Magazine App"
@@ -13,6 +14,9 @@ class Settings:
     
     # Paths
     OUTPUTS_DIR = os.getenv("OUTPUTS_DIR", "/app/outputs")
+    UPLOADS_DIR = os.path.join(OUTPUTS_DIR, "uploads")
+    SOURCES_FILE = os.getenv("SOURCES_FILE", os.path.join(OUTPUTS_DIR, "sources.json"))
+    CONVOCATORIAS_FILE = os.getenv("CONVOCATORIAS_FILE", os.path.join(OUTPUTS_DIR, "convocatorias.json"))
     
     # Security / Workers
     WORKER_TOKEN = os.getenv("WORKER_TOKEN", "change-me-strong")
@@ -22,8 +26,18 @@ class Settings:
     
     API_INTERNAL_URL = os.getenv("API_INTERNAL_URL", "http://localhost:8000")
     
-    # Email
-    EMAIL_SETTINGS_FILE = os.getenv("EMAIL_SETTINGS_FILE", "email_settings.json")
-    DEFAULT_SENDER_EMAIL = os.getenv("DEFAULT_SENDER_EMAIL", "noreply@cotecmar.com")
+    # SMTP / Demo mode
+    DEMO_MODE = os.getenv("DEMO_MODE", "true").lower() == "true"
+    SMTP_HOST = os.getenv("SMTP_HOST", "")
+    SMTP_PORT = int(os.getenv("SMTP_PORT", "587"))
+    SMTP_TLS = os.getenv("SMTP_TLS", "true").lower() == "true"
+    SMTP_USER = os.getenv("SMTP_USER", "")
+    SMTP_PASS = os.getenv("SMTP_PASS", "")
+    # Por defecto, el remitente es el usuario SMTP si está definido
+    DEFAULT_SENDER_EMAIL = os.getenv("DEFAULT_SENDER_EMAIL", SMTP_USER or "noreply@cotecmar.com")
+
+# Crear directorios necesarios al importar el módulo
+for directory in [Settings.OUTPUTS_DIR, Settings.UPLOADS_DIR]:
+    Path(directory).mkdir(parents=True, exist_ok=True)
 
 settings = Settings()

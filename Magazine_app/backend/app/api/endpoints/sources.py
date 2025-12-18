@@ -3,73 +3,124 @@ import json
 import requests
 from bs4 import BeautifulSoup
 from urllib.parse import urlparse, urljoin
-from typing import List, Dict, Any
-from fastapi import APIRouter, HTTPException, Path
+from typing import List, Dict, Any, Optional
+from fastapi import APIRouter, HTTPException, Path, Depends, Query
 
 from backend.app.core.config import settings
 from backend.app.schemas.source import SourcesSearchRequest, SourcesAISearchRequest, SourceCreate, SourceUpdate
-from backend.app.utils.files import load_json_list, save_json_list
 from backend.app.services.agent_service import llm_invoke, search_web
+from backend.app.db.session import get_db
+from backend.app.db import models
+from sqlalchemy.orm import Session
 
 router = APIRouter(prefix="/sources", tags=["sources"])
 
+
+def _source_to_dict(src: models.Source) -> Dict[str, Any]:
+    """Serializa un objeto Source a dict compatible con frontend previo (usa 'hidden')."""
+    return {
+        "id": src.id,
+        "name": src.name,
+        "type": src.type,
+        "url": src.url,
+        "hidden": not bool(src.is_active),
+    }
+
+
 @router.get("")
-async def get_sources() -> List[Dict[str, Any]]:
-    return load_json_list(settings.SOURCES_FILE)
+async def get_sources(
+    is_active: Optional[bool] = Query(None, description="Filtrar por estado activo/inactivo"),
+    db: Session = Depends(get_db),
+) -> List[Dict[str, Any]]:
+    q = db.query(models.Source)
+    if is_active is not None:
+        q = q.filter(models.Source.is_active == is_active)
+    items = q.order_by(models.Source.id.asc()).all()
+    return [_source_to_dict(it) for it in items]
+
 
 @router.post("")
-async def create_source(src: SourceCreate):
-    items = load_json_list(settings.SOURCES_FILE)
-    
-    def _next_id(items):
-        if not items: return 1
-        return max((int(x.get("id", 0)) for x in items), default=0) + 1
-        
-    new_obj = {"id": _next_id(items), "name": src.name, "type": src.type or "", "url": src.url, "hidden": False}
-    items.append(new_obj)
-    save_json_list(settings.SOURCES_FILE, items)
-    return new_obj
+async def create_source(src: SourceCreate, db: Session = Depends(get_db)):
+    # Validar unicidad de URL a nivel lógico antes de intentar insertar
+    existing = db.query(models.Source).filter(models.Source.url == src.url).first()
+    if existing:
+        raise HTTPException(status_code=400, detail="Ya existe una fuente con esa URL")
+
+    obj = models.Source(
+        name=src.name,
+        type=src.type or "",
+        url=src.url,
+        is_active=True,
+    )
+    db.add(obj)
+    db.commit()
+    db.refresh(obj)
+    return _source_to_dict(obj)
+
 
 @router.put("/{source_id}")
-async def update_source(source_id: int = Path(...), patch: SourceUpdate = None):
-    items = load_json_list(settings.SOURCES_FILE)
-    for it in items:
-        if int(it.get("id", -1)) == int(source_id):
-            if patch.name is not None: it["name"] = patch.name
-            if patch.type is not None: it["type"] = patch.type
-            if patch.url is not None: it["url"] = patch.url
-            if patch.hidden is not None: it["hidden"] = bool(patch.hidden)
-            save_json_list(settings.SOURCES_FILE, items)
-            return it
-    raise HTTPException(status_code=404, detail="Source no encontrada")
+async def update_source(
+    source_id: int = Path(...),
+    patch: SourceUpdate | None = None,
+    db: Session = Depends(get_db),
+):
+    if patch is None:
+        patch = SourceUpdate()
+
+    obj = db.query(models.Source).filter(models.Source.id == source_id).first()
+    if not obj:
+        raise HTTPException(status_code=404, detail="Source no encontrada")
+
+    # Validar URL única si se cambia
+    if patch.url is not None and patch.url != obj.url:
+        exists = db.query(models.Source).filter(models.Source.url == patch.url).first()
+        if exists:
+            raise HTTPException(status_code=400, detail="Ya existe una fuente con esa URL")
+
+    if patch.name is not None:
+        obj.name = patch.name
+    if patch.type is not None:
+        obj.type = patch.type
+    if patch.url is not None:
+        obj.url = patch.url
+    if patch.hidden is not None:
+        obj.is_active = not bool(patch.hidden)
+
+    db.commit()
+    db.refresh(obj)
+    return _source_to_dict(obj)
+
 
 @router.patch("/{source_id}/toggle")
-async def toggle_source(source_id: int = Path(...)):
-    items = load_json_list(settings.SOURCES_FILE)
-    for it in items:
-        if int(it.get("id", -1)) == int(source_id):
-            it["hidden"] = not bool(it.get("hidden", False))
-            save_json_list(settings.SOURCES_FILE, items)
-            return it
-    raise HTTPException(status_code=404, detail="Source no encontrada")
+async def toggle_source(source_id: int = Path(...), db: Session = Depends(get_db)):
+    obj = db.query(models.Source).filter(models.Source.id == source_id).first()
+    if not obj:
+        raise HTTPException(status_code=404, detail="Source no encontrada")
+
+    obj.is_active = not bool(obj.is_active)
+    db.commit()
+    db.refresh(obj)
+    return _source_to_dict(obj)
+
 
 @router.delete("/{source_id}")
-async def delete_source(source_id: int = Path(...)):
-    items = load_json_list(settings.SOURCES_FILE)
-    initial_len = len(items)
-    items = [it for it in items if int(it.get("id", -1)) != int(source_id)]
-    if len(items) == initial_len:
+async def delete_source(source_id: int = Path(...), db: Session = Depends(get_db)):
+    obj = db.query(models.Source).filter(models.Source.id == source_id).first()
+    if not obj:
         raise HTTPException(status_code=404, detail="Source no encontrada")
-    save_json_list(settings.SOURCES_FILE, items)
+
+    db.delete(obj)
+    db.commit()
     return {"status": "success", "message": "Source eliminada"}
 
 @router.post("/search")
-async def search_sources(payload: SourcesSearchRequest):
+async def search_sources(payload: SourcesSearchRequest, db: Session = Depends(get_db)):
     q = (payload.query or '').strip()
     if not q:
         return {"results": []}
 
-    existing = load_json_list(settings.SOURCES_FILE)
+    # Cargar fuentes existentes desde la BD
+    existing_rows = db.query(models.Source).all()
 
     def _norm(u: str) -> str:
         try:
@@ -79,8 +130,7 @@ async def search_sources(payload: SourcesSearchRequest):
             return f"{host}{path}"
         except Exception:
             return (u or '').lower().strip()
-
-    existing_map = { _norm(s.get('url', '')): s for s in existing }
+    existing_map = { _norm(s.url or ""): s for s in existing_rows if getattr(s, "url", None) }
 
     hits = search_web(q, tavily_max=3, brave_max=1)
 
@@ -94,14 +144,14 @@ async def search_sources(payload: SourcesSearchRequest):
             "title": title,
             "url": url,
             "exists": matched is not None,
-            "id": matched.get('id') if matched else None
+            "id": matched.id if matched else None,
         })
 
     results.sort(key=lambda x: (x.get('exists', False), (x.get('title') or '').lower()))
     return {"results": results}
 
 @router.post("/ai_search")
-async def ai_search_sources(payload: SourcesAISearchRequest | None = None):
+async def ai_search_sources(payload: SourcesAISearchRequest | None = None, db: Session = Depends(get_db)):
     fixed_topics = ["inteligencia artificial", "ciencia", "tecnología", "naval"]
     
     # Generate queries with LLM
@@ -137,9 +187,9 @@ async def ai_search_sources(payload: SourcesAISearchRequest | None = None):
             return f"{host}{path}"
         except Exception:
             return (u or '').lower().strip()
-            
-    existing = load_json_list(settings.SOURCES_FILE)
-    existing_map = { _norm(s.get('url', '')): s for s in existing }
+
+    existing_rows = db.query(models.Source).all()
+    existing_map = { _norm(s.url or ""): s for s in existing_rows if getattr(s, "url", None) }
     
     seen = set()
     unique = []
@@ -160,7 +210,7 @@ async def ai_search_sources(payload: SourcesAISearchRequest | None = None):
             "title": it['title'],
             "url": url,
             "exists": matched is not None,
-            "id": matched.get('id') if matched else None
+            "id": matched.id if matched else None,
         })
         
     results.sort(key=lambda x: (x.get('exists', False), (x.get('title') or '').lower()))
@@ -174,9 +224,7 @@ async def ai_search_sources(payload: SourcesAISearchRequest | None = None):
 # It's better to group it. I'll make a separate router instance or just include it here but note the URL might change to /sources/requirements/..
 # Or I can just define it as @router.get("/requirements/{item_id}") which becomes /sources/requirements/{item_id}.
 # The original was /requirements/{item_id}.
-# I will put it in a separate general router or here. 
-# Let's add it here as /requirements/{item_id} (relative to this file, but exposed how?).
-# I'll put it here.
+# I will put it here.
 async def get_requirements(item_id: int): 
     # Logic from main_api.py lines 674-768
     # ...

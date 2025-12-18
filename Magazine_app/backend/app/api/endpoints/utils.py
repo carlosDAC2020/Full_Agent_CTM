@@ -2,11 +2,14 @@ import os
 import shutil
 from fastapi import APIRouter, UploadFile, File, HTTPException, Depends
 from fastapi.responses import FileResponse, RedirectResponse
+from sqlalchemy.orm import Session
 
 from backend.app.core.config import settings
 from backend.app.schemas.email import EmailSettings, SendEmailRequest
 from backend.app.services.email_service import send_smtp_email
-from backend.app.utils.files import load_json_dict, save_json_dict, ensure_outputs
+from backend.app.utils.files import ensure_outputs
+from backend.app.db.session import get_db
+from backend.app.db import models
 
 router = APIRouter()
 
@@ -46,13 +49,16 @@ async def upload_pdf(pdf_file: UploadFile = File(...)):
 
 # Email Settings
 @router.get("/email_settings")
-async def get_email_settings():
-    raw = load_json_dict(settings.EMAIL_SETTINGS_FILE)
-    sender_email = raw.get("sender_email") or raw.get("sender") or settings.DEFAULT_SENDER_EMAIL
-    favs = raw.get("favorite_emails")
-    if not isinstance(favs, list):
-        favs = raw.get("favorites") if isinstance(raw.get("favorites"), list) else []
-    
+async def get_email_settings(db: Session = Depends(get_db)):
+    # Leer configuración desde BD; si no existe, usar DEFAULT_SENDER_EMAIL y lista vacía
+    cfg = db.query(models.EmailConfig).first()
+    if cfg is None:
+        sender_email = settings.DEFAULT_SENDER_EMAIL
+        favs = []
+    else:
+        sender_email = cfg.sender_email or settings.DEFAULT_SENDER_EMAIL
+        favs = cfg.favorite_emails or []
+
     return {
         "sender_email": sender_email,
         "favorite_emails": favs,
@@ -61,8 +67,9 @@ async def get_email_settings():
     }
 
 @router.post("/email_settings")
-async def save_email_settings(payload: EmailSettings):
+async def save_email_settings(payload: EmailSettings, db: Session = Depends(get_db)):
     import re
+
     def _is_email(x: str) -> bool:
         return bool(re.match(r"^[^\s@]+@[^\s@]+\.[^\s@]+$", x or ""))
 
@@ -72,13 +79,16 @@ async def save_email_settings(payload: EmailSettings):
     favs_in = payload.favorite_emails if isinstance(payload.favorite_emails, list) else payload.favorites
     favs = [e for e in (favs_in or []) if _is_email(e)]
 
-    data = {
-        "sender_email": sender_val,
-        "favorite_emails": favs,
-        "sender": sender_val,
-        "favorites": favs,
-    }
-    save_json_dict(settings.EMAIL_SETTINGS_FILE, data)
+    cfg = db.query(models.EmailConfig).first()
+    if cfg is None:
+        cfg = models.EmailConfig(sender_email=sender_val, favorite_emails=favs)
+        db.add(cfg)
+    else:
+        cfg.sender_email = sender_val
+        cfg.favorite_emails = favs
+
+    db.commit()
+
     return {"status": "ok"}
 
 @router.post("/send_email")
