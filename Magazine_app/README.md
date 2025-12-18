@@ -82,6 +82,11 @@ celery -A backend.celery_app worker --loglevel=info --pool=solo
 ```
 
 ---
+### 5. Migración de JSON a DB (Opcional)
+```bash
+docker compose exec magazine_api python -m backend.scripts.migrate_convocatorias
+```
+
 
 ## 📂 Estructura del Proyecto
 
