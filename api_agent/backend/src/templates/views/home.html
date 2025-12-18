@@ -11,12 +11,15 @@
         <div class="w-full md:w-5/12 lg:w-4/12 flex flex-col border-r border-gray-200 bg-gray-50/30">
             <!-- Header de Búsqueda -->
             <div class="p-6 space-y-4 border-b border-gray-100 bg-blue-50/50">
-                <div class="flex items-center gap-3 mb-2">
-                    <div
-                        class="w-10 h-10 bg-cotecmar-dark rounded-xl flex items-center justify-center text-white shadow-lg">
-                        <i class="ph ph-magnifying-glass text-xl"></i>
+                <div class="flex items-center justify-between mb-2">
+                    <div class="flex items-center gap-3">
+                        <button onclick="toggleSidebar()"
+                            class="w-10 h-10 bg-white border border-blue-100 rounded-xl flex items-center justify-center text-cotecmar-dark shadow-sm hover:bg-blue-50 transition-all active:scale-95"
+                            title="Alternar Menú">
+                            <i class="ph ph-sidebar-simple text-xl"></i>
+                        </button>
+                        <h2 class="text-xl font-bold text-cotecmar-dark tracking-tight">Convocatorias</h2>
                     </div>
-                    <h2 class="text-xl font-bold text-cotecmar-dark">Convocatorias</h2>
                 </div>
 
                 <div class="relative group">

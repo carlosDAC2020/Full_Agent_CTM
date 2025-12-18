@@ -154,19 +154,11 @@
     <main
         class="flex-1 flex flex-col relative w-full h-full bg-blue-50/30 backdrop-blur-sm transition-all duration-300">
 
-        <!-- HEADER COMÚN -->
-        <!-- HEADER COMÚN -->
-        <header class="absolute top-0 w-full p-4 flex justify-between items-center z-20">
-            <!-- Left: Sidebar Toggle -->
-            <button onclick="toggleSidebar()"
-                class="text-cotecmar-dark hover:bg-gray-100 p-2 rounded-lg transition-all duration-300 active:scale-90"
-                title="Alternar Menú">
-                <i class="ph ph-sidebar-simple text-xl"></i>
-            </button>
-
+        <!-- HEADER DINÁMICO -->
+        <header id="global-header" class="w-full flex justify-center items-center h-16 z-20 pointer-events-none">
             <!-- Center: Global Stepper -->
             <div id="global-stepper"
-                class="hidden absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center gap-1 bg-white/90 backdrop-blur-md px-1.5 py-1.5 rounded-full shadow-lg border border-gray-100/50 transition-all duration-300">
+                class="hidden pointer-events-auto flex items-center gap-1 bg-white/90 backdrop-blur-md px-1.5 py-1.5 rounded-full shadow-lg border border-gray-100/50 transition-all duration-300 scale-90">
 
                 <!-- Step 1 -->
                 <div id="step-dot-1"
@@ -212,11 +204,7 @@
                         4</div>
                     <span class="text-xs font-bold whitespace-nowrap hidden md:block">Final</span>
                 </div>
-
             </div>
-
-            <!-- Right: Empty for balance or future tools -->
-            <div class="ml-auto w-10"></div>
         </header>
 
         <!-- CONTENIDO DINÁMICO -->
