@@ -1,5 +1,5 @@
 from datetime import datetime
-from sqlalchemy import Column, Integer, String, DateTime, Date, ForeignKey, JSON, Text
+from sqlalchemy import Column, Integer, String, DateTime, Date, ForeignKey, JSON, Text, Boolean
 from sqlalchemy.orm import relationship
 
 from .session import Base
@@ -103,3 +103,16 @@ class EmailConfig(Base):
     id = Column(Integer, primary_key=True)
     sender_email = Column(String(255), nullable=False)
     favorite_emails = Column(JSON, nullable=False, default=list)
+
+
+class Source(Base):
+    __tablename__ = "sources"
+    __table_args__ = {"extend_existing": True}
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(255), nullable=False)
+    type = Column(String(255), nullable=False, default="")
+    url = Column(Text, nullable=False, unique=True)
+    is_active = Column(Boolean, nullable=False, default=True)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime, default=datetime.utcnow, nullable=False)
