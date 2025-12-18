@@ -51,6 +51,12 @@ export function resetInterface() {
     if (fileInput) fileInput.value = '';
     updateFileStatus(); // Update file text to 0
 
-    // 5. Refresh History (removes active highlight)
+    // 5. Reset Selection UI
+    const { noSelectionState, selectionDetails, convocatoriasList } = getElements();
+    if (noSelectionState) noSelectionState.classList.remove('hidden');
+    if (selectionDetails) selectionDetails.classList.add('hidden');
+
+    // 6. Refresh History and List
     loadHistory();
+    import('./search.js').then(search => search.filterOptions());
 }

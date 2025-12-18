@@ -1,6 +1,6 @@
 // Main Entry Point
 import { loadHistory, toggleSidebar } from './ui/sidebar.js';
-import { openDropdown, filterOptions, selectOption } from './ui/search.js';
+import { initInitialView, filterOptions, selectOption } from './ui/search.js';
 import {
     startAnalysis,
     updateFileStatus,
@@ -71,12 +71,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Inicializar componentes
     loadHistory();
+    initInitialView();
 
     // Exponer funciones globales necesarias para onclicks en el HTML
     window.toggleSidebar = toggleSidebar;
     window.resetInterface = resetInterface;
 
-    window.openDropdown = openDropdown;
     window.filterOptions = filterOptions;
     window.selectOption = selectOption;
 

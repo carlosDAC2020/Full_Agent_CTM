@@ -11,7 +11,10 @@ export function getElements() {
         step3: document.getElementById('step-3-schema'),
         step4: document.getElementById('step-4-final'),
         ideasContainer: document.getElementById('ideas-container'),
-        ideaEditor: document.getElementById('idea-editor')
+        ideaEditor: document.getElementById('idea-editor'),
+        convocatoriasList: document.getElementById('convocatorias-list'),
+        noSelectionState: document.getElementById('no-selection-state'),
+        selectionDetails: document.getElementById('selection-details')
     };
 }
 
@@ -20,9 +23,20 @@ import { store } from '../data/store.js';
 export function updateFileStatus() {
     const input = document.getElementById('file-upload');
     const dropZone = document.getElementById('drop-zone');
+    const countContainer = document.getElementById('file-count-container');
+    const countText = document.getElementById('file-count-text');
+
     if (input && input.files.length > 0) {
-        dropZone.classList.add('border-green-400', 'bg-green-50/50');
-        document.getElementById('upload-text-main').innerText = input.files.length + " Archivo(s)";
+        dropZone.classList.add('border-cotecmar-mid', 'bg-blue-50/50');
+        document.getElementById('upload-text-main').innerText = "Archivos Listos";
+        if (countContainer) {
+            countContainer.classList.remove('hidden');
+            countText.innerText = input.files.length;
+        }
+    } else {
+        dropZone.classList.remove('border-cotecmar-mid', 'bg-blue-50/50');
+        document.getElementById('upload-text-main').innerText = "Arrastre archivos o haga clic";
+        if (countContainer) countContainer.classList.add('hidden');
     }
 }
 

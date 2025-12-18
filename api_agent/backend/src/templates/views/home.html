@@ -3,80 +3,169 @@
 {% block title %}Cotecmar AI - Dashboard{% endblock %}
 
 {% block content %}
-<!-- VISTA A: BUSCADOR (Sin cambios mayores) -->
-<div id="initial-view"
-    class="absolute inset-0 flex flex-col items-center pt-24 md:pt-32 p-4 transition-all duration-500 z-10 overflow-y-auto custom-scrollbar">
+<!-- VISTA A: BUSCADOR REDISEÑADO (Dos columnas) -->
+<div id="initial-view" class="absolute inset-0 flex flex-col transition-all duration-500 z-10 overflow-hidden bg-white">
+    <div class="flex-1 flex overflow-hidden">
 
-    <div class="mb-8 text-center animate-slide-up">
-        <div
-            class="w-16 h-16 bg-cotecmar-dark rounded-2xl mx-auto flex items-center justify-center shadow-xl shadow-blue-900/20 mb-4">
-            <i class="ph ph-boat text-3xl text-white"></i>
-        </div>
-        <h1 class="text-2xl md:text-3xl font-bold text-cotecmar-dark mb-2">Gestión de Convocatorias</h1>
-        <p class="text-gray-500 text-sm max-w-md mx-auto">Busque o seleccione una convocatoria para comenzar el flujo de
-            generación de propuestas.</p>
-    </div>
+        <!-- COLUMNA IZQUIERDA: Listado y Filtros (40%) -->
+        <div class="w-full md:w-5/12 lg:w-4/12 flex flex-col border-r border-gray-200 bg-gray-50/30">
+            <!-- Header de Búsqueda -->
+            <div class="p-6 space-y-4 border-b border-gray-100 bg-white">
+                <div class="flex items-center gap-3 mb-2">
+                    <div
+                        class="w-10 h-10 bg-cotecmar-dark rounded-xl flex items-center justify-center text-white shadow-lg">
+                        <i class="ph ph-magnifying-glass text-xl"></i>
+                    </div>
+                    <h2 class="text-xl font-bold text-cotecmar-dark">Convocatorias</h2>
+                </div>
 
-    <div class="w-full max-w-2xl relative z-50 animate-slide-up" style="animation-delay: 0.1s;">
-        <div
-            class="bg-white rounded-2xl shadow-xl shadow-blue-900/10 border border-gray-200 p-2 flex items-center gap-2 relative ring-offset-2 focus-within:ring-2 focus-within:ring-cotecmar-light/50 transition-all">
-            <div class="pl-4 text-cotecmar-light flex-shrink-0">
-                <i class="ph ph-magnifying-glass text-2xl"></i>
-            </div>
-            <div class="flex-1 relative group">
-                <input type="text" id="search-input"
-                    class="w-full h-14 bg-transparent outline-none text-gray-700 text-lg font-medium placeholder-gray-400"
-                    placeholder="Escriba para buscar..." onfocus="openDropdown()" oninput="filterOptions()"
-                    autocomplete="off">
-                <div class="absolute right-2 top-0 h-full flex items-center pointer-events-none">
-                    <i id="dropdown-arrow" class="ph ph-caret-down text-gray-400 transition-transform duration-300"></i>
-                </div>
-                <div id="dropdown-options"
-                    class="hidden absolute top-full left-0 w-full mt-4 bg-white border border-gray-100 rounded-xl shadow-2xl py-2 overflow-hidden transition-all z-50 max-h-64 overflow-y-auto">
-                </div>
-            </div>
-            <button onclick="startAnalysis()"
-                class="bg-cotecmar-dark hover:bg-cotecmar-mid text-white h-12 w-12 rounded-xl flex-shrink-0 flex items-center justify-center transition-colors shadow-lg group">
-                <i
-                    class="ph ph-paper-plane-right text-xl font-bold group-hover:translate-x-0.5 transition-transform"></i>
-            </button>
-        </div>
-    </div>
-
-    <!-- Preview Panel -->
-    <div id="preview-panel"
-        class="hidden w-full max-w-2xl mt-6 animate-slide-up bg-white/90 backdrop-blur-md border border-gray-200 rounded-2xl p-6 shadow-xl z-10 relative">
-        <div class="absolute -top-3 left-8 w-6 h-6 bg-white border-t border-l border-gray-200 transform rotate-45 z-0">
-        </div>
-        <div class="relative z-10">
-            <div class="flex items-start gap-4 mb-6 border-b border-gray-100 pb-6">
-                <div
-                    class="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-cotecmar-dark flex items-center justify-center text-white shadow-lg shadow-blue-500/30 flex-shrink-0">
-                    <i class="ph ph-file-text text-2xl"></i>
-                </div>
-                <div>
-                    <h3 id="prev-title" class="font-bold text-gray-800 text-lg leading-tight">Título</h3>
-                    <p id="prev-desc" class="text-sm text-gray-500 mt-2 leading-relaxed">Desc...</p>
-                </div>
-            </div>
-            <div>
-                <label
-                    class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 block flex items-center gap-2"><i
-                        class="ph ph-paperclip"></i> Adjuntar Documentación</label>
                 <div class="relative group">
-                    <input type="file" id="file-upload"
-                        class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20" multiple
-                        onchange="updateFileStatus()">
-                    <div id="drop-zone"
-                        class="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center transition-all duration-300 group-hover:border-cotecmar-mid group-hover:bg-blue-50/50 bg-gray-50/50">
-                        <div id="upload-icon-wrapper"
-                            class="w-10 h-10 bg-white rounded-full shadow-sm mx-auto flex items-center justify-center mb-2 text-cotecmar-light group-hover:scale-110 transition-transform">
-                            <i class="ph ph-upload-simple text-xl"></i>
+                    <i
+                        class="ph ph-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-cotecmar-mid transition-colors"></i>
+                    <input type="text" id="search-input" oninput="filterOptions()"
+                        class="w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl outline-none focus:ring-4 focus:ring-cotecmar-light/10 focus:border-cotecmar-light transition-all text-sm font-medium"
+                        placeholder="Buscar por título o palabras clave..." autocomplete="off">
+                </div>
+
+                <div class="flex gap-2">
+                    <select id="filter-type" onchange="filterOptions()"
+                        class="flex-1 text-[10px] font-bold uppercase tracking-wider bg-gray-50 border border-gray-200 rounded-xl px-2 py-2 outline-none focus:border-cotecmar-light transition-colors text-gray-500">
+                        <option value="">Tipos</option>
+                    </select>
+                    <select id="filter-source" onchange="filterOptions()"
+                        class="flex-1 text-[10px] font-bold uppercase tracking-wider bg-gray-50 border border-gray-200 rounded-xl px-2 py-2 outline-none focus:border-cotecmar-light transition-colors text-gray-500">
+                        <option value="">Fuentes</option>
+                    </select>
+                    <select id="filter-period" onchange="filterOptions()"
+                        class="flex-1 text-[10px] font-bold uppercase tracking-wider bg-gray-50 border border-gray-200 rounded-xl px-2 py-2 outline-none focus:border-cotecmar-light transition-colors text-gray-500">
+                        <option value="">Periodo</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Listado Scrollable -->
+            <div id="convocatorias-list" class="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-3">
+                <!-- Se llena con JS: Tarjetas de convocatorias -->
+                <div class="flex flex-col items-center justify-center h-64 text-gray-300">
+                    <i class="ph ph-circle-notch animate-spin text-3xl mb-2"></i>
+                    <p class="text-xs font-medium uppercase tracking-widest">Cargando convocatorias...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- COLUMNA DERECHA: Detalle y Acciones (60%) -->
+        <div class="flex-1 flex flex-col bg-slate-50 relative overflow-hidden">
+
+            <!-- Estado Inicial: Nada seleccionado -->
+            <div id="no-selection-state"
+                class="absolute inset-0 flex flex-col items-center justify-center p-12 text-center animate-slide-up z-0">
+                <div
+                    class="w-24 h-24 bg-white rounded-3xl shadow-xl shadow-blue-900/5 flex items-center justify-center text-gray-200 mb-6 transform rotate-3">
+                    <i class="ph ph-file-search text-5xl"></i>
+                </div>
+                <h3 class="text-xl font-bold text-gray-700 mb-2">Seleccione una convocatoria</h3>
+                <p class="text-sm text-gray-400 max-w-sm leading-relaxed">Elija una convocatoria del listado lateral
+                    para ver su detalle estructurado e iniciar el proceso de asistencia con IA.</p>
+            </div>
+
+            <!-- Panel de Detalle (Se muestra al seleccionar) -->
+            <div id="selection-details"
+                class="hidden flex-1 overflow-y-auto custom-scrollbar p-6 md:p-10 relative z-10">
+                <div class="max-w-3xl mx-auto space-y-8 pb-20">
+
+                    <!-- Card de Cabecera -->
+                    <div
+                        class="bg-white rounded-3xl p-8 border border-gray-200 shadow-sm relative overflow-hidden group">
+                        <div
+                            class="absolute top-0 right-0 w-32 h-32 bg-blue-50/50 rounded-full -mr-16 -mt-16 transition-transform group-hover:scale-110">
                         </div>
-                        <h4 id="upload-text-main" class="text-sm font-medium text-gray-700">Arrastra archivos aquí</h4>
+
+                        <div class="relative z-10">
+                            <div class="flex flex-col md:flex-row md:items-start gap-6">
+                                <div
+                                    class="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-600 to-cotecmar-dark flex items-center justify-center text-white shadow-xl shadow-blue-500/20 flex-shrink-0 animate-slide-up">
+                                    <i class="ph ph-article text-3xl"></i>
+                                </div>
+                                <div class="space-y-3">
+                                    <h2 id="prev-title" class="text-2xl font-extrabold text-slate-800 leading-tight">
+                                        Título de la Convocatoria</h2>
+                                    <div class="flex flex-wrap gap-2">
+                                        <span id="prev-type"
+                                            class="px-3 py-1 bg-indigo-50 text-indigo-700 rounded-lg text-[10px] font-bold uppercase tracking-widest border border-indigo-100 italic">INVESTIGACIÓN</span>
+                                        <span id="prev-source"
+                                            class="px-3 py-1 bg-slate-100 text-slate-600 rounded-lg text-[10px] font-bold uppercase tracking-widest border border-slate-200">MINCIENCIAS</span>
+                                        <span id="prev-deadline"
+                                            class="px-3 py-1 bg-orange-50 text-orange-700 rounded-lg text-[10px] font-bold uppercase tracking-widest border border-orange-100">DICIEMBRE
+                                            2024</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mt-8 space-y-4">
+                                <label
+                                    class="text-[10px] font-extrabold text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2">
+                                    <span class="w-1 h-1 bg-cotecmar-light rounded-full"></span> RESUMEN Y OBJETIVOS
+                                </label>
+                                <div id="prev-desc"
+                                    class="text-sm text-slate-600 leading-relaxed bg-slate-50/50 p-6 rounded-2xl border border-slate-100 italic">
+                                    Información detallada sobre la convocatoria...
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Card de Adjuntos -->
+                    <div class="bg-white rounded-3xl p-8 border border-gray-200 shadow-sm transition-all duration-300">
+                        <label
+                            class="text-[10px] font-extrabold text-slate-400 uppercase tracking-[0.2em] mb-6 block flex items-center gap-2">
+                            <i class="ph ph-paperclip-horizontal text-xl text-cotecmar-light"></i> ADJUNTAR
+                            DOCUMENTACIÓN ADICIONAL
+                        </label>
+
+                        <div class="relative group">
+                            <input type="file" id="file-upload"
+                                class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20" multiple
+                                onchange="updateFileStatus()">
+                            <div id="drop-zone"
+                                class="border-2 border-dashed border-slate-200 rounded-3xl p-8 text-center transition-all duration-300 group-hover:border-cotecmar-mid group-hover:bg-blue-50/30 bg-slate-50/30">
+                                <div id="upload-icon-wrapper"
+                                    class="w-16 h-16 bg-white rounded-2xl shadow-md mx-auto flex items-center justify-center mb-4 text-slate-400 group-hover:text-cotecmar-mid group-hover:scale-110 transition-all duration-300">
+                                    <i class="ph ph-cloud-arrow-up text-3xl"></i>
+                                </div>
+                                <h4 id="upload-text-main" class="text-base font-bold text-slate-700">Arrastre archivos o
+                                    haga clic</h4>
+                                <p class="text-[11px] text-slate-400 mt-2 font-medium">Soporta propuestas técnicas,
+                                    anexos o referencias (PDF, Word, TXT)</p>
+
+                                <!-- File Count Badge -->
+                                <div id="file-count-container" class="mt-4 hidden animate-slide-up">
+                                    <div
+                                        class="inline-flex items-center gap-2 px-4 py-2 bg-cotecmar-dark text-white rounded-xl text-xs font-bold shadow-lg shadow-blue-900/20">
+                                        <i class="ph ph-files"></i>
+                                        <span id="file-count-text">0</span> Archivos seleccionados
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Botón Flotante de Acción -->
+                    <div class="flex justify-end pt-4">
+                        <button onclick="startAnalysis()"
+                            class="group bg-cotecmar-dark hover:bg-cotecmar-mid text-white px-10 py-5 rounded-2xl font-bold shadow-2xl shadow-blue-900/30 transition-all active:scale-95 flex items-center gap-4 relative overflow-hidden">
+                            <div
+                                class="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity">
+                            </div>
+                            <span class="relative z-10">Iniciar Asistencia de I+D+i</span>
+                            <i class="ph ph-sparkle text-xl transition-transform group-hover:rotate-12"></i>
+                        </button>
                     </div>
                 </div>
             </div>
+
+            <!-- Manchas decorativas -->
+            <div class="absolute -bottom-20 -right-20 w-64 h-64 bg-blue-100/30 blur-3xl rounded-full"></div>
+            <div class="absolute top-1/2 -left-20 w-48 h-48 bg-indigo-100/20 blur-3xl rounded-full"></div>
         </div>
     </div>
 </div>
