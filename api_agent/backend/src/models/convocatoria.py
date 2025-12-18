@@ -1,6 +1,6 @@
 from datetime import datetime
 from sqlalchemy import Column, Integer, String, DateTime, Date, Text, JSON
-from .database import Base
+from src.core.database import Base
 
 class Convocatoria(Base):
     __tablename__ = "convocatorias"
