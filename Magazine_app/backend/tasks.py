@@ -239,15 +239,17 @@ def run_requisitos(self, payload: Dict[str, Any] | None = None):
         except Exception:
             agent_llm = None
 
-        json_path = os.path.join("outputs", "convocatorias.json")
-        items = []
+        # 1) Obtener la convocatoria desde la BD (fuente de verdad)
+        db = SessionLocal()
         try:
-            with open(json_path, "r", encoding="utf-8") as f:
-                items = json.load(f)
-        except Exception:
-            items = []
-        item = next((it for it in items if int(it.get("id", -1)) == int(item_id)), None)
-        if not item:
+            conv = db_models.Convocatoria if hasattr(db_models, "Convocatoria") else None
+            row = None
+            if conv is not None:
+                row = db.query(conv).filter(conv.id == item_id).first()
+        finally:
+            db.close()
+
+        if not row:
             # No hay convocatoria con ese ID: error permanente, no tiene sentido reintentar.
             _finish_task_status(task_id, "failed")
             _publish_event("task_failed", {"id": task_id, "type": "requisitos", "error": "Convocatoria no encontrada"})
@@ -260,8 +262,15 @@ def run_requisitos(self, payload: Dict[str, Any] | None = None):
                 )
             except Exception:
                 pass
-            # Terminar la tarea limpiamente sin lanzar una excepción que dispare reintentos.
             return {"status": "not_found", "id": item_id, "requirements": []}
+
+        # Item base para el prompt (título, tipo, enlace)
+        item = {
+            "id": row.id,
+            "title": getattr(row, "title", None),
+            "type": getattr(row, "type", None),
+            "url": getattr(row, "url", None) or getattr(row, "source", None),
+        }
 
         url = item.get("url") or item.get("source")
         if not url:
@@ -295,7 +304,16 @@ def run_requisitos(self, payload: Dict[str, Any] | None = None):
                 except Exception:
                     pass
 
+        # 2) Actualizar el JSON legacy si existe (para compatibilidad con front antiguo)
         try:
+            json_path = os.path.join("outputs", "convocatorias.json")
+            items = []
+            try:
+                with open(json_path, "r", encoding="utf-8") as f:
+                    items = json.load(f)
+            except Exception:
+                items = []
+
             changed = False
             for it in items:
                 if int(it.get("id", -1)) == int(item_id):
