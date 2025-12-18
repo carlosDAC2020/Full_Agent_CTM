@@ -4,6 +4,7 @@ import time
 from datetime import datetime
 from typing import Any, Dict, Optional, List
 from celery import states
+from celery.exceptions import Ignore
 from .celery_app import celery_app
 import requests
 
@@ -247,7 +248,20 @@ def run_requisitos(self, payload: Dict[str, Any] | None = None):
             items = []
         item = next((it for it in items if int(it.get("id", -1)) == int(item_id)), None)
         if not item:
-            raise RuntimeError("Convocatoria no encontrada")
+            # No hay convocatoria con ese ID: error permanente, no tiene sentido reintentar.
+            _finish_task_status(task_id, "failed")
+            _publish_event("task_failed", {"id": task_id, "type": "requisitos", "error": "Convocatoria no encontrada"})
+            try:
+                _post_flow_status(
+                    task_id,
+                    status="error",
+                    name="Extracción de Requisitos",
+                    meta={"error": "Convocatoria no encontrada", "id": item_id},
+                )
+            except Exception:
+                pass
+            # Terminar la tarea limpiamente sin lanzar una excepción que dispare reintentos.
+            return {"status": "not_found", "id": item_id, "requirements": []}
 
         url = item.get("url") or item.get("source")
         if not url:
@@ -346,7 +360,7 @@ def run_requisitos(self, payload: Dict[str, Any] | None = None):
                 _send_smtp(sender, to, "Flujo requisitos falló", f"Error: {str(e)}", [])
         except Exception:
             pass
-        self.update_state(state=states.FAILURE, meta={"exc": str(e)})
+        # Dejar que Celery marque el estado como FAILURE basado en la excepción propagada.
         raise
     finally:
         try:
