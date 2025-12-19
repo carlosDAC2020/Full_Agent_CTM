@@ -2,7 +2,7 @@
 import os
 from langchain_core.messages import AIMessage, HumanMessage
 from langchain_google_genai import ChatGoogleGenerativeAI
-from src.agents.tech_surveillance.state import GraphState, ProposalIdea, GeneralInfo, ReportSchema
+from backend.agent.tech_surveillance.state import GraphState, ProposalIdea, GeneralInfo, ReportSchema
 
 # Asegúrate de importar el nuevo prompt
 from .prompts import INITIAL_SCHEMA_PROMPTS 

@@ -1,11 +1,10 @@
 import os
 
-from src.agents.tech_surveillance.state import GraphState
+from backend.agent.tech_surveillance.state import GraphState
 from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain_core.prompts import PromptTemplate
 
-from src.agents.tech_surveillance.routes.manager.squemas import RouteQuery
-from src.agents.tech_surveillance.routes.manager.prompts import template
+from backend.agent.tech_surveillance.routes.manager.squemas import RouteQuery
+from backend.agent.tech_surveillance.routes.manager.prompts import template
 
 # Modelo base para chat general
 chat_model = ChatGoogleGenerativeAI(

@@ -1,11 +1,9 @@
 import os
-import re
-import datetime
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.messages import AIMessage, HumanMessage
 from langchain.agents import create_agent
 
-from src.agents.tech_surveillance.state import GraphState, DocsPaths
+from backend.agent.tech_surveillance.state import GraphState
 from .prompts import SYSTEM_PROMPT, CONTENT_PROMPT_TEMPLATE
 
 from .tools import research_tools

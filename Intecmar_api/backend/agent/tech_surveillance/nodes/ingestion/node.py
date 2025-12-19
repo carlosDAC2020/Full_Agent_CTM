@@ -7,7 +7,7 @@ from langchain_core.prompts import PromptTemplate
 from .prompts import template
 
 # Importamos los nuevos esquemas del estado
-from src.agents.tech_surveillance.state import GraphState, CallInfo
+from backend.agent.tech_surveillance.state import GraphState, CallInfo
 
 # ... (definición de chat_model y extraction_llm sin cambios) ...
 chat_model = ChatGoogleGenerativeAI(
@@ -17,7 +17,6 @@ chat_model = ChatGoogleGenerativeAI(
     convert_system_message_to_human=True
 )
 extraction_llm = chat_model.with_structured_output(CallInfo)
-
 
 def ingestion_node(state: GraphState) -> dict:
     """

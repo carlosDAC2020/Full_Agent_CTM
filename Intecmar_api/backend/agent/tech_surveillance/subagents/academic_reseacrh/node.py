@@ -6,7 +6,7 @@ from langchain_core.messages import AIMessage, HumanMessage
 
 from .tools import research_tools
 from .prompts import RESEARCH_PROMPT_TEMPLATE
-from src.agents.tech_surveillance.state import GraphState, ReportSchema, TheoreticalFramework, GeneralInfo
+from backend.agent.tech_surveillance.state import GraphState, ReportSchema, TheoreticalFramework
 
 # Initialize model 
 model = ChatGoogleGenerativeAI(

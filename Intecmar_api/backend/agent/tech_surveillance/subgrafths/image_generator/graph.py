@@ -11,10 +11,10 @@ from google.genai import types
 from PIL import Image
 from io import BytesIO
 
-from src.agents.tech_surveillance.state import GraphState, ReportSchema, DocsPaths
+from backend.agent.tech_surveillance.state import GraphState, ReportSchema, DocsPaths
 from .prompts import template_image_prompt
 
-from src.services.storage import MinioService
+from backend.app.services.tech_surveillance.storage import MinioService
 
 # Instanciamos el servicio de almacenamiento
 storage_service = MinioService()

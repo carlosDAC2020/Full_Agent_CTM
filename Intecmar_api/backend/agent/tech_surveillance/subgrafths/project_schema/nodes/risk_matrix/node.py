@@ -6,7 +6,7 @@ from langchain_core.messages import AIMessage
 from langchain_google_genai import ChatGoogleGenerativeAI
 
 # Importamos los nuevos esquemas del estado
-from src.agents.tech_surveillance.state import GraphState, ReportSchema, ExecutionPlan
+from backend.agent.tech_surveillance.state import GraphState, ReportSchema, ExecutionPlan
 # Importamos los prompts 
 from .prompts import RISK_MATRIX_PROMPT
 from ...prompts import SHARED_CONTEXT_HEADER

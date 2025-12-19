@@ -3,42 +3,32 @@ from __future__ import annotations
 
 import os
 from langgraph.graph import END, StateGraph
-from src.agents.tech_surveillance.state import GraphState
+from backend.agent.tech_surveillance.state import GraphState
 
 # importamos rutas
-from src.agents.tech_surveillance.routes.manager.route import router_node
+from backend.agent.tech_surveillance.routes.manager.route import router_node
 
 # importamos nodos 
-from src.agents.tech_surveillance.nodes.ingestion.node import ingestion_node
-from src.agents.tech_surveillance.nodes.chat.node import chat_node
-from src.agents.tech_surveillance.nodes.report.node import report_node
-from src.agents.tech_surveillance.nodes.initial_schema_proyect.node import initial_schema_node
-from src.agents.tech_surveillance.nodes.initial_schema_proyect_doc.node import initial_schema_proyect_doc_node
-from src.agents.tech_surveillance.nodes.ipropose_ides.node import propose_ides_node
-from src.agents.tech_surveillance.nodes.presentation.node import presentation_generation_docs_node
+from backend.agent.tech_surveillance.nodes.ingestion.node import ingestion_node
+from backend.agent.tech_surveillance.nodes.chat.node import chat_node
+from backend.agent.tech_surveillance.nodes.report.node import report_node
+from backend.agent.tech_surveillance.nodes.initial_schema_proyect.node import initial_schema_node
+from backend.agent.tech_surveillance.nodes.initial_schema_proyect_doc.node import initial_schema_proyect_doc_node
+from backend.agent.tech_surveillance.nodes.ipropose_ides.node import propose_ides_node
+from backend.agent.tech_surveillance.nodes.presentation.node import presentation_generation_docs_node
 
 # importamos subagentes 
-from src.agents.tech_surveillance.subagents.academic_reseacrh.node import academic_research_node
-from src.agents.tech_surveillance.subagents.presentation_generation.node import presentation_generation_node
+from backend.agent.tech_surveillance.subagents.academic_reseacrh.node import academic_research_node
+from backend.agent.tech_surveillance.subagents.presentation_generation.node import presentation_generation_node
 
 # importamos subgrafos 
-from src.agents.tech_surveillance.subgrafths.image_generator.graph import Image_generator_subgraph
-from src.agents.tech_surveillance.subgrafths.project_schema.graph import project_schema_subgraph
+from backend.agent.tech_surveillance.subgrafths.image_generator.graph import Image_generator_subgraph
+from backend.agent.tech_surveillance.subgrafths.project_schema.graph import project_schema_subgraph
 
 
-# --- Configuración de Ejecución ---
-# Leemos las variables de entorno para controlar el flujo
-# CTM_EXECUTION_SCOPE: ALL, ACADEMIC, SCHEMA, IMAGE
-# CTM_EXECUTION_STRATEGY: SEQUENTIAL, PARALLEL (Solo aplica para ALL)
-EXECUTION_SCOPE = "IMAGE" #os.environ.get("CTM_EXECUTION_SCOPE", "ALL").upper()
-EXECUTION_STRATEGY = os.environ.get("CTM_EXECUTION_STRATEGY", "SEQUENTIAL").upper()
 
-print(f"--- CONFIGURACIÓN DE GRAFO ---")
-print(f"SCOPE: {EXECUTION_SCOPE}")
-print(f"STRATEGY: {EXECUTION_STRATEGY}")
 
 # --- Construir el Grafo ---
-
 workflow = StateGraph(GraphState)
 
 # Añadimos los nodos
@@ -94,7 +84,6 @@ workflow.add_edge("academic_research", "project_schemas")
 workflow.add_edge("project_schemas", "images_generator")
 workflow.add_edge("images_generator", "report")
 workflow.add_edge("report", END)
-
 
 
 # Compilamos el grafo

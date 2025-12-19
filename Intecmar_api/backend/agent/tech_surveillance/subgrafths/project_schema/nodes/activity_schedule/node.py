@@ -9,7 +9,7 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from pydantic import BaseModel, Field
 
 # Importamos los nuevos esquemas del estado
-from src.agents.tech_surveillance.state import GraphState, ReportSchema, ExecutionPlan, GeneralInfo
+from backend.agent.tech_surveillance.state import GraphState, ReportSchema, ExecutionPlan, GeneralInfo
 # Importamos los prompts 
 from .prompts import ACTIVITY_SCHEDULE_PROMPT
 from ...prompts import SHARED_CONTEXT_HEADER

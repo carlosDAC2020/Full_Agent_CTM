@@ -2,12 +2,12 @@ import os
 import re 
 import datetime
 
-from src.agents.tech_surveillance.state import GraphState, DocsPaths
+from backend.agent.tech_surveillance.state import GraphState, DocsPaths
 from langchain_core.messages import AIMessage
 
 from .utils import create_marp_from_text,  convert_marp_to_formats
 
-from src.services.storage import MinioService
+from backend.app.services.tech_surveillance.storage import MinioService
 
 # Instanciar servicio (o hacerlo global)
 storage_service = MinioService()
