@@ -48,3 +48,22 @@ pendientes
 - hacer q las interfaces tengan un etsilo homogeneo entre los pasos 
 
 - agregra el uso de documentos de refenrecia para la genracion de la presentacion inicial
+
+
+
+
+
+
+----------------------------------------------------
+
+migracion de agente a magazine 
+
+- codogo del agente de vigilancia tecnologica 
+
+- esquemas 
+
+- modelos y coneccion a base de datos 
+
+- servicios 
+
+- coneccion de worker y tasks para el worker 

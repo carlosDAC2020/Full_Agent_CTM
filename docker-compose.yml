@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   # ==========================================
-  # SHARED INFRASTRUCTURE
+  # INFRAESTRUCTURA COMPARTIDA
   # ==========================================
   
   shared_redis:
@@ -46,15 +46,14 @@ services:
       - agent_network
 
   # ==========================================
-  # MAGAZINE APP SERVICES
+  # INTECMAR API (Núcleo Unificado)
   # ==========================================
 
-  magazine_api:
+  intecmar_api:
     build: 
-      context: ./Magazine_app
-    container_name: magazine_api
+      context: ./Intecmar_api
+    container_name: intecmar_api
     command: uvicorn backend.app.main:app --host 0.0.0.0 --port 8000 --reload --reload-exclude outputs/*
-    user: "${UID:-1000}:${GID:-1000}"
     ports:
       - "8000:8000"
     env_file:
@@ -63,101 +62,71 @@ services:
       - PYTHONPATH=/app
       - REDIS_URL=redis://shared_redis:6379/0
       - DATABASE_URL=postgresql+psycopg2://shared_user:shared_pass@shared_postgres:5432/mag_db
-      - WORKER_TOKEN=${WORKER_TOKEN:-change-me-strong}
       - JWT_SECRET=${JWT_SECRET:-change-me}
       - MINIO_ENDPOINT=shared-minio:9000
       - MINIO_ACCESS_KEY=minioadmin
       - MINIO_SECRET_KEY=minioadmin
       - MINIO_SECURE=False
       - MINIO_BUCKET_USERS=users
+      # Agent specific envs
+      - CELERY_BROKER_URL=redis://shared_redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://shared_redis:6379/0
+      - SHARED_DATA_PATH=/app/backend/shared_data
     volumes:
-      - ./Magazine_app:/app
-      - ./Magazine_app/outputs:/app/outputs
+      - ./Intecmar_api:/app
     depends_on:
       - shared_redis
       - shared_postgres
     networks:
       - agent_network
 
+  # ==========================================
+  # INTECMAR WORKERS (Revista y Agente)
+  # ==========================================
+
   magazine_worker:
     build: 
-      context: ./Magazine_app
+      context: ./Intecmar_api
     container_name: magazine_worker
-    command: celery -A backend.celery_app worker -Q magazine -l info -c 1
-    user: "${UID:-1000}:${GID:-1000}"
+    command: celery -A backend.app.workers.magazine.celery_app worker -Q magazine -l info -c 1
     env_file:
       - .env
     environment:
       - PYTHONPATH=/app
       - REDIS_URL=redis://shared_redis:6379/0
       - DATABASE_URL=postgresql+psycopg2://shared_user:shared_pass@shared_postgres:5432/mag_db
-      - WORKER_TOKEN=${WORKER_TOKEN:-change-me-strong}
-      - API_INTERNAL_URL=http://magazine_api:8000
+      - API_INTERNAL_URL=http://intecmar_api:8000
       - MINIO_ENDPOINT=shared-minio:9000
       - MINIO_ACCESS_KEY=minioadmin
       - MINIO_SECRET_KEY=minioadmin
       - MINIO_SECURE=False
-      - MINIO_BUCKET_USERS=users
     volumes:
-      - ./Magazine_app:/app
-      - ./Magazine_app/outputs:/app/outputs
+      - ./Intecmar_api:/app
     depends_on:
       - shared_redis
-      - shared_postgres
-    networks:
-      - agent_network
-
-  # ==========================================
-  # API AGENT SERVICES
-  # ==========================================
-
-  agent-api:
-    build: 
-      context: ./api_agent/backend
-    container_name: agent-api
-    volumes:
-      - ./api_agent/backend/src:/app/src
-    ports:
-      - "8001:8000"
-    env_file: 
-      - .env
-    environment:
-      - CELERY_BROKER_URL=redis://shared_redis:6379/0
-      - CELERY_RESULT_BACKEND=redis://shared_redis:6379/0
-      - MINIO_ENDPOINT=http://shared-minio:9000
-      - MINIO_ACCESS_KEY=minioadmin
-      - MINIO_SECRET_KEY=minioadmin
-      - MINIO_BUCKET=agent-results
-      - MINIO_PUBLIC_ENDPOINT=http://localhost:9000 
-      - DATABASE_URL=postgresql://shared_user:shared_pass@shared_postgres:5432/mag_db
-      - JWT_SECRET=${JWT_SECRET:-change-me}
-    depends_on:
-      - shared_redis
-      - shared-minio
       - shared_postgres
     networks:
       - agent_network
 
   agent-worker:
     build: 
-      context: ./api_agent/backend
-    container_name: agent-worker
-    command: celery -A src.celery_worker.celery_app worker -Q agent -l info
-    volumes:
-      - ./api_agent/backend/src:/app/src
-      - ./api_agent/backend/shared_data:/app/shared_data
+      context: ./Intecmar_api
+    container_name: agent_worker
+    command: celery -A backend.app.workers.tech_surveillance.celery_app worker -Q agent -l info
     env_file: 
       - .env
     environment:
+      - PYTHONPATH=/app
       - CELERY_BROKER_URL=redis://shared_redis:6379/0
       - CELERY_RESULT_BACKEND=redis://shared_redis:6379/0
-      - SHARED_DATA_PATH=/app/shared_data
-      - MINIO_ENDPOINT=http://shared-minio:9000
+      - DATABASE_URL=postgresql+psycopg2://shared_user:shared_pass@shared_postgres:5432/mag_db
+      - SHARED_DATA_PATH=/app/backend/shared_data
+      - MINIO_ENDPOINT=shared-minio:9000
       - MINIO_ACCESS_KEY=minioadmin
       - MINIO_SECRET_KEY=minioadmin
       - MINIO_BUCKET=agent-results
-      - DATABASE_URL=postgresql://shared_user:shared_pass@shared_postgres:5432/mag_db
-      - JWT_SECRET=${JWT_SECRET:-change-me}
+    volumes:
+      - ./Intecmar_api:/app
     depends_on:
       - shared_redis
       - shared-minio

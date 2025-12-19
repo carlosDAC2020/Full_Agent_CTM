@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>INTECMAR | Plataforma de Vigilancia Tecnológica</title>
+  <link rel="icon" href="{{ url_for('assets', path='logo-cotecmar.png') }}" type="image/png">
+
+  <!-- Fuentes -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;700&display=swap"
+    rel="stylesheet">
+
+  <!-- Iconos -->
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+  <style>
+    :root {
+      /* PALETA DE COLORES */
+      --bg-body: #02040a;
+      --bg-card: rgba(15, 23, 42, 0.6);
+      --primary: #0ea5e9;
+      /* Sky Blue */
+      --primary-dark: #0284c7;
+      --accent: #6366f1;
+      /* Indigo */
+      --success: #10b981;
+      --text-main: #f8fafc;
+      --text-light: #94a3b8;
+      --border: rgba(255, 255, 255, 0.08);
+      --glow: rgba(14, 165, 233, 0.5);
+
+      --mouse-x: 50%;
+      --mouse-y: 50%;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: 'Montserrat', sans-serif;
+      color: var(--text-main);
+      background-color: var(--bg-body);
+      /* Grid animada de fondo */
+      background-image:
+        linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+      background-size: 60px 60px;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    /* Fuente Técnica */
+    .mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* --- SPOTLIGHT & BACKGROUND --- */
+    body::before {
+      content: "";
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(800px circle at var(--mouse-x) var(--mouse-y),
+          rgba(14, 165, 233, 0.1),
+          transparent 45%);
+      pointer-events: none;
+      z-index: 9999;
+      mix-blend-mode: screen;
+    }
+
+    /* --- ANIMACIONES DE ENTRADA (SCROLL REVEAL) --- */
+    .reveal {
+      opacity: 0;
+      transform: translateY(30px);
+      transition: all 0.8s cubic-bezier(0.5, 0, 0, 1);
+    }
+
+    .reveal.active {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* --- NAVBAR --- */
+    .navbar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      padding: 1rem 5%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(2, 4, 10, 0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      z-index: 1000;
+    }
+
+    .nav-logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      color: white;
+    }
+
+    .nav-logo img {
+      height: 35px;
+      filter: brightness(0) invert(1);
+    }
+
+    .brand-name {
+      font-weight: 900;
+      font-size: 1.4rem;
+      letter-spacing: -1px;
+    }
+
+    .brand-name span {
+      color: var(--primary);
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 30px;
+      list-style: none;
+    }
+
+    .nav-links a {
+      text-decoration: none;
+      color: #cbd5e1;
+      font-weight: 500;
+      transition: 0.3s;
+      position: relative;
+    }
+
+    .nav-links a::after {
+      content: '';
+      position: absolute;
+      width: 0;
+      height: 2px;
+      bottom: -5px;
+      left: 0;
+      background: var(--primary);
+      transition: width 0.3s;
+    }
+
+    .nav-links a:hover {
+      color: white;
+    }
+
+    .nav-links a:hover::after {
+      width: 100%;
+    }
+
+    .btn-cta {
+      background: linear-gradient(90deg, var(--primary), var(--accent));
+      color: white;
+      padding: 10px 24px;
+      border-radius: 4px;
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 0.9rem;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+      clip-path: polygon(10% 0, 100% 0, 100% 70%, 90% 100%, 0 100%, 0 30%);
+    }
+
+    .btn-cta:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 0 20px var(--glow);
+    }
+
+    /* --- HERO --- */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 120px 20px 60px;
+      position: relative;
+    }
+
+    /* Título INTECMAR Masivo */
+    .intecmar-title {
+      font-size: clamp(3rem, 10vw, 7rem);
+      /* Responsive grande */
+      font-weight: 900;
+      line-height: 1;
+      margin-bottom: 10px;
+      background: linear-gradient(to right bottom, #fff, #94a3b8);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      letter-spacing: -2px;
+      position: relative;
+      z-index: 2;
+    }
+
+    /* Efecto "Glow" detrás del texto */
+    .intecmar-title::after {
+      content: 'INTECMAR';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      color: rgba(14, 165, 233, 0.15);
+      z-index: -1;
+      filter: blur(15px);
+      transform: scale(1.05);
+    }
+
+    .hero-subtitle {
+      font-size: clamp(1.5rem, 4vw, 2.5rem);
+      font-weight: 700;
+      color: white;
+      margin-bottom: 20px;
+      background: linear-gradient(to right, var(--primary), var(--accent));
+      -webkit-background-clip: text;
+      color: transparent;
+      background-clip: text;
+    }
+
+    .hero p {
+      font-size: 1.1rem;
+      color: #94a3b8;
+      margin-bottom: 40px;
+      max-width: 700px;
+      line-height: 1.6;
+    }
+
+    /* Pills flotantes animadas */
+    .tech-badges {
+      display: flex;
+      gap: 15px;
+      justify-content: center;
+      margin-bottom: 30px;
+      flex-wrap: wrap;
+    }
+
+    .badge {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border);
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      animation: floatBadge 4s ease-in-out infinite;
+    }
+
+    .badge:nth-child(2) {
+      animation-delay: 1s;
+    }
+
+    .badge:nth-child(3) {
+      animation-delay: 2s;
+    }
+
+    @keyframes floatBadge {
+
+      0%,
+      100% {
+        transform: translateY(0);
+      }
+
+      50% {
+        transform: translateY(-10px);
+      }
+    }
+
+    /* --- COMPARISON TABLE (Por qué INTECMAR) --- */
+    .comparison-section {
+      padding: 100px 5%;
+      position: relative;
+    }
+
+    .comparison-container {
+      max-width: 1000px;
+      margin: 0 auto;
+      background: var(--bg-card);
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      overflow: hidden;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+    }
+
+    .comp-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+    }
+
+    .comp-table th,
+    .comp-table td {
+      padding: 25px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .comp-table th {
+      font-weight: 700;
+      text-transform: uppercase;
+      font-size: 0.85rem;
+      letter-spacing: 1px;
+      color: #64748b;
+    }
+
+    /* Columna INTECMAR destacada */
+    .col-intecmar {
+      background: rgba(14, 165, 233, 0.05);
+      position: relative;
+    }
+
+    .col-intecmar::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 2px;
+      background: var(--primary);
+      box-shadow: 0 0 15px var(--primary);
+    }
+
+    .comp-table td {
+      font-size: 0.95rem;
+      color: #cbd5e1;
+    }
+
+    .highlight-text {
+      color: white;
+      font-weight: 600;
+      font-size: 1.1rem;
+    }
+
+    .check-icon {
+      color: var(--success);
+      font-size: 1.2rem;
+      margin-right: 8px;
+    }
+
+    .cross-icon {
+      color: #ef4444;
+      font-size: 1.2rem;
+      margin-right: 8px;
+    }
+
+    /* --- FEATURES GRID --- */
+    .section-title {
+      text-align: center;
+      margin-bottom: 70px;
+    }
+
+    .section-title h2 {
+      font-size: 2.2rem;
+      margin-bottom: 10px;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 30px;
+      padding: 0 5%;
+    }
+
+    .feature-card {
+      background: linear-gradient(145deg, rgba(30, 41, 59, 0.4), rgba(15, 23, 42, 0.6));
+      padding: 30px;
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      transition: 0.4s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .feature-card:hover {
+      transform: translateY(-10px);
+      border-color: var(--primary);
+    }
+
+    .feature-card:hover .icon-box {
+      background: var(--primary);
+      color: white;
+      transform: scale(1.1) rotate(5deg);
+    }
+
+    .icon-box {
+      width: 50px;
+      height: 50px;
+      background: rgba(14, 165, 233, 0.1);
+      color: var(--primary);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      margin-bottom: 20px;
+      transition: 0.4s;
+    }
+
+    /* --- API TERMINAL --- */
+    .terminal-window {
+      background: #0f172a;
+      border-radius: 10px;
+      border: 1px solid #334155;
+      padding: 20px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .terminal-header {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 15px;
+    }
+
+    .dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+    }
+
+    .dot-r {
+      background: #ef4444;
+    }
+
+    .dot-y {
+      background: #eab308;
+    }
+
+    .dot-g {
+      background: #22c55e;
+    }
+
+    /* --- FOOTER --- */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 50px 5%;
+      background: #010205;
+      font-size: 0.9rem;
+      color: #64748b;
+      text-align: center;
+    }
+
+    /* Media Queries */
+    @media (max-width: 768px) {
+      .intecmar-title {
+        font-size: 3.5rem;
+      }
+
+      .nav-links {
+        display: none;
+      }
+
+      .comparison-container {
+        overflow-x: auto;
+      }
+
+      .comp-table {
+        min-width: 600px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <nav class="navbar">
+    <a href="#" class="nav-logo">
+      <img src="{{ url_for('assets', path='logo-cotecmar.png') }}" onerror="this.src='/assets/logo-cotecmar.png'"
+        alt="Logo">
+      <div class="brand-name">INTECMAR</div>
+    </a>
+    <ul class="nav-links">
+      <li><a href="#ventajas">Ventajas</a></li>
+      <li><a href="#features">Capacidades</a></li>
+      <li><a href="#api">API</a></li>
+    </ul>
+    <a href="login.html" class="btn-cta">Plataforma <i class="ph-bold ph-arrow-right"></i></a>
+  </nav>
+
+  <!-- HERO SECTION -->
+  <header class="hero">
+    <div class="tech-badges reveal">
+      <div class="badge mono"><i class="ph-bold ph-brain"></i> Gemini AI 1.5</div>
+      <div class="badge mono"><i class="ph-bold ph-share-network"></i> LangGraph</div>
+      <div class="badge mono"><i class="ph-bold ph-lightning"></i> FastAPI</div>
+    </div>
+
+    <h1 class="intecmar-title reveal">INTECMAR</h1>
+    <h2 class="hero-subtitle reveal">Vigilancia Tecnológica con Agentes de IA</h2>
+
+    <p class="reveal">
+      La herramienta definitiva de COTECMAR para la <strong>búsqueda, curaduría y generación</strong> de inteligencia
+      estratégica. Convierte horas de investigación en magazines profesionales en minutos.
+    </p>
+
+    <div style="display: flex; gap: 20px; justify-content: center;" class="reveal">
+      <a href="login.html" class="btn-cta" style="padding: 14px 32px; font-size: 1rem;">
+        Iniciar Motor
+      </a>
+      <a href="#api"
+        style="padding: 14px 32px; border: 1px solid var(--border); border-radius: 4px; color: white; text-decoration: none; font-weight: 600; transition:0.3s;"
+        onmouseover="this.style.borderColor='white'" onmouseout="this.style.borderColor='rgba(255,255,255,0.08)'">
+        Ver Documentación
+      </a>
+    </div>
+  </header>
+
+  <!-- TABLA COMPARATIVA (EL POR QUÉ) -->
+  <section id="ventajas" class="comparison-section">
+    <div class="section-title reveal">
+      <h2>¿Por qué INTECMAR?</h2>
+      <p>Evolucionamos la vigilancia tecnológica tradicional a un proceso autónomo.</p>
+    </div>
+
+    <div class="comparison-container reveal">
+      <table class="comp-table">
+        <thead>
+          <tr>
+            <th style="width: 30%;">Característica</th>
+            <th style="width: 35%;">Método Tradicional</th>
+            <th style="width: 35%; color: var(--primary);">INTECMAR AI</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Búsqueda de Información</strong></td>
+            <td><i class="cross-icon ph-bold ph-x"></i> Manual en múltiples portales</td>
+            <td class="col-intecmar highlight-text"><i class="check-icon ph-bold ph-check"></i> Agentes OSINT (Tavily +
+              Brave)</td>
+          </tr>
+          <tr>
+            <td><strong>Análisis de Documentos</strong></td>
+            <td><i class="cross-icon ph-bold ph-clock"></i> Lectura humana (Horas/Días)</td>
+            <td class="col-intecmar highlight-text"><i class="check-icon ph-bold ph-check"></i> Procesamiento LLM
+              (Segundos)</td>
+          </tr>
+          <tr>
+            <td><strong>Extracción de Datos</strong></td>
+            <td><i class="cross-icon ph-bold ph-x"></i> Copiar y pegar en Excel</td>
+            <td class="col-intecmar highlight-text"><i class="check-icon ph-bold ph-check"></i> Tablas estructuradas
+              automáticas</td>
+          </tr>
+          <tr>
+            <td><strong>Entregable Final</strong></td>
+            <td><i class="cross-icon ph-bold ph-file-text"></i> Documento Word plano</td>
+            <td class="col-intecmar highlight-text"><i class="check-icon ph-bold ph-check"></i> Magazine PDF / Flipbook
+              Diseño Pro</td>
+          </tr>
+          <tr>
+            <td><strong>Disponibilidad</strong></td>
+            <td><i class="cross-icon ph-bold ph-clock"></i> Horario laboral</td>
+            <td class="col-intecmar highlight-text"><i class="check-icon ph-bold ph-check"></i> 24/7 Asíncrono (Celery)
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- CARACTERÍSTICAS -->
+  <section id="features" style="padding: 100px 0;">
+    <div class="section-title reveal">
+      <h2>Potencia tu Investigación</h2>
+      <p>Stack tecnológico de defensa aplicado a la inteligencia competitiva.</p>
+    </div>
+
+    <div class="grid-3">
+      <div class="feature-card reveal">
+        <div class="icon-box"><i class="ph-bold ph-robot"></i></div>
+        <h3>Agentes Autónomos</h3>
+        <p>Orquestación inteligente con <strong>LangGraph</strong>. Los agentes planifican la búsqueda, ejecutan
+          consultas y validan la calidad de la información encontrada.</p>
+      </div>
+      <div class="feature-card reveal">
+        <div class="icon-box"><i class="ph-bold ph-file-pdf"></i></div>
+        <h3>Motor de Magazines</h3>
+        <p>Generación dinámica de PDFs. El sistema diagrama automáticamente portadas, índices y contenido, listo para
+          presentar a gerencia.</p>
+      </div>
+      <div class="feature-card reveal">
+        <div class="icon-box"><i class="ph-bold ph-crosshair"></i></div>
+        <h3>Precisión OSINT</h3>
+        <p>Integración con motores de búsqueda avanzada para rastrear convocatorias ocultas, papers recientes y eventos
+          de nicho.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- API SECTION -->
+  <section id="api" style="padding: 100px 5%; background: rgba(0,0,0,0.3);">
+    <div class="section-title reveal">
+      <h2>API-First Architecture</h2>
+      <p>Diseñado para desarrolladores e integración continua.</p>
+    </div>
+    <div class="terminal-window reveal">
+      <div class="terminal-header">
+        <div class="dot dot-r"></div>
+        <div class="dot dot-y"></div>
+        <div class="dot dot-g"></div>
+        <span style="margin-left: 10px; color: #64748b;">API Endpoints Clave</span>
+      </div>
+      <div style="color: #e2e8f0; line-height: 1.7; font-size: 0.9rem;">
+        <p style="margin-bottom: 12px; color: #94a3b8;">
+          La API está organizada en routers bajo <span class="mono">/api</span>:
+        </p>
+        <ul style="list-style: none; padding-left: 0; margin: 0;">
+          <li style="margin-bottom: 8px;">
+            <span class="mono" style="color: #38bdf8;">/auth</span>
+            <span style="color: #94a3b8;">&nbsp;— Registro y login (JWT).</span>
+          </li>
+          <li style="margin-bottom: 8px;">
+            <span class="mono" style="color: #38bdf8;">/magazines</span>
+            <span style="color: #94a3b8;">&nbsp;— Generación y listado de magazines.</span>
+          </li>
+          <li style="margin-bottom: 8px;">
+            <span class="mono" style="color: #38bdf8;">/tasks</span>
+            <span style="color: #94a3b8;">&nbsp;— Gestión y monitoreo de tareas en segundo plano (SSE).</span>
+          </li>
+          <li style="margin-bottom: 8px;">
+            <span class="mono" style="color: #38bdf8;">/sources</span>
+            <span style="color: #94a3b8;">&nbsp;— Gestión y búsqueda de fuentes de información.</span>
+          </li>
+          <li>
+            <span class="mono" style="color: #38bdf8;">/utils</span>
+            <span style="color: #94a3b8;">&nbsp;— Subida de archivos, visor y utilidades de correo.</span>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div style="margin-bottom: 20px; opacity: 0.6;">
+      <img src="{{ url_for('assets', path='logo-cotecmar.png') }}" onerror="this.src='/assets/logo-cotecmar.png'"
+        alt="Logo" style="height: 30px; filter: brightness(0) invert(1);">
+    </div>
+    <p>&copy; 2025 COTECMAR. Todos los derechos reservados.</p>
+    <p class="mono" style="font-size: 0.75rem; margin-top: 10px; color: #475569;">
+      Powered by INTECMAR Platform v2.0
+    </p>
+  </footer>
+
+  <script>
+    // --- LÓGICA DE ANIMACIÓN (Scroll Reveal) ---
+    const observerOptions = {
+      threshold: 0.1,
+      rootMargin: "0px 0px -50px 0px"
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('active');
+          observer.unobserve(entry.target); // Solo animar una vez
+        }
+      });
+    }, observerOptions);
+
+    document.querySelectorAll('.reveal').forEach(el => {
+      observer.observe(el);
+    });
+
+    // --- MOUSE SPOTLIGHT ---
+    document.addEventListener('mousemove', (e) => {
+      document.body.style.setProperty('--mouse-x', e.clientX + 'px');
+      document.body.style.setProperty('--mouse-y', e.clientY + 'px');
+    });
+  </script>
+
+</body>
+
+</html>

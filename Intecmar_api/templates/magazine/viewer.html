@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FlipBook</title>
+
+  <link rel="icon" href="{{ url_for('assets', path='logo-cotecmar.png') }}" type="image/png">
+  <style>
+    html,
+    body {
+      margin: 0;
+      height: 100%;
+      overflow: hidden;
+      background: #333;
+      font-family: system-ui, sans-serif;
+    }
+
+    .stage {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+    }
+
+    .book-container {
+      position: relative;
+    }
+
+    #flipbook {
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    }
+
+    #flipbook .page {
+      background-color: #fff;
+      background-repeat: no-repeat;
+      background-size: contain;
+    }
+
+    #flipbook .even {
+      background-image: linear-gradient(to right, rgba(0, 0, 0, 0.05) 0%, rgba(0, 0, 0, 0) 10%);
+    }
+
+    #flipbook .odd {
+      background-image: linear-gradient(to left, rgba(0, 0, 0, 0.05) 0%, rgba(0, 0, 0, 0) 10%);
+    }
+
+    #loader {
+      color: #fff;
+      font-size: 1.5em;
+      text-align: center;
+    }
+
+    #loader .small {
+      font-size: .7em;
+      color: #ccc;
+      display: block;
+      margin-top: 8px;
+    }
+
+    .controls {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+      z-index: 1001;
+    }
+
+    .controls button {
+      background: rgba(0, 0, 0, .5);
+      border: 1px solid rgba(255, 255, 255, .2);
+      color: #fff;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: grid;
+      place-items: center;
+      transition: background .2s ease;
+    }
+
+    .controls button:hover:not(:disabled) {
+      background: rgba(0, 0, 0, .8);
+    }
+
+    .controls button:disabled {
+      opacity: .4;
+      cursor: not-allowed;
+    }
+
+    .controls svg {
+      width: 24px;
+      height: 24px;
+    }
+
+    .page-indicator {
+      color: #fff;
+      background: rgba(0, 0, 0, .5);
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 16px;
+      user-select: none;
+    }
+
+    .error {
+      color: #fecaca;
+      padding: 12px 16px;
+      background: #7f1d1d;
+      border-radius: 8px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="stage">
+    <div id="loader">Cargando documento...<span class="small" id="loader-progress"></span></div>
+    <div class="book-container" style="display:none;">
+      <div id="flipbook"></div>
+    </div>
+  </div>
+
+  <audio id="page-audio" preload="auto"
+    src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_c7a2d97e7d.mp3?filename=page-turn-102995.mp3"></audio>
+
+  <div class="controls" style="display:none;">
+    <button id="prev-btn" title="Página Anterior">
+      <svg fill="currentColor" viewBox="0 0 20 20">
+        <path fill-rule="evenodd"
+          d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
+          clip-rule="evenodd" />
+      </svg>
+    </button>
+    <div class="page-indicator"><span id="page-current">1</span> de <span id="page-total">N</span></div>
+    <button id="next-btn" title="Página Siguiente">
+      <svg fill="currentColor" viewBox="0 0 20 20">
+        <path fill-rule="evenodd"
+          d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+          clip-rule="evenodd" />
+      </svg>
+    </button>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/turn.js/3/turn.min.js"></script>
+
+  <script>
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    const stage = document.querySelector('.stage');
+    const loader = document.getElementById('loader');
+    const loaderProgress = document.getElementById('loader-progress');
+    const bookContainer = document.querySelector('.book-container');
+    const flipbook = $('#flipbook');
+    const pageCurrent = document.getElementById('page-current');
+    const pageTotal = document.getElementById('page-total');
+    const prevBtn = document.getElementById('prev-btn');
+    const nextBtn = document.getElementById('next-btn');
+
+    window.addEventListener('DOMContentLoaded', () => {
+      const params = new URLSearchParams(location.search);
+      const pdfUrl = params.get('file');
+      if (!pdfUrl) {
+        stage.innerHTML = '<div class="error">Falta el parámetro "file" en la URL para cargar el PDF.</div>';
+      } else {
+        if (typeof window.jQuery === 'undefined') {
+          stage.innerHTML = '<div class="error">jQuery no se cargó. Verifica tu conexión o desactiva bloqueadores.</div>';
+        } else if (typeof jQuery.fn.turn !== 'function') {
+          stage.innerHTML = '<div class="error">Turn.js no se cargó. Verifica tu conexión o desactiva bloqueadores.</div>';
+        } else {
+          initFlipbook(pdfUrl).catch(err => {
+            console.error(err);
+            stage.innerHTML = '<div class="error">No se pudo cargar el PDF. Revisa la consola para más detalles.</div>';
+          });
+        }
+      }
+    });
+
+    async function initFlipbook(url) {
+      const pdf = await pdfjsLib.getDocument(url).promise;
+      const numPages = pdf.numPages;
+      pageTotal.textContent = numPages;
+
+      let firstPage;
+      for (let pageNum = 1; pageNum <= numPages; pageNum++) {
+        loaderProgress.textContent = `Renderizando página ${pageNum} de ${numPages}...`;
+        const page = await pdf.getPage(pageNum);
+        if (pageNum === 1) firstPage = page;
+        const viewport = page.getViewport({ scale: 2.0 });
+        const canvas = document.createElement('canvas');
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
+        const context = canvas.getContext('2d');
+        await page.render({ canvasContext: context, viewport }).promise;
+
+        const pageElement = document.createElement('div');
+        pageElement.className = 'page';
+        pageElement.style.backgroundImage = `url(${canvas.toDataURL()})`;
+        flipbook.append(pageElement);
+      }
+
+      loader.style.display = 'none';
+      bookContainer.style.display = 'block';
+
+      const pageViewport = firstPage.getViewport({ scale: 1 });
+      const aspectRatio = pageViewport.width / pageViewport.height;
+      const bookHeight = window.innerHeight * 0.9;
+      let currentDisplay = 'single';
+
+      function setSizeByDisplay(displayMode) {
+        const width = displayMode === 'double' ? (bookHeight * aspectRatio * 2) : (bookHeight * aspectRatio);
+        flipbook.turn('size', width, bookHeight);
+      }
+
+      flipbook.turn({
+        width: bookHeight * aspectRatio,
+        height: bookHeight,
+        elevation: 50,
+        gradients: true,
+        autoCenter: true,
+        duration: 800,
+        when: {
+          turning: function () {
+            const audio = document.getElementById('page-audio');
+            if (audio) {
+              audio.volume = 0.35;
+              audio.currentTime = 0;
+              audio.play().catch(() => { });
+            }
+          },
+          turned: function (event, page, view) {
+            pageCurrent.textContent = Array.isArray(view) && view.length ? view.join(' - ') : String(page);
+            prevBtn.disabled = page === 1;
+            nextBtn.disabled = page === numPages;
+            const desired = (page === 1 || page === numPages) ? 'single' : 'double';
+            if (desired !== currentDisplay) {
+              currentDisplay = desired;
+              flipbook.turn('display', desired);
+              setSizeByDisplay(desired);
+            }
+          }
+        }
+      });
+
+      flipbook.turn('display', 'single');
+      setSizeByDisplay('single');
+
+      document.querySelector('.controls').style.display = 'flex';
+      prevBtn.addEventListener('click', () => flipbook.turn('previous'));
+      nextBtn.addEventListener('click', () => flipbook.turn('next'));
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowLeft') flipbook.turn('previous');
+        if (e.key === 'ArrowRight') flipbook.turn('next');
+      });
+      window.addEventListener('resize', () => {
+        const newHeight = window.innerHeight * 0.9;
+        const width = currentDisplay === 'double' ? (newHeight * aspectRatio * 2) : (newHeight * aspectRatio);
+        flipbook.turn('size', width, newHeight);
+      });
+    }
+  </script>
+
+</body>
+
+</html>
