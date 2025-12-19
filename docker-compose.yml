@@ -128,7 +128,7 @@ services:
     volumes:
       - ./Intecmar_api:/app
     depends_on:
-      - shared_redis
+      - shared-redis
       - shared-minio
       - shared_postgres
     networks:
