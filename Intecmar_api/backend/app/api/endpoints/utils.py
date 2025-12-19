@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 
 from backend.app.core.config import settings
 from backend.app.schemas.email import EmailSettings, SendEmailRequest
-from Intecmar_api.backend.app.services.magazine.email_service import send_smtp_email
+from backend.app.services.magazine.email_service import send_smtp_email
 from backend.app.utils.files import ensure_outputs
 from backend.app.db.session import get_db
 from backend.app.db import models

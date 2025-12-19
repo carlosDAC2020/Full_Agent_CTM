@@ -8,7 +8,7 @@ celery_app = Celery(
     "agent_worker",
     broker=broker_url,
     backend=result_backend,
-    include=["src.tasks.agent_tasks"]
+    include=["backend.app.workers.tech_surveillance.tasks"]
 )
 
 celery_app.conf.update(
@@ -19,12 +19,12 @@ celery_app.conf.update(
     enable_utc=True,
     task_default_queue='agent',
     task_routes={
-        'src.tasks.*': {'queue': 'agent'},
+        'backend.app.workers.tech_surveillance.tasks.*': {'queue': 'agent'},
     }
 )
 
 # Explicit import to ensure task registration when worker starts
 try:
-    import Intecmar_api.backend.app.workers.tech_surveillance.tasks  
+    import backend.app.workers.tech_surveillance.tasks  
 except Exception:
     pass

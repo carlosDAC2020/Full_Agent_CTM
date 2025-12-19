@@ -11,7 +11,7 @@ celery_app = Celery(
     broker=broker_url,
     backend=result_backend,
     include=[
-        "backend.tasks",
+        "backend.app.workers.magazine.tasks",
     ],
 )
 
@@ -23,11 +23,11 @@ celery_app.conf.update(
     worker_max_tasks_per_child=100,
     task_default_queue='magazine',
     task_routes={
-        'backend.tasks.*': {'queue': 'magazine'},
+        'backend.app.workers.magazine.tasks.*': {'queue': 'magazine'},
     }
 )
 # Explicit import to ensure task registration when worker starts
 try:
-    import Intecmar_api.backend.app.workers.magazine.tasks  # noqa: F401
+    import backend.app.workers.magazine.tasks  # noqa: F401
 except Exception:
     pass

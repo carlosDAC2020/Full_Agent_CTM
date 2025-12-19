@@ -86,7 +86,7 @@ async def run_agent_stream(input_state: dict, task_instance):
 
     return final_state
 
-@celery_app.task(bind=True, name="src.tasks.agent_tasks.process_agent_step")
+@celery_app.task(bind=True, name="backend.app.workers.tech_surveillance.tasks.process_agent_step")
 def task_process_agent_step(self, session_id: str, input_data: dict, step_type: str):
     """
     Tarea Celery principal.

@@ -13,8 +13,8 @@ from backend.app.db.session import get_db
 from backend.app.db import models
 from backend.app.core.security import get_current_user
 from backend.app.schemas.task import TaskCreate, FlowStatusUpdate
-from Intecmar_api.backend.app.services.magazine.redis_service import get_redis, task_key, acquire_flow_lock, release_flow_lock
-from Intecmar_api.backend.app.workers.magazine.celery_app import celery_app
+from backend.app.services.magazine.redis_service import get_redis, task_key, acquire_flow_lock, release_flow_lock
+from backend.app.workers.magazine.celery_app import celery_app
 
 router = APIRouter() # Mounted at /tasks usually, but main_api had mixed /tasks and /flows
 

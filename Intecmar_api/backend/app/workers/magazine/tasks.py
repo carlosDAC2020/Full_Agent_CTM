@@ -11,9 +11,9 @@ import requests
 from backend.app.core.config import settings
 from backend.app.db.session import SessionLocal
 from backend.app.db import models as db_models
-from Intecmar_api.backend.app.services.magazine.redis_service import get_redis, task_key, release_flow_lock
-from Intecmar_api.backend.app.services.magazine.email_service import send_smtp_email
-from Intecmar_api.backend.app.services.magazine.agent_service import run_magazine_generation_stream, search_web, llm_invoke, agent_app
+from backend.app.services.magazine.redis_service import get_redis, task_key, release_flow_lock
+from backend.app.services.magazine.email_service import send_smtp_email
+from backend.app.services.magazine.agent_service import run_magazine_generation_stream, search_web, llm_invoke, agent_app
 
 # Agent imports handled by agent_service, but we access agent_app directly in runs
 # If agent_app is needed, we imported it above from agent_service
@@ -235,7 +235,7 @@ def run_requisitos(self, payload: Dict[str, Any] | None = None):
         from bs4 import BeautifulSoup
         from datetime import datetime as _dt
         try:
-            from Intecmar_api.backend.agent.magazine.nodes import llm as agent_llm  # type: ignore
+            from backend.agent.magazine.nodes import llm as agent_llm  # type: ignore
         except Exception:
             agent_llm = None
 
@@ -404,7 +404,7 @@ def run_fuentes(self, payload: Dict[str, Any] | None = None):
 
     try:
         try:
-            from Intecmar_api.backend.agent.magazine.tools import search_all as web_search_all  # type: ignore
+            from backend.agent.magazine.tools import search_all as web_search_all  # type: ignore
         except Exception:
             web_search_all = None
 

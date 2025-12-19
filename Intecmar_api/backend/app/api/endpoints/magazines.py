@@ -10,10 +10,10 @@ from backend.app.db import models
 from backend.app.core.security import get_current_user
 from backend.app.schemas.magazine import GenerateRequest, IdsRequest, SavedCreate
 from backend.app.schemas.convocatoria import ConvocatoriaOut
-from Intecmar_api.backend.app.services.magazine.redis_service import get_redis, task_key
-from Intecmar_api.backend.app.services.magazine.agent_service import run_magazine_generation_stream
-from Intecmar_api.backend.app.services.magazine.pdf_engine import generate_pdf
-from Intecmar_api.backend.app.services.magazine.minio_storage import minio_storage
+from backend.app.services.magazine.redis_service import get_redis, task_key
+from backend.app.services.magazine.agent_service import run_magazine_generation_stream
+from backend.app.services.magazine.pdf_engine import generate_pdf
+from backend.app.services.magazine.minio_storage import minio_storage
 from backend.app.utils.files import load_json_list, save_json_dict
 
 router = APIRouter()

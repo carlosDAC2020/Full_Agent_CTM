@@ -1,19 +1,20 @@
 import uuid
 from fastapi import APIRouter
-from src.schemas.requests import IngestRequest, SelectionRequest, NextStepRequest
-from src.tasks.agent_tasks import task_process_agent_step
+from backend.app.schemas.requests import IngestRequest, SelectionRequest, NextStepRequest
+from backend.app.workers.tech_surveillance.tasks import task_process_agent_step
 
 from sqlalchemy.orm import Session
 from fastapi import Depends, HTTPException
-from src.core.database import get_db
-from src.models.history import AgentSession, AgentStep
-from src.core.auth import get_current_user, User  # NEW: Import auth and local User
+from backend.app.db.session import get_db
+from backend.app.db.history import AgentSession, AgentStep
+from backend.app.core.security import get_current_user
+from backend.app.db.models import User
 
 import json
 from typing import List
-from src.services.storage import MinioService
-from src.models.convocatoria import Convocatoria
-from src.schemas.requests import IngestRequest, SelectionRequest, NextStepRequest, ConvocatoriaOut
+from backend.app.services.tech_surveillance.storage import MinioService
+from backend.app.db.models import Convocatoria
+from backend.app.schemas.requests import IngestRequest, SelectionRequest, NextStepRequest, ConvocatoriaOut
 
 router = APIRouter(prefix="/api/agent", tags=["Agent Actions"])
 storage_service = MinioService()

@@ -8,7 +8,7 @@ from fastapi import APIRouter, HTTPException, Path, Depends, Query
 
 from backend.app.core.config import settings
 from backend.app.schemas.source import SourcesSearchRequest, SourcesAISearchRequest, SourceCreate, SourceUpdate
-from Intecmar_api.backend.app.services.magazine.agent_service import llm_invoke, search_web
+from backend.app.services.magazine.agent_service import llm_invoke, search_web
 from backend.app.db.session import get_db
 from backend.app.db import models
 from sqlalchemy.orm import Session
