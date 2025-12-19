@@ -5,7 +5,7 @@ services:
   # INFRAESTRUCTURA COMPARTIDA
   # ==========================================
   
-  shared_redis:
+  shared-redis:
     image: redis:7-alpine
     container_name: shared_redis
     ports:
@@ -60,22 +60,22 @@ services:
       - .env
     environment:
       - PYTHONPATH=/app
-      - REDIS_URL=redis://shared_redis:6379/0
+      - REDIS_URL=redis://shared-redis:6379/0
       - DATABASE_URL=postgresql+psycopg2://shared_user:shared_pass@shared_postgres:5432/mag_db
       - JWT_SECRET=${JWT_SECRET:-change-me}
-      - MINIO_ENDPOINT=shared-minio:9000
+      - MINIO_ENDPOINT=http://shared-minio:9000
       - MINIO_ACCESS_KEY=minioadmin
       - MINIO_SECRET_KEY=minioadmin
       - MINIO_SECURE=False
       - MINIO_BUCKET_USERS=users
       # Agent specific envs
-      - CELERY_BROKER_URL=redis://shared_redis:6379/0
-      - CELERY_RESULT_BACKEND=redis://shared_redis:6379/0
+      - CELERY_BROKER_URL=redis://shared-redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://shared-redis:6379/0
       - SHARED_DATA_PATH=/app/backend/shared_data
     volumes:
       - ./Intecmar_api:/app
     depends_on:
-      - shared_redis
+      - shared-redis
       - shared_postgres
     networks:
       - agent_network
@@ -93,17 +93,17 @@ services:
       - .env
     environment:
       - PYTHONPATH=/app
-      - REDIS_URL=redis://shared_redis:6379/0
+      - REDIS_URL=redis://shared-redis:6379/0
       - DATABASE_URL=postgresql+psycopg2://shared_user:shared_pass@shared_postgres:5432/mag_db
       - API_INTERNAL_URL=http://intecmar_api:8000
-      - MINIO_ENDPOINT=shared-minio:9000
+      - MINIO_ENDPOINT=http://shared-minio:9000
       - MINIO_ACCESS_KEY=minioadmin
       - MINIO_SECRET_KEY=minioadmin
       - MINIO_SECURE=False
     volumes:
       - ./Intecmar_api:/app
     depends_on:
-      - shared_redis
+      - shared-redis
       - shared_postgres
     networks:
       - agent_network
@@ -117,11 +117,11 @@ services:
       - .env
     environment:
       - PYTHONPATH=/app
-      - CELERY_BROKER_URL=redis://shared_redis:6379/0
-      - CELERY_RESULT_BACKEND=redis://shared_redis:6379/0
+      - CELERY_BROKER_URL=redis://shared-redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://shared-redis:6379/0
       - DATABASE_URL=postgresql+psycopg2://shared_user:shared_pass@shared_postgres:5432/mag_db
       - SHARED_DATA_PATH=/app/backend/shared_data
-      - MINIO_ENDPOINT=shared-minio:9000
+      - MINIO_ENDPOINT=http://shared-minio:9000
       - MINIO_ACCESS_KEY=minioadmin
       - MINIO_SECRET_KEY=minioadmin
       - MINIO_BUCKET=agent-results
