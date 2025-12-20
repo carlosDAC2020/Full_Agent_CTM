@@ -5,7 +5,7 @@ import redis
 from datetime import datetime
 from langchain_core.messages import HumanMessage, AIMessage
 
-from backend.app.workers.tech_surveillance import celery_app
+from backend.app.workers.tech_surveillance.celery_app import celery_app
 from backend.agent.tech_surveillance.graph import agent 
 
 # --- IMPORTACIONES DE TU AGENTE ---

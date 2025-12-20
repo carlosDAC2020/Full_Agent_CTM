@@ -6,8 +6,14 @@ import io
 
 class MinioStorage:
     def __init__(self) -> None:
+        endpoint = os.getenv("MINIO_ENDPOINT", "shared_minio:9000")
+        if endpoint.startswith("http://"):
+            endpoint = endpoint[7:]
+        elif endpoint.startswith("https://"):
+            endpoint = endpoint[8:]
+
         self.client = Minio(
-            os.getenv("MINIO_ENDPOINT", "shared-minio:9000"),
+            endpoint,
             access_key=os.getenv("MINIO_ACCESS_KEY", "minioadmin"),
             secret_key=os.getenv("MINIO_SECRET_KEY", "minioadmin"),
             secure=os.getenv("MINIO_SECURE", "False").lower() == "true",
