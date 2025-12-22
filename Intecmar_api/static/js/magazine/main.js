@@ -561,6 +561,9 @@ document.addEventListener('DOMContentLoaded', () => {
         updatePdfCartList();
         pdfCartPanel.classList.remove('hidden');
         pdfCartPanel.setAttribute('aria-hidden', 'false');
+      } else {
+        // Feedback visual si no hay items
+        showError('Selecciona al menos una convocatoria para generar un PDF personalizado.');
       }
     });
   }
