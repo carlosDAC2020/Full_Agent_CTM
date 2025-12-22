@@ -93,75 +93,18 @@ def run_magazine(self, payload: Dict[str, Any] | None = None):
         tema = (payload or {}).get("tema") or default_topic
         inputs = {"tema": tema}
 
+
         result: Dict[str, Any] = {}
         for output in agent_app.stream(inputs):
             # Emitir progreso básico cada iteración
             _publish_event("task_progress", {"id": task_id, "type": "magazine", "message": "procesando..."})
             for key, value in output.items():
-                if key in ["contenido_curado", "pdf_path"]:
+                if key == "contenido_curado":
                     result[key] = value
 
-        pdf_path = result.get("pdf_path")
-        pdf_url = None
-        if not pdf_path and result.get("contenido_curado"):
-            # Generar PDF si no vino del agente (legacy/refactor compatibility)
-            try:
-                print("⚠️  Generating PDF from worker (fallback)...")
-                pdf_path, pdf_name = generate_pdf(result.get("contenido_curado", []))
-                
-                # Upload to MinIO
-                user_email = (payload or {}).get("user_email")
-                if user_email:
-                    try:
-                        folder = f"{user_email}/Magazines"
-                        if os.path.exists(pdf_path):
-                            with open(pdf_path, "rb") as f:
-                                b = f.read()
-                            minio_storage.upload_file(file_data=b, folder=folder, filename=pdf_name)
-                    except Exception as e:
-                        print(f"⚠️ MinIO upload failed: {e}")
-
-                # Update result
-                result["pdf_path"] = pdf_path
-            except Exception as e:
-                print(f"⚠️ PDF Generation failed: {e}")
-
-        pdf_path = result.get("pdf_path")
-        pdf_url = None
-        if pdf_path:
-            # Ensure correct URL format
-            if "outputs" in str(pdf_path):
-                 fname = os.path.basename(str(pdf_path))
-                 pdf_url = f"/outputs/{fname}"
-            else:
-                 safe_path = str(pdf_path).replace("\\", "/")
-                 pdf_url = f"/{safe_path}"
-
-        # Persist PDF metadata in DB if user_id present
-        try:
-            user_id = None
-            try:
-                user_id = int((payload or {}).get("user_id"))
-            except Exception:
-                user_id = None
-            if pdf_url and user_id:
-                filename = os.path.basename(safe_path)
-                size_bytes = None
-                try:
-                    fpath = os.path.join("outputs", os.path.basename(filename))
-                    if os.path.exists(fpath):
-                        size_bytes = os.path.getsize(fpath)
-                except Exception:
-                    pass
-                db = SessionLocal()
-                try:
-                    row = db_models.Magazine(user_id=user_id, filename=filename, title=None, size_bytes=size_bytes)
-                    db.add(row)
-                    db.commit()
-                finally:
-                    db.close()
-        except Exception:
-            pass
+        # El agente ya guardó las convocatorias en la BD
+        # El usuario generará el PDF manualmente desde la interfaz
+        contenido_curado = result.get("contenido_curado", [])
 
         _finish_task_status(task_id, "succeeded")
         # Persistir resultado para fallback de polling
@@ -169,14 +112,14 @@ def run_magazine(self, payload: Dict[str, Any] | None = None):
             r = _get_redis()
             if r:
                 r.hset(f"task:{task_id}", mapping={
-                    "result": json.dumps({"pdf_url": pdf_url, "contenido_curado": result.get("contenido_curado", [])}, ensure_ascii=False)
+                    "result": json.dumps({"contenido_curado": contenido_curado}, ensure_ascii=False)
                 })
         except Exception:
             pass
-        _publish_event("task_succeeded", {"id": task_id, "type": "magazine", "result": {"pdf_url": pdf_url, "contenido_curado": result.get("contenido_curado", [])}})
-        # Notificar API: completed + result_url para frontend
+        _publish_event("task_succeeded", {"id": task_id, "type": "magazine", "result": {"contenido_curado": contenido_curado}})
+        # Notificar API: completed
         try:
-            meta = {"result_url": pdf_url, "contenido_curado": result.get("contenido_curado", [])}
+            meta = {"contenido_curado": contenido_curado, "count": len(contenido_curado)}
             _post_flow_status(task_id, status="completed", name="Generación de Magazine", meta=meta)
         except Exception:
             pass
@@ -187,11 +130,8 @@ def run_magazine(self, payload: Dict[str, Any] | None = None):
             fallback = os.getenv("TEST_EMAIL") or ""
             to = [e for e in [user_email or fallback] if e]
             if sender and to:
-                body = "Flujo 'Generar Magazine' terminado exitosamente."
-                attachments = []
-                if pdf_url and pdf_url.startswith("/outputs/"):
-                    attachments = [os.path.join("outputs", os.path.basename(pdf_url))]
-                _send_smtp(sender, to, "Flujo magazine terminado exitosamente", body, attachments)
+                body = f"Flujo 'Generar Magazine' terminado exitosamente. Se encontraron {len(contenido_curado)} convocatorias."
+                _send_smtp(sender, to, "Flujo magazine terminado exitosamente", body, [])
         except Exception:
             pass
         finally:
@@ -207,7 +147,8 @@ def run_magazine(self, payload: Dict[str, Any] | None = None):
                     _release_flow_lock("magazine")
             except Exception:
                 pass
-        return {"status": "success", "pdf_url": pdf_url, "contenido_curado": result.get("contenido_curado", [])}
+        return {"status": "success", "contenido_curado": contenido_curado}
+
 
     except Exception as e:
         _finish_task_status(task_id, "failed")
