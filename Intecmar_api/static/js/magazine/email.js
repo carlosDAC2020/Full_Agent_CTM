@@ -47,7 +47,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 openPanel('');
             });
         }
-        
+
         // Add recipient button
         const addRecipientBtn = document.getElementById('addRecipientBtn');
         if (addRecipientBtn) {
@@ -190,10 +190,10 @@ document.addEventListener('DOMContentLoaded', () => {
     function closePanel() {
         // Log para saber que la función se ejecutó
         console.log('%c--- INTENTO DE CERRAR PANEL DE EMAIL ---', 'color: red; font-weight: bold;');
-        
+
         // La traza que nos dirá QUIÉN llamó a esta función
         console.trace('La función closePanel fue llamada desde esta pila de ejecución:');
-        
+
         // La acción que oculta el panel (la dejamos como estaba)
         sendEmailPanel.classList.add('hidden');
         sendEmailPanel.setAttribute('aria-hidden', 'true');
@@ -218,10 +218,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // Recipient Management
     function addRecipient(email) {
         if (!email || !isValidEmail(email)) return;
-        
+
         // Check if already added
         if (recipients.some(r => r.email === email)) return;
-        
+
         recipients.push({ email, isFavorite: isFavorite(email) });
         renderRecipients();
     }
@@ -233,7 +233,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function renderRecipients() {
         recipientTagsContainer.innerHTML = '';
-        
+
         recipients.forEach(recipient => {
             const tag = document.createElement('div');
             tag.className = 'recipient-tag';
@@ -247,18 +247,18 @@ document.addEventListener('DOMContentLoaded', () => {
                     <span class="tooltiptext">Quitar</span>
                 </button>
             `;
-            
+
             // Add event listeners
             tag.querySelector('.remove-tag-btn').addEventListener('click', (e) => {
                 e.stopPropagation();
                 removeRecipient(recipient.email);
             });
-            
+
             tag.querySelector('.favorite-star').addEventListener('click', (e) => {
                 e.stopPropagation();
                 toggleFavorite(recipient.email);
             });
-            
+
             recipientTagsContainer.appendChild(tag);
         });
     }
@@ -267,19 +267,19 @@ document.addEventListener('DOMContentLoaded', () => {
     function toggleFavorite(email) {
         const recipient = recipients.find(r => r.email === email);
         if (!recipient) return;
-        
+
         recipient.isFavorite = !recipient.isFavorite;
-        
+
         // Update in favorites list
         if (recipient.isFavorite && !favorites.includes(email)) {
             favorites.push(email);
         } else if (!recipient.isFavorite) {
             favorites = favorites.filter(f => f !== email);
         }
-        
+
         // Save to storage
         saveEmailSettings();
-        
+
         // Re-render
         renderRecipients();
         renderFavorites();
@@ -301,7 +301,7 @@ document.addEventListener('DOMContentLoaded', () => {
             favoritesDropdown.innerHTML = '<div class="favorite-item">No hay favoritos guardados</div>';
             return;
         }
-        
+
         favoritesDropdown.innerHTML = `
             <div class="favorites-list">
                 ${favorites.map(email => `
@@ -319,7 +319,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 `).join('')}
             </div>
         `;
-        
+
         // Add event listeners
         document.querySelectorAll('.add-favorite').forEach(btn => {
             btn.addEventListener('click', (e) => {
@@ -330,7 +330,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
         });
-        
+
         document.querySelectorAll('.remove-favorite').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 e.stopPropagation();
@@ -342,13 +342,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function removeFavorite(email) {
         favorites = favorites.filter(f => f !== email);
-        
+
         // Update recipient tags
         const recipient = recipients.find(r => r.email === email);
         if (recipient) {
             recipient.isFavorite = false;
         }
-        
+
         saveEmailSettings();
         renderRecipients();
         renderFavorites();
@@ -357,7 +357,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Sender Email Management
     let isEditing = false;
     let currentEditIcon = null;
-    
+
     function editSenderEmail() {
         if (isEditing) {
             // If already editing, save the changes
@@ -368,7 +368,7 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 senderInput.value = currentSenderEmail; // Revert if invalid
             }
-            
+
             // Reset UI
             senderInput.readOnly = true;
             if (currentEditIcon) {
@@ -381,12 +381,12 @@ document.addEventListener('DOMContentLoaded', () => {
             isEditing = false;
             return;
         }
-        
+
         // Start editing
         isEditing = true;
         const currentEmail = senderInput.value;
         senderInput.readOnly = false;
-        
+
         // Change button to save icon
         const icon = editSenderBtn.querySelector('i');
         if (icon) {
@@ -397,12 +397,12 @@ document.addEventListener('DOMContentLoaded', () => {
         if (editSenderBtn) {
             editSenderBtn.title = 'Guardar';
         }
-        
+
         senderInput.focus();
-        
+
         const saveEdit = () => {
             if (!isEditing) return;
-            
+
             const newEmail = senderInput.value.trim();
             if (newEmail && isValidEmail(newEmail)) {
                 currentSenderEmail = newEmail;
@@ -410,7 +410,7 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 senderInput.value = currentSenderEmail; // Revert if invalid
             }
-            
+
             // Reset UI
             senderInput.readOnly = true;
             if (currentEditIcon) {
@@ -422,10 +422,10 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             isEditing = false;
         };
-        
+
         const handleKeyDown = (e) => {
             if (!isEditing) return;
-            
+
             if (e.key === 'Enter') {
                 e.preventDefault();
                 saveEdit();
@@ -435,10 +435,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 saveEdit(); // Revert and exit edit mode
             }
         };
-        
+
         // Remove any existing event listeners to prevent duplicates
         senderInput.removeEventListener('keydown', handleKeyDown);
-        
+
         // Only add keydown listener, no blur listener
         senderInput.addEventListener('keydown', handleKeyDown);
     }
@@ -457,15 +457,15 @@ document.addEventListener('DOMContentLoaded', () => {
             showNotification('Debes adjuntar un PDF o generar uno antes de enviar.', 'error');
             return;
         }
-        
+
         const sendBtn = document.getElementById('sendEmailBtn');
         const originalText = sendBtn.innerHTML;
-        
+
         try {
             // Show loading state
             sendBtn.disabled = true;
             sendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
-            
+
             const response = await fetch(`${API_URL}/send_email`, {
                 method: 'POST',
                 headers: {
@@ -479,9 +479,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     subject: 'Revista de Convocatorias COTECMAR'
                 })
             });
-            
+
             const data = await response.json();
-            
+
             if (response.ok) {
                 showNotification('¡Correo enviado con éxito!', 'success');
                 setTimeout(closePanel, 1500);
@@ -616,7 +616,7 @@ document.addEventListener('DOMContentLoaded', () => {
             </label>
         `;
         checklistContainer.appendChild(selectAllWrapper);
-        
+
         // Añadir un separador visual
         const separator = document.createElement('hr');
         separator.style.margin = '16px 0';
@@ -628,7 +628,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const uniqueId = `fav-check-${index}`;
             const checkboxWrapper = document.createElement('div');
             checkboxWrapper.className = 'uv-checkbox-wrapper';
-            
+
             // Estructura HTML para cada email
             checkboxWrapper.innerHTML = `
                 <input type="checkbox" id="${uniqueId}" class="uv-checkbox" name="fav" value="${email}" />
@@ -656,7 +656,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             });
         }
-        
+
         // Mostrar el modal
         favoritesModal.classList.remove('hidden');
     }
@@ -672,16 +672,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 showNotification('Por favor, selecciona al menos un correo', 'warning');
                 return;
             }
-            
+
             selected.forEach(cb => {
                 if (cb.value) {  // Asegurarse de que el valor no esté vacío
                     addRecipient(cb.value);
                 }
             });
-            
+
             // Cerrar el modal después de agregar
             favoritesModal.classList.add('hidden');
-            
+
             // Mostrar notificación de éxito
             showNotification(`${selected.length} correo(s) agregado(s) a destinatarios`, 'success');
         });

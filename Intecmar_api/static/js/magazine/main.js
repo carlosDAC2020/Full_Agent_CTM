@@ -76,13 +76,13 @@ document.addEventListener('DOMContentLoaded', () => {
           try {
             const err = await res.json();
             if (err && err.detail) msg = String(err.detail);
-          } catch {}
+          } catch { }
           throw new Error(msg);
         }
       }
       await refreshSources();
       // Aviso de cuántas se añadieron
-      try { alert(`Se añadieron ${toAdd.length} fuente(s) al Dataset.`); } catch {}
+      try { alert(`Se añadieron ${toAdd.length} fuente(s) al Dataset.`); } catch { }
       // Marcar en el estado local como agregadas y re-renderizar lista IA
       const addedSet = new Set(toAdd.map(c => c.getAttribute('data-url') || ''));
       if (Array.isArray(lastAISearchResults) && lastAISearchResults.length) {
@@ -162,19 +162,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (st === 'succeeded') {
                   stopped = true;
                   if (taskWaiters.has(taskId)) taskWaiters.delete(taskId);
-                  try { updateCard({ id: taskId, type: 'fuentes' }, 'succeeded', js.result); } catch {}
+                  try { updateCard({ id: taskId, type: 'fuentes' }, 'succeeded', js.result); } catch { }
                   resolve(js);
                   return;
                 }
                 if (st === 'failed') {
                   stopped = true;
                   if (taskWaiters.has(taskId)) taskWaiters.delete(taskId);
-                  try { updateCard({ id: taskId, type: 'fuentes' }, 'failed'); } catch {}
+                  try { updateCard({ id: taskId, type: 'fuentes' }, 'failed'); } catch { }
                   reject(new Error(js.error || 'Task failed'));
                   return;
                 }
               }
-            } catch {}
+            } catch { }
             setTimeout(poll, 2000);
           };
           setTimeout(poll, 2000);
@@ -184,7 +184,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const data = res.ok ? await res.json() : { results: [] };
         renderAISearchResults(data.results || []);
       } catch (e) {
-        try { const last = Array.from(taskCards.keys()).pop(); if (last) updateCard({ id: last, type: 'fuentes' }, 'failed'); } catch {}
+        try { const last = Array.from(taskCards.keys()).pop(); if (last) updateCard({ id: last, type: 'fuentes' }, 'failed'); } catch { }
         renderAISearchResults([]);
         showError(e.message || String(e));
       } finally {
@@ -216,7 +216,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const me = await r.json();
         if (me && typeof me.id === 'number') { __currentUserId = me.id; return __currentUserId; }
       }
-    } catch {}
+    } catch { }
     return null;
   }
   async function taskBelongsToMe(taskId) {
@@ -255,13 +255,13 @@ document.addEventListener('DOMContentLoaded', () => {
   // Ver Requisitos Flow
   // =======================
   const DEFAULT_WORDS = [
-    'convocatorias','eventos','conferencias','summits','workshops','hackathons','convocatorias'
+    'convocatorias', 'eventos', 'conferencias', 'summits', 'workshops', 'hackathons', 'convocatorias'
   ];
   const REQS_WORDS = [
-    'requisitos','más info','requerimientos','normas','obligaciones','condiciones','requisitos'
+    'requisitos', 'más info', 'requerimientos', 'normas', 'obligaciones', 'condiciones', 'requisitos'
   ];
   const SOURCES_WORDS = [
-    'fuentes','bases de datos','organizaciones','sitios web','empresas','fuentes'
+    'fuentes', 'bases de datos', 'organizaciones', 'sitios web', 'empresas', 'fuentes'
   ];
 
   function setLoaderWords(words) {
@@ -310,7 +310,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                   }
                 }
-              } catch {}
+              } catch { }
               setTimeout(pollReqs, 2000);
             };
             setTimeout(pollReqs, 2000);
@@ -331,7 +331,7 @@ document.addEventListener('DOMContentLoaded', () => {
               const idx = allItems.findIndex(x => Number(x.id) === Number(itemId));
               if (idx >= 0) allItems[idx] = { ...allItems[idx], requisitos: res };
             }
-          } catch {}
+          } catch { }
           // Marcar mini-loader como completado si hay una tarjeta de requisitos pendiente (sin taskId conocido)
           try {
             for (const [tid, el] of taskCards.entries()) {
@@ -342,7 +342,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 break;
               }
             }
-          } catch {}
+          } catch { }
           if (!Number.isNaN(itemId)) localStorage.setItem(`reqLoaded:${itemId}`, '1');
           return; // listo
         }
@@ -368,7 +368,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
               }
             }
-          } catch {}
+          } catch { }
           setTimeout(poll, 2000);
         };
         setTimeout(poll, 2000);
@@ -387,9 +387,9 @@ document.addEventListener('DOMContentLoaded', () => {
           const idx = allItems.findIndex(x => Number(x.id) === Number(itemId));
           if (idx >= 0) allItems[idx] = { ...allItems[idx], requisitos: res };
         }
-      } catch {}
+      } catch { }
       // Marcar mini-loader como completado con el taskId
-      try { updateCard({ id: taskId, type: 'requisitos' }, 'succeeded', { id: itemId, requirements: res }); } catch {}
+      try { updateCard({ id: taskId, type: 'requisitos' }, 'succeeded', { id: itemId, requirements: res }); } catch { }
       const btn = cardEl.querySelector('button[data-action="ver-requisitos"]');
       if (btn) btn.remove();
       if (!Number.isNaN(itemId)) localStorage.setItem(`reqLoaded:${itemId}`, '1');
@@ -489,24 +489,24 @@ document.addEventListener('DOMContentLoaded', () => {
               if (st === 'succeeded') {
                 stopped = true;
                 if (taskWaiters.has(taskId)) taskWaiters.delete(taskId);
-                try { updateCard({ id: taskId, type: 'magazine' }, 'succeeded', js.result); } catch {}
+                try { updateCard({ id: taskId, type: 'magazine' }, 'succeeded', js.result); } catch { }
                 // Abrir PDF si viene en result
                 try {
                   const pdfUrl = js.result && js.result.pdf_url ? (js.result.pdf_url.startsWith('http') ? js.result.pdf_url : `${API_URL}${js.result.pdf_url}`) : null;
                   if (pdfUrl) window.open(pdfUrl, '_blank', 'noopener');
-                } catch {}
+                } catch { }
                 resolve(js);
                 return;
               }
               if (st === 'failed') {
                 stopped = true;
                 if (taskWaiters.has(taskId)) taskWaiters.delete(taskId);
-                try { updateCard({ id: taskId, type: 'magazine' }, 'failed'); } catch {}
+                try { updateCard({ id: taskId, type: 'magazine' }, 'failed'); } catch { }
                 reject(new Error(js.error || 'Task failed'));
                 return;
               }
             }
-          } catch {}
+          } catch { }
           setTimeout(poll, 2000);
         };
         setTimeout(poll, 2000);
@@ -592,11 +592,11 @@ document.addEventListener('DOMContentLoaded', () => {
               <script>try{ if('${targetUrl || ''}') { setTimeout(function(){ location.href='${targetUrl}'; }, 150); } }catch(e){}</script>
             </body></html>`);
             doc.close();
-          } catch {}
+          } catch { }
         };
         // Placeholders visibles mientras cargan
-        try { if (pdfWin && pdfWin.document) { pdfWin.document.title = 'Abriendo PDF...'; pdfWin.document.body.innerHTML = '<p style="font-family:sans-serif">Abriendo PDF...</p>'; } } catch {}
-        try { if (viewerWin && viewerWin.document) { viewerWin.document.title = 'Abriendo visor...'; viewerWin.document.body.innerHTML = '<p style="font-family:sans-serif">Abriendo visor...</p>'; } } catch {}
+        try { if (pdfWin && pdfWin.document) { pdfWin.document.title = 'Abriendo PDF...'; pdfWin.document.body.innerHTML = '<p style="font-family:sans-serif">Abriendo PDF...</p>'; } } catch { }
+        try { if (viewerWin && viewerWin.document) { viewerWin.document.title = 'Abriendo visor...'; viewerWin.document.body.innerHTML = '<p style="font-family:sans-serif">Abriendo visor...</p>'; } } catch { }
         const res = await fetch(`${API_URL}/generate_pdf_from_ids`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -619,13 +619,13 @@ document.addEventListener('DOMContentLoaded', () => {
           if (pdfWin) { try { prime(pdfWin, 'Abriendo PDF...', pdfAbs); pdfWin.location = pdfAbs; } catch { window.open(pdfAbs, 'pdf_tab'); } }
           else { window.open(pdfAbs, 'pdf_tab'); }
         } else if (pdfWin) {
-          try { pdfWin.document.body.innerHTML = '<p style="font-family:sans-serif;color:#b91c1c">No se recibió PDF.</p>'; } catch {} 
+          try { pdfWin.document.body.innerHTML = '<p style="font-family:sans-serif;color:#b91c1c">No se recibió PDF.</p>'; } catch { }
         }
         if (viewerAbs) {
           if (viewerWin) { try { prime(viewerWin, 'Abriendo visor...', viewerAbs); viewerWin.location = viewerAbs; } catch { window.open(viewerAbs, 'viewer_tab'); } }
           else { window.open(viewerAbs, 'viewer_tab'); }
         } else if (viewerWin) {
-          try { viewerWin.document.body.innerHTML = '<p style=\"font-family:sans-serif;color:#b91c1c\">No se recibió visor.</p>'; } catch {}
+          try { viewerWin.document.body.innerHTML = '<p style=\"font-family:sans-serif;color:#b91c1c\">No se recibió visor.</p>'; } catch { }
         }
         // Cerrar panel del carrito tras abrir ventanas
         if (pdfCartPanel) {
@@ -672,7 +672,7 @@ document.addEventListener('DOMContentLoaded', () => {
           try {
             const err = await res.json();
             if (err && err.detail) msg = String(err.detail);
-          } catch {}
+          } catch { }
           throw new Error(msg);
         }
         srcName.value = ''; srcType.value = ''; srcUrl.value = '';
@@ -844,13 +844,13 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
           const data = JSON.parse(ev.data || '{}');
           if (await taskBelongsToMe(data.id)) createCard({ id: data.id, type: data.type });
-        } catch {}
+        } catch { }
       });
       es.addEventListener('task_progress', async (ev) => {
         try {
           const data = JSON.parse(ev.data || '{}');
           if (await taskBelongsToMe(data.id)) updateCard({ id: data.id, type: data.type }, 'running');
-        } catch {}
+        } catch { }
       });
       es.addEventListener('task_succeeded', async (ev) => {
         try {
@@ -861,7 +861,7 @@ document.addEventListener('DOMContentLoaded', () => {
           // Resolver posibles esperas ligadas a esta tarea
           const waiter = taskWaiters.get(data.id);
           if (waiter && typeof waiter.resolve === 'function') {
-            try { waiter.resolve(data); } catch {}
+            try { waiter.resolve(data); } catch { }
             taskWaiters.delete(data.id);
           }
           // Resolver esperas por itemId de requisitos
@@ -875,10 +875,10 @@ document.addEventListener('DOMContentLoaded', () => {
                   allItems[idx] = { ...allItems[idx], requisitos: reqs.length ? reqs : ['No especificado'] };
                 }
               }
-            } catch {}
+            } catch { }
             const w = requisitosWaitersByItem.get(data.result.id);
             if (w && typeof w.resolve === 'function') {
-              try { w.resolve(data); } catch {}
+              try { w.resolve(data); } catch { }
               requisitosWaitersByItem.delete(data.result.id);
             }
           }
@@ -886,7 +886,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const pdfUrl = data.result.pdf_url.startsWith('http') ? data.result.pdf_url : `${API_URL}${data.result.pdf_url}`;
             window.open(pdfUrl, '_blank', 'noopener');
           }
-        } catch {}
+        } catch { }
       });
       es.addEventListener('task_failed', async (ev) => {
         try {
@@ -896,20 +896,20 @@ document.addEventListener('DOMContentLoaded', () => {
           showToast(`Flujo ${data.type} falló`, 'error');
           const waiter = taskWaiters.get(data.id);
           if (waiter && typeof waiter.reject === 'function') {
-            try { waiter.reject(new Error(data.error || 'Task failed')); } catch {}
+            try { waiter.reject(new Error(data.error || 'Task failed')); } catch { }
             taskWaiters.delete(data.id);
           }
           if (data.type === 'requisitos' && data.result && typeof data.result.id === 'number') {
             const w = requisitosWaitersByItem.get(data.result.id);
             if (w && typeof w.reject === 'function') {
-              try { w.reject(new Error(data.error || 'Task failed')); } catch {}
+              try { w.reject(new Error(data.error || 'Task failed')); } catch { }
               requisitosWaitersByItem.delete(data.result.id);
             }
           }
-        } catch {}
+        } catch { }
       });
       es.onerror = () => { /* el navegador reintenta solo */ };
-    } catch {}
+    } catch { }
   }
 
   async function rehydrateActiveTasks() {
@@ -923,11 +923,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const uid = Number((t && t.user_id) || 0);
         if (t && t.id && myId && uid === myId) createCard({ id: t.id, type: t.type });
       });
-    } catch {}
+    } catch { }
   }
 
   function showToast(message, level) {
-    try { alert(message); } catch {}
+    try { alert(message); } catch { }
   }
 
   // Inicializar SSE y rehidratación
@@ -1001,10 +1001,10 @@ document.addEventListener('DOMContentLoaded', () => {
       const descripcion = it.descripcion || objetivo; // Usar objetivo como fallback para descripción
 
       // Manejo especial para 'beneficios' que puede ser un array
-      const beneficios = Array.isArray(it.beneficios) 
+      const beneficios = Array.isArray(it.beneficios)
         ? it.beneficios.map(b => `• ${b}`).join('<br>') // Crea una lista con viñetas
         : (it.beneficios || 'No especificado');
-        
+
       const lugar = it.lugar || 'No especificado';
       const monto = it.monto || it.monto_financiacion || it.financiacion || '';
       const keywordsVal = it.keywords || it.palabras_clave || it.tags || [];
@@ -1342,8 +1342,8 @@ document.addEventListener('DOMContentLoaded', () => {
   function getRangeValues() {
     const start = startDateInput && startDateInput.value ? new Date(startDateInput.value) : null;
     const end = endDateInput && endDateInput.value ? new Date(endDateInput.value) : null;
-    if (start) start.setHours(0,0,0,0);
-    if (end) end.setHours(23,59,59,999);
+    if (start) start.setHours(0, 0, 0, 0);
+    if (end) end.setHours(23, 59, 59, 999);
     return { start, end };
   }
   function parseDateMaybe(str) {
@@ -1360,19 +1360,19 @@ document.addEventListener('DOMContentLoaded', () => {
     return null;
   }
   function matchesTimeFilter(it, mode, range) {
-    const today = new Date(); today.setHours(0,0,0,0);
+    const today = new Date(); today.setHours(0, 0, 0, 0);
     const end = parseDateMaybe(it.fecha_cierre || it.fecha || it.deadline) || null;
     const start = parseDateMaybe(it.fecha_inicio || it.inicio) || null;
     const pivot = end || start; // fecha a usar para clasificar activa/cerrada
 
     if (mode === 'active') {
       if (!pivot) return true; // sin fechas: considerarlas activas
-      const d = new Date(pivot); d.setHours(0,0,0,0);
+      const d = new Date(pivot); d.setHours(0, 0, 0, 0);
       return d.getTime() >= today.getTime();
     }
     if (mode === 'closed') {
       if (!pivot) return false; // sin fechas no se puede clasificar
-      const d = new Date(pivot); d.setHours(0,0,0,0);
+      const d = new Date(pivot); d.setHours(0, 0, 0, 0);
       return d.getTime() < today.getTime();
     }
     // range
@@ -1461,7 +1461,7 @@ document.addEventListener('DOMContentLoaded', () => {
         otherTopic.disabled = true;
         otherTopic.value = '';
       }
-    } catch {}
+    } catch { }
   }
   function getSelectedTopicFromUI() {
     const r = document.querySelector('input[name="topic"]:checked');
