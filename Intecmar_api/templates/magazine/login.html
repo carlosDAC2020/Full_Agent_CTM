@@ -5,7 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Acceso | Magazine App</title>
-  <link rel="icon" href="{{ url_for('assets', path='logo-cotecmar.png') }}" type="image/png">
+  <link rel="icon" href="/assets/logo-cotecmar.png" type="image/png">
 
   <!-- Fuentes -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -300,8 +300,8 @@
 
   <!-- IZQUIERDA: VIDEO -->
   <div class="split-left">
-    <video class="bg-video" autoplay loop muted playsinline poster="{{ url_for('assets', path='poster.png') }}">
-      <source src="{{ url_for('assets', path='home.mp4') }}" type="video/mp4">
+    <video class="bg-video" autoplay loop muted playsinline poster="/assets/poster.png">
+      <source src="/assets/home.mp4" type="video/mp4">
       Tu navegador no soporta videos HTML5.
     </video>
     <div class="video-overlay"></div>
@@ -316,8 +316,7 @@
     <div class="auth-card">
       <header class="header">
         <div class="logo-container">
-          <img src="{{ url_for('assets', path='logo-cotecmar.png') }}" onerror="this.style.display='none'" alt="Logo"
-            class="logo" />
+          <img src="/assets/logo-cotecmar.png" onerror="this.src='/img/logo-cotecmar.png'" alt="Logo" class="logo" />
         </div>
         <h1 class="title" id="pageTitle">Bienvenido</h1>
         <p class="subtitle" id="pageSubtitle">Ingresa tus credenciales para continuar</p>
