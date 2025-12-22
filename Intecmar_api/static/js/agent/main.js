@@ -16,15 +16,7 @@ import {
 async function loadUserInfo() {
     // Helper to get login URL dynamically (Codespaces vs Localhost)
     const getLoginUrl = () => {
-        const currentHost = window.location.hostname;
-        const protocol = window.location.protocol;
-        if (currentHost.includes('github.dev') || currentHost.includes('csb.app')) {
-            // Codespaces: replace 8001 with 8000
-            return protocol + '//' + currentHost.replace('-8001', '-8000') + '/login';
-        } else {
-            // Localhost
-            return 'http://' + currentHost + ':8000/login';
-        }
+        return '/login';
     };
 
     const token = localStorage.getItem('auth_token');
@@ -92,23 +84,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Navigation function to Magazine app
     window.navigateToMagazineHome = function () {
-        const currentHost = window.location.hostname;
-        const protocol = window.location.protocol;
-        let targetUrl = '';
-        const token = localStorage.getItem('auth_token');
-
-        if (currentHost.includes('github.dev') || currentHost.includes('csb.app')) {
-            // Codespaces/Cloud environment: replace port in subdomain
-            targetUrl = protocol + '//' + currentHost.replace('-8001', '-8000') + '/magazine';
-        } else {
-            // Localhost environment
-            targetUrl = 'http://' + currentHost + ':8000/magazine';
-        }
-
-        if (token) {
-            targetUrl += `?token=${encodeURIComponent(token)}`;
-        }
-
-        window.location.href = targetUrl;
+        window.location.href = '/magazine';
     };
 });
