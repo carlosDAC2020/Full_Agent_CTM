@@ -3,7 +3,7 @@ from fastapi import APIRouter
 from celery.result import AsyncResult
 from backend.app.services.tech_surveillance.storage import MinioService
 
-router = APIRouter(prefix="/api/agent_tasks", tags=["Tasks"])
+router = APIRouter(prefix="/agent_tasks", tags=["Tasks"])
 storage_service = MinioService()
 
 @router.get("/{task_id}")

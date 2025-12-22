@@ -26,7 +26,7 @@ async function loadUserInfo() {
     }
 
     try {
-        const res = await fetch('/api/me', {
+        const res = await fetch('/api/auth/me', {
             headers: { 'Authorization': `Bearer ${token}` }
         });
 

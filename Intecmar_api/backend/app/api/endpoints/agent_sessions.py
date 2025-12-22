@@ -11,7 +11,7 @@ from backend.app.db.history import AgentSession, AgentStep
 from backend.app.db.models import User
 from backend.app.core.security import get_current_user  
 
-router = APIRouter(prefix="/api/agent_sessions", tags=["Sessions"])
+router = APIRouter(prefix="/agent_sessions", tags=["Sessions"])
 
 
 @router.get("")

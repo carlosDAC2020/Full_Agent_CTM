@@ -16,7 +16,7 @@ from backend.app.services.tech_surveillance.storage import MinioService
 from backend.app.db.models import Convocatoria
 from backend.app.schemas.requests import IngestRequest, SelectionRequest, NextStepRequest, ConvocatoriaOut
 
-router = APIRouter(prefix="/api/agent", tags=["Agent Actions"])
+router = APIRouter(prefix="/agent", tags=["Agent Actions"])
 storage_service = MinioService()
 
 @router.get("/convocatorias", response_model=List[ConvocatoriaOut])

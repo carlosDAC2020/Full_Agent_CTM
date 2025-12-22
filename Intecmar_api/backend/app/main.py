@@ -58,7 +58,7 @@ app.mount("/outputs", StaticFiles(directory=settings.OUTPUTS_DIR), name="outputs
 templates = Jinja2Templates(directory=os.path.join(_ROOT_DIR, "templates"))
 
 # Include Router
-app.include_router(api_router)
+app.include_router(api_router, prefix="/api")
 
 # --- MAGAZINE FRONTEND ROUTES ---
 @app.get("/", include_in_schema=False)
