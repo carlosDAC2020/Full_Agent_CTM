@@ -22,6 +22,7 @@ def presentation_generation_docs_node(state: GraphState):
     call_info = state.get("call_info")
     # Obtener session_id del estado 
     session_id = state.get("session_id", "unknown_session")
+    user_email = state.get("user_email", "unknown_user")
 
     if not presentation_summary or not call_info:
         message = AIMessage(content="Error: Sin datos de entrada")
@@ -52,10 +53,13 @@ def presentation_generation_docs_node(state: GraphState):
     # ---  SUBIDA A MINIO ---
     print("☁️ Subiendo archivos a la nube (MinIO)...")
     
-    # Subir y obtener las KEYS (ej: "uuid-123/presentacion.pdf")
-    md_key = storage_service.upload_file(filename, session_id)
-    pdf_key = storage_service.upload_file(pdf_path, session_id)
-    pptx_key = storage_service.upload_file(pptx_path, session_id)
+    # Construir ruta de carpeta organizada
+    minio_folder = f"{user_email}/Agent_Sessions/{session_id}/presentation"
+    
+    # Subir y obtener las KEYS (ej: "email/Agent_Sessions/uuid/presentation/archivo.pdf")
+    md_key = storage_service.upload_file(filename, minio_folder)
+    pdf_key = storage_service.upload_file(pdf_path, minio_folder)
+    pptx_key = storage_service.upload_file(pptx_path, minio_folder)
     
     # Actualizamos el estado con las KEYS de MinIO, no las rutas locales
     docs_paths: DocsPaths = state.get("docs_paths") or DocsPaths()

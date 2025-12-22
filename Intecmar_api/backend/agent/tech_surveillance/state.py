@@ -238,3 +238,6 @@ class GraphState(TypedDict):
 
     # id de secion de la ejcucion 
     session_id : Optional[str]
+    
+    # Email del usuario para organizacion de carpetas
+    user_email: Optional[str]

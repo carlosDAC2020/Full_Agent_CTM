@@ -89,6 +89,7 @@ def generator_image_node(state: GraphState):
     """
     print(" generando poster del proyetco")
     session_id = state.get("session_id", "default_session")
+    user_email = state.get("user_email", "unknown_user")
     image_prompt = state.get("image_prompt")
     report_components = state.get("report_components") or ReportSchema()
     
@@ -105,18 +106,17 @@ def generator_image_node(state: GraphState):
     output_dir = os.path.join(base_path, "posters")
     os.makedirs(output_dir, exist_ok=True)
 
-    # Buscamos en /app/src/static/
-    current_dir = os.path.dirname(os.path.abspath(__file__)) # agents/tech_surveillance/image_graph
-    # Subir niveles hasta encontrar 'src' o definir ruta absoluta docker
-    # Opción segura: Asumir ruta estándar de docker
-    logo_path = "/app/src/static/images/CotecmarLogo_white.png"
+    # Buscamos en /app/static/
+    # En Docker, Intecmar_api suele montarse en /app, así que static está en /app/static
+    logo_path = "/app/static/images/CotecmarLogo_white.png"
     
     if not os.path.exists(logo_path):
-        # Fallback para entorno local fuera de docker
-        logo_path = os.path.join("src", "static", "images", "CotecmarLogo_white.png")
-        if not os.path.exists(logo_path):
-             # Ultimo intento relativo
-             logo_path = "static/images/CotecmarLogo_white.png"
+        # Fallback para entorno local (asumiendo ejecución desde backend/)
+        # Subimos niveles: backend/agent/tech_surveillance/subgrafths/image_generator/graph.py
+        # Necesitamos ir a: static/images/
+        # base del proyecto
+        base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "..", "..", "..")) 
+        logo_path = os.path.join(base_dir, "static", "images", "CotecmarLogo_white.png")
 
     print(f"Buscando logo en: {logo_path}")
     
@@ -194,7 +194,8 @@ def generator_image_node(state: GraphState):
                 
                 # D. Subir a MinIO
                 print("   ☁️ Subiendo póster a MinIO...")
-                minio_key = storage_service.upload_file(full_image_path, session_id)
+                minio_folder = f"{user_email}/Agent_Sessions/{session_id}/generated_images"
+                minio_key = storage_service.upload_file(full_image_path, minio_folder)
                 break 
         
         if image_path:

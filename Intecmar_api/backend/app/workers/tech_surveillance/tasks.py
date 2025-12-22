@@ -175,6 +175,12 @@ def task_process_agent_step(self, session_id: str, input_data: dict, step_type: 
     if step_type == "ingest":
         current_state["messages"] = [HumanMessage(content=input_data["text"])]
         current_state["route_decision"] = "ingest"
+        if "user_email" in input_data:
+             current_state["user_email"] = input_data["user_email"]
+    
+    # Asegurar que user_email se preserva o actualiza si viene en input (para reanudaciones)
+    if "user_email" in input_data and not current_state.get("user_email"):
+        current_state["user_email"] = input_data["user_email"]
     
     elif step_type == "proposal_ideas":
         current_state["route_decision"] = "proposal_ideas"

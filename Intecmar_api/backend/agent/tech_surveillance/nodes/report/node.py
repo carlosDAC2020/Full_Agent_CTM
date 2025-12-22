@@ -29,6 +29,7 @@ def report_node(state: GraphState):
     report_components = state.get("report_components")
 
     session_id = state.get("session_id", "default_session")
+    user_email = state.get("user_email", "unknown_user")
 
     if not report_components:
         return {}
@@ -327,14 +328,15 @@ def report_node(state: GraphState):
         # SUBIDA A MINIO
         # ========================================
         print("☁️ Subiendo reporte final a MinIO...")
-        pdf_key = storage_service.upload_file(pdf_filepath, session_id)
-        md_key = storage_service.upload_file(md_filepath, session_id)
+        minio_folder = f"{user_email}/Agent_Sessions/{session_id}/final_project_proposal"
+        pdf_key = storage_service.upload_file(pdf_filepath, minio_folder)
+        md_key = storage_service.upload_file(md_filepath, minio_folder)
         
         # Nota: La imagen de portada ya debería haber sido subida en su propio nodo,
         # pero si no, podrías subirla aquí también si quisieras tener el link directo.
         img_key = None
         if final_img_path:
-             img_key = storage_service.upload_file(final_img_path, session_id)
+             img_key = storage_service.upload_file(final_img_path, minio_folder)
 
         # ========================================
         # ACTUALIZACIÓN DE ESTADO

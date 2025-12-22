@@ -44,7 +44,7 @@ async def start_ingest(
     
     task = task_process_agent_step.delay(
         session_id=session_id, 
-        input_data={"text": request.text}, 
+        input_data={"text": request.text, "user_email": current_user.email}, 
         step_type="ingest"
     )
     return {"task_id": task.id, "session_id": session_id}
@@ -65,7 +65,7 @@ async def generate_ideas(
     
     task = task_process_agent_step.delay(
         session_id=request.session_id, 
-        input_data={}, 
+        input_data={"user_email": current_user.email}, 
         step_type="proposal_ideas"
     )
     return {"task_id": task.id, "session_id": request.session_id}
@@ -86,7 +86,7 @@ async def select_idea(
     
     task = task_process_agent_step.delay(
         session_id=request.session_id, 
-        input_data={"selected_idea": request.selected_idea}, 
+        input_data={"selected_idea": request.selected_idea, "user_email": current_user.email}, 
         step_type="project_idea"
     )
     return {"task_id": task.id, "session_id": request.session_id}
@@ -107,7 +107,7 @@ async def finalize_project(
     
     task = task_process_agent_step.delay(
         session_id=request.session_id, 
-        input_data={}, 
+        input_data={"user_email": current_user.email}, 
         step_type="generate_project"
     )
     return {"task_id": task.id, "session_id": request.session_id}

@@ -27,6 +27,7 @@ def initial_schema_proyect_doc_node(state: GraphState) -> dict:
     # Obtenemos el esquema inicial del proyecto
     initial_schema = state.get("initial_schema") or "No se encontró el esquema inicial."
     session_id = state.get("session_id", "default_session")
+    user_email = state.get("user_email", "unknown_user")
     
     # Obtenemos el título del proyecto desde selected_idea o report_components
     selected_idea = state.get("selected_idea")
@@ -176,8 +177,10 @@ def initial_schema_proyect_doc_node(state: GraphState) -> dict:
     
     # Subimos y obtenemos las KEYS (ej: uuid/archivo.pdf)
     # upload_file maneja internamente la estructura session_id/nombre_archivo
-    md_key = storage_service.upload_file(md_filepath, session_id)
-    pdf_key = storage_service.upload_file(pdf_filepath, session_id)
+    minio_folder = f"{user_email}/Agent_Sessions/{session_id}/initial_schema"
+    
+    md_key = storage_service.upload_file(md_filepath, minio_folder)
+    pdf_key = storage_service.upload_file(pdf_filepath, minio_folder)
 
     # ========================================
     # ACTUALIZAR RUTAS EN EL ESTADO
