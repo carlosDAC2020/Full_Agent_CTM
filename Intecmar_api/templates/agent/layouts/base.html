@@ -87,7 +87,7 @@
     </script>
 
     <!-- CSS Personalizado -->
-    <link rel="stylesheet" href="{{ url_for('static', path='css/main.css') }}">
+    <link rel="stylesheet" href="/static/css/main.css">
 </head>
 
 <body class="bg-cotecmar-gray h-screen flex overflow-hidden font-sans text-slate-800">
@@ -98,7 +98,7 @@
         <div class="p-5 flex items-center gap-3 border-b border-blue-900/50 min-w-[16rem]">
             <!-- Uso dinámico del logo que tienes en carpeta -->
             <!-- Uso dinámico del logo que tienes en carpeta -->
-            <img src="{{ url_for('static', path='images/CotecmarLogo_white.png') }}" alt="Cotecmar" class="h-10 w-auto opacity-90">
+            <img src="/static/images/CotecmarLogo_white.png" alt="Cotecmar" class="h-10 w-auto opacity-90">
             <div class="h-8 w-px bg-blue-800/50 mx-1"></div>
             <div class="flex flex-col">
                 <span class="font-extrabold tracking-widest text-base leading-none text-white">INTECMAR</span>
@@ -216,7 +216,7 @@
     </main>
 
     <!-- JS de la App -->
-    <script type="module" src="{{ url_for('static', path='js/agent/main.js') }}"></script>
-</body> 
+    <script type="module" src="/static/js/agent/main.js"></script>
+</body>
 
 </html>
