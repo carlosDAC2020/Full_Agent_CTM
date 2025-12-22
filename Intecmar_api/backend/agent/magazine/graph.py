@@ -7,6 +7,7 @@ from .nodes import (
     nodo_extraccion,
     nodo_curacion,
     nodo_guardado_db,
+    nodo_generador_pdf,
 )
 
 # Crear el grafo
@@ -18,6 +19,7 @@ workflow.add_node("busqueda", nodo_busqueda)
 workflow.add_node("extraccion", nodo_extraccion)
 workflow.add_node("curacion", nodo_curacion)
 workflow.add_node("guardado_db", nodo_guardado_db)
+workflow.add_node("generador_pdf", nodo_generador_pdf)
 
 # Definir el flujo (las conexiones entre nodos)
 workflow.set_entry_point("planificador")
@@ -25,7 +27,8 @@ workflow.add_edge("planificador", "busqueda")
 workflow.add_edge("busqueda", "extraccion")
 workflow.add_edge("extraccion", "curacion")
 workflow.add_edge("curacion", "guardado_db")
-workflow.add_edge("guardado_db", END)
+workflow.add_edge("guardado_db", "generador_pdf")
+workflow.add_edge("generador_pdf", END)
 
 # Compilar el grafo en una aplicación ejecutable
 app = workflow.compile()

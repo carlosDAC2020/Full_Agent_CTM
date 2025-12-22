@@ -118,7 +118,7 @@ def nodo_extraccion(state: AgentState) -> AgentState:
                - "fecha_inicio": Fecha de inicio en formato YYYY-MM-DD si está disponible
                - "fecha_cierre": Fecha de cierre en formato YYYY-MM-DD (si hay múltiples fechas, usa la más cercana)
                - "deadline": Fecha y hora exacta de cierre en formato ISO 8601 (si está disponible)
-               - "type_financy": Tipo de financiamiento (ej: "beca", "capital semilla", "premio en efectivo", "aceleración", "mentoría", etc.)
+               - "type_financy": Tipo(s) de financiamiento como string o lista de strings (ej: "beca", ["capital semilla", "mentoría"], "premio en efectivo", etc.)
                - "monto": Monto del financiamiento si está especificado (ej: "USD 10,000", "Hasta $50,000,000 COP")
                - "objetivo": Objetivo de la convocatoria
                - "beneficios": Lista de beneficios adicionales
@@ -350,6 +350,15 @@ def nodo_guardado_db(state: AgentState) -> AgentState:
             if q.first():
                 continue
 
+            # Normalize type_financy to string (convert array to comma-separated string)
+            type_financy_value = item.get("type_financy")
+            if isinstance(type_financy_value, list):
+                type_financy_str = ", ".join(str(x) for x in type_financy_value if x)
+            elif type_financy_value:
+                type_financy_str = str(type_financy_value)
+            else:
+                type_financy_str = None
+            
             conv = models.Convocatoria(
                 title=str(titulo),
                 description=str(desc),
@@ -361,7 +370,7 @@ def nodo_guardado_db(state: AgentState) -> AgentState:
                 fecha_inicio=_clean_date(item.get("fecha_inicio") or item.get("inicio")),
                 deadline=_clean_date(item.get("deadline")),
                 fecha_cierre=_clean_date(item.get("fecha_cierre")),
-                type_financy=item.get("type_financy"),
+                type_financy=type_financy_str,
                 monto=item.get("monto"),
                 requisitos=item.get("requisitos") or ["No especificado"],
                 beneficios=item.get("beneficios") or ["No especificados"],
@@ -382,4 +391,40 @@ def nodo_guardado_db(state: AgentState) -> AgentState:
     # Importante: devolver una actualización válida del estado
     return {"contenido_curado": state.get("contenido_curado", [])}
 
-# nodo_generador_pdf eliminado: el backend genera PDF directamente en main_api.py
+
+def nodo_generador_pdf(state: AgentState) -> AgentState:
+    """Genera el PDF del magazine con el contenido curado y lo sube a MinIO."""
+    print("--- 📄 GENERANDO PDF ---")
+    
+    from backend.app.services.magazine.pdf_engine import generate_pdf
+    from backend.app.services.magazine.minio_storage import minio_storage
+    
+    contenido = state.get("contenido_curado", [])
+    
+    if not contenido:
+        print("⚠️  No hay contenido para generar PDF")
+        return {"pdf_path": None}
+    
+    try:
+        # Generar PDF
+        pdf_path, pdf_name = generate_pdf(contenido)
+        print(f"✅ PDF generado: {pdf_path}")
+        
+        # Subir a MinIO si es posible
+        # Note: user_email would need to be passed in state for proper folder structure
+        # For now, we'll use a generic folder
+        try:
+            folder = "magazines"  # Could be enhanced with user email if available in state
+            if os.path.exists(pdf_path):
+                with open(pdf_path, "rb") as f:
+                    pdf_data = f.read()
+                minio_storage.upload_file(file_data=pdf_data, folder=folder, filename=pdf_name)
+                print(f"✅ PDF subido a MinIO: {folder}/{pdf_name}")
+        except Exception as e:
+            print(f"⚠️ Error subiendo a MinIO: {e}")
+        
+        return {"pdf_path": pdf_path}
+    except Exception as e:
+        print(f"⚠️ Error generando PDF: {e}")
+        return {"pdf_path": None}
+
