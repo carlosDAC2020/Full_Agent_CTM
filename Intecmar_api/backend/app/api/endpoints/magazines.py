@@ -252,12 +252,28 @@ async def user_history(current_user: models.User = Depends(get_current_user), db
                         meta_url = f"/outputs/{sidecar}"
             except Exception: pass
             
+            # Generate URL for viewer - try MinIO first, fallback to local
+            pdf_url = None
+            viewer_url = None
+            if r.filename:
+                # Try local first
+                local_path = os.path.join(settings.OUTPUTS_DIR, r.filename)
+                if os.path.exists(local_path):
+                    pdf_url = f"/outputs/{r.filename}"
+                    viewer_url = f"/viewer?file=/outputs/{r.filename}"
+                else:
+                    # Use MinIO URL
+                    minio_url = f"/api/minio_pdf/{current_user.email}/{r.filename}"
+                    pdf_url = minio_url
+                    viewer_url = f"/viewer?file={minio_url}"
+            
             items.append({
                 "id": r.id,
                 "name": r.title or r.filename or f"Magazine #{r.id}",
                 "date": r.created_at.isoformat() if r.created_at else None,
                 "status": "completed",
-                "url": f"/outputs/{r.filename}" if r.filename else None,
+                "url": pdf_url,
+                "viewer_url": viewer_url,
                 "meta_url": meta_url,
                 "kind": "magazine",
             })

@@ -55,5 +55,19 @@ class MinioStorage:
             print(f"Error subiendo a MinIO: {e}")
             return False
 
+    def download_file(self, folder: str, filename: str) -> bytes | None:
+        """Descarga un archivo desde MinIO y retorna sus bytes."""
+        try:
+            object_name = f"{folder}/{filename}"
+            response = self.client.get_object(self.bucket_name, object_name)
+            data = response.read()
+            response.close()
+            response.release_conn()
+            return data
+        except S3Error as e:
+            print(f"Error descargando desde MinIO: {e}")
+            return None
+
 
 minio_storage = MinioStorage()
+

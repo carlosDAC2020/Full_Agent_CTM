@@ -12,6 +12,8 @@ from backend.app.utils.files import ensure_outputs
 from backend.app.db.session import get_db
 from backend.app.db import models
 
+from backend.app.services.magazine.minio_storage import minio_storage
+
 router = APIRouter()
 
 # Initialize templates
@@ -22,6 +24,23 @@ templates = Jinja2Templates(directory=os.path.join(_root, "templates"))
 async def viewer_page(request: Request):
     """Sirve el visor de PDF tipo flipbook básico."""
     return templates.TemplateResponse("magazine/viewer.html", {"request": request})
+
+@router.get("/minio_pdf/{user_email:path}/{filename}")
+async def serve_minio_pdf(user_email: str, filename: str):
+    """Sirve un PDF desde MinIO."""
+    from fastapi.responses import Response
+    
+    folder = f"{user_email}/Magazines"
+    pdf_data = minio_storage.download_file(folder, filename)
+    
+    if pdf_data is None:
+        raise HTTPException(status_code=404, detail="PDF no encontrado en MinIO")
+    
+    return Response(
+        content=pdf_data,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f"inline; filename={filename}"}
+    )
 
 @router.post("/upload_pdf")
 async def upload_pdf(pdf_file: UploadFile = File(...)):
