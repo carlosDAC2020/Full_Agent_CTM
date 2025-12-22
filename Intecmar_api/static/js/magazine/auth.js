@@ -79,8 +79,8 @@
       setToken(''); 
       refreshMe(); 
       try {
-        const onIndex = window.location.pathname.includes('/frontend/index.html');
-        if (onIndex) window.location.href = '/frontend/login.html';
+        const onIndex = window.location.pathname.includes('/magazine');
+        if (onIndex) window.location.href = '/login';
       } catch {}
     });
     if (doLogin) doLogin.addEventListener('click', async ()=>{
@@ -100,8 +100,8 @@
         await refreshMe();
         // Redirect to app after successful login from login page
         try {
-          const onLoginPage = window.location.pathname.includes('/frontend/login.html');
-          if (onLoginPage) window.location.href = '/frontend/index.html';
+          const onLoginPage = window.location.pathname.includes('/login');
+          if (onLoginPage) window.location.href = '/magazine';
         } catch {}
       } catch(e){
         authError.textContent = e.message || String(e);

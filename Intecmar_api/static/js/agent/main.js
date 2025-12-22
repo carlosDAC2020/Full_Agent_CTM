@@ -20,10 +20,10 @@ async function loadUserInfo() {
         const protocol = window.location.protocol;
         if (currentHost.includes('github.dev') || currentHost.includes('csb.app')) {
             // Codespaces: replace 8001 with 8000
-            return protocol + '//' + currentHost.replace('-8001', '-8000') + '/frontend/login.html';
+            return protocol + '//' + currentHost.replace('-8001', '-8000') + '/login';
         } else {
             // Localhost
-            return 'http://' + currentHost + ':8000/frontend/login.html';
+            return 'http://' + currentHost + ':8000/login';
         }
     };
 
@@ -99,10 +99,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (currentHost.includes('github.dev') || currentHost.includes('csb.app')) {
             // Codespaces/Cloud environment: replace port in subdomain
-            targetUrl = protocol + '//' + currentHost.replace('-8001', '-8000') + '/frontend/index.html';
+            targetUrl = protocol + '//' + currentHost.replace('-8001', '-8000') + '/magazine';
         } else {
             // Localhost environment
-            targetUrl = 'http://' + currentHost + ':8000/frontend/index.html';
+            targetUrl = 'http://' + currentHost + ':8000/magazine';
         }
 
         if (token) {
