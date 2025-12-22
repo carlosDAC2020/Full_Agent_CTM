@@ -19,6 +19,7 @@ from fastapi.templating import Jinja2Templates
 from backend.app.core.config import settings
 from backend.app.api.api_v1 import api_router
 from backend.app.db.session import engine, Base
+from backend.scripts.migrate_convocatorias import migrate_convocatorias, migrate_sources
 
 # Create tables
 # In production, use Alembic
@@ -28,6 +29,16 @@ except Exception as e:
     print(f"DB init warning: {e}")
 
 app = FastAPI(title=settings.PROJECT_NAME, version=settings.VERSION)
+
+@app.on_event("startup")
+async def startup_event():
+    print("Iniciando migración de datos...")
+    try:
+        migrate_convocatorias()
+        migrate_sources()
+        print("Migración de datos completada exitosamente.")
+    except Exception as e:
+        print(f"Error durante la migración en el arranque: {e}")
 
 # CORS
 app.add_middleware(

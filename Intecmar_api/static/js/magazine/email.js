@@ -466,7 +466,7 @@ document.addEventListener('DOMContentLoaded', () => {
             sendBtn.disabled = true;
             sendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
 
-            const response = await fetch(`${API_URL}/send_email`, {
+            const response = await fetch(`${API_URL}/api/send_email`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -506,7 +506,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const formData = new FormData();
         formData.append('pdf_file', file);
         try {
-            const res = await fetch(`${API_URL}/upload_pdf`, { method: 'POST', body: formData });
+            const res = await fetch(`${API_URL}/api/upload_pdf`, { method: 'POST', body: formData });
             if (!res.ok) throw new Error('Error al subir el archivo');
             const data = await res.json();
             if (sendEmailPanel) sendEmailPanel.dataset.pdfPath = data.pdf_path || '';
@@ -527,7 +527,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // =======================================================
     async function loadEmailSettings() {
         try {
-            const response = await fetch(`${API_URL}/email_settings`);
+            const response = await fetch(`${API_URL}/api/email_settings`);
             if (!response.ok) throw new Error('No se pudo cargar la configuración.');
 
             const data = await response.json();
@@ -552,7 +552,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function saveEmailSettings() {
         try {
-            await fetch(`${API_URL}/email_settings`, {
+            await fetch(`${API_URL}/api/email_settings`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({

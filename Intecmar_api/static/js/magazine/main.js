@@ -155,7 +155,7 @@ document.addEventListener('DOMContentLoaded', () => {
           const poll = async () => {
             if (stopped) return;
             try {
-              const r = await fetch(`${API_URL}/tasks/id/${taskId}`);
+              const r = await fetch(`${API_URL}/api/tasks/id/${taskId}`);
               if (r.ok) {
                 const js = await r.json();
                 const st = (js.status || '').toLowerCase();
@@ -180,7 +180,7 @@ document.addEventListener('DOMContentLoaded', () => {
           setTimeout(poll, 2000);
           setTimeout(() => { if (taskWaiters.has(taskId)) { taskWaiters.delete(taskId); reject(new Error('Timeout AI search')); } }, 120000);
         });
-        const res = await fetch(`${API_URL}/sources/ai_search`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ tema: tema || null }) });
+        const res = await fetch(`${API_URL}/api/sources/ai_search`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ tema: tema || null }) });
         const data = res.ok ? await res.json() : { results: [] };
         renderAISearchResults(data.results || []);
       } catch (e) {
@@ -597,7 +597,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Placeholders visibles mientras cargan
         try { if (pdfWin && pdfWin.document) { pdfWin.document.title = 'Abriendo PDF...'; pdfWin.document.body.innerHTML = '<p style="font-family:sans-serif">Abriendo PDF...</p>'; } } catch { }
         try { if (viewerWin && viewerWin.document) { viewerWin.document.title = 'Abriendo visor...'; viewerWin.document.body.innerHTML = '<p style="font-family:sans-serif">Abriendo visor...</p>'; } } catch { }
-        const res = await fetch(`${API_URL}/generate_pdf_from_ids`, {
+        const res = await fetch(`${API_URL}/api/generate_pdf_from_ids`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ ids: Array.from(selectedItems.keys()) })
@@ -810,7 +810,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Encolar tarea vía API
   async function enqueueTask(type, payload) {
-    const res = await fetch(`${API_URL}/tasks`, {
+    const res = await fetch(`${API_URL}/api/tasks`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ type, payload: payload || {} })
@@ -839,7 +839,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function connectSSE() {
     try {
-      const es = new EventSource(`${API_URL}/tasks/stream`);
+      const es = new EventSource(`${API_URL}/api/tasks/stream`);
       es.addEventListener('task_started', async (ev) => {
         try {
           const data = JSON.parse(ev.data || '{}');
@@ -914,7 +914,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   async function rehydrateActiveTasks() {
     try {
-      const res = await fetch(`${API_URL}/tasks?status=active`);
+      const res = await fetch(`${API_URL}/api/tasks?status=active`);
       if (!res.ok) return;
       const data = await res.json();
       const tasks = Array.isArray(data.tasks) ? data.tasks : [];
@@ -1500,7 +1500,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   async function refreshSources() {
     try {
-      const res = await fetch(`${API_URL}/sources`);
+      const res = await fetch(`${API_URL}/api/sources`);
       const data = res.ok ? await res.json() : [];
       buildSourcesList(data);
       const badge = document.getElementById('sourcesCount');
@@ -1535,7 +1535,7 @@ document.addEventListener('DOMContentLoaded', () => {
       `;
       const toggleBtn = row.querySelector('.toggle-btn');
       toggleBtn.addEventListener('click', async () => {
-        await fetch(`${API_URL}/sources/${s.id}/toggle`, { method: 'PATCH' });
+        await fetch(`${API_URL}/api/sources/${s.id}/toggle`, { method: 'PATCH' });
         await refreshSources();
       });
       const editBtn = row.querySelector('.edit-btn');
@@ -1543,13 +1543,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const name = prompt('Nombre', s.name || '') || s.name;
         const type = prompt('Tipo', s.type || '') || s.type;
         const url = prompt('URL', s.url || '') || s.url;
-        await fetch(`${API_URL}/sources/${s.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, type, url }) });
+        await fetch(`${API_URL}/api/sources/${s.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, type, url }) });
         await refreshSources();
       });
       const deleteBtn = row.querySelector('.delete-btn');
       deleteBtn.addEventListener('click', async () => {
         if (confirm(`¿Seguro que quieres eliminar la fuente "${s.name}"?`)) {
-          await fetch(`${API_URL}/sources/${s.id}`, { method: 'DELETE' });
+          await fetch(`${API_URL}/api/sources/${s.id}`, { method: 'DELETE' });
           await refreshSources();
         }
       });
