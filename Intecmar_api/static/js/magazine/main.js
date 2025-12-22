@@ -66,7 +66,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const name = c.getAttribute('data-title') || '';
         const url = c.getAttribute('data-url') || '';
         if (!url) continue;
-        const res = await fetch(`${API_URL}/sources`, {
+        const res = await fetch(`${API_URL}/api/sources`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ name, url, type: '' })
@@ -211,7 +211,7 @@ document.addEventListener('DOMContentLoaded', () => {
   async function getCurrentUserId() {
     if (typeof __currentUserId === 'number' && __currentUserId > 0) return __currentUserId;
     try {
-      const r = await fetch(`${API_URL}/auth/me`);
+      const r = await fetch(`${API_URL}/api/auth/me`);
       if (r.ok) {
         const me = await r.json();
         if (me && typeof me.id === 'number') { __currentUserId = me.id; return __currentUserId; }
@@ -223,7 +223,7 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       const myId = await getCurrentUserId();
       if (!myId) return false;
-      const r = await fetch(`${API_URL}/tasks/id/${taskId}`);
+      const r = await fetch(`${API_URL}/api/tasks/id/${taskId}`);
       if (!r.ok) return false;
       const js = await r.json();
       const uid = Number(js.user_id || 0);
@@ -356,7 +356,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const poll = async () => {
           if (stopped) return;
           try {
-            const r = await fetch(`${API_URL}/tasks/id/${taskId}`);
+            const r = await fetch(`${API_URL}/api/tasks/id/${taskId}`);
             if (r.ok) {
               const js = await r.json();
               const st = (js.status || '').toLowerCase();
@@ -482,7 +482,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const poll = async () => {
           if (stopped) return;
           try {
-            const r = await fetch(`${API_URL}/tasks/id/${taskId}`);
+            const r = await fetch(`${API_URL}/api/tasks/id/${taskId}`);
             if (r.ok) {
               const js = await r.json();
               const st = (js.status || '').toLowerCase();
@@ -611,7 +611,7 @@ document.addEventListener('DOMContentLoaded', () => {
           viewerAbs = data.viewer_url.startsWith('http') ? data.viewer_url : `${API_URL}${data.viewer_url}`;
         } else if (pdfAbs) {
           // Fallback: construir viewer usando el PDF absoluto como parámetro
-          viewerAbs = `${API_URL}/viewer?file=${encodeURIComponent(pdfAbs)}`;
+          viewerAbs = `${API_URL}/api/viewer?file=${encodeURIComponent(pdfAbs)}`;
         }
 
         // Asignar URLs a las ventanas ya abiertas
@@ -662,7 +662,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const url = srcUrl.value.trim();
       if (!name || !url) return;
       try {
-        const res = await fetch(`${API_URL}/sources`, {
+        const res = await fetch(`${API_URL}/api/sources`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ name, type, url })
