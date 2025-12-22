@@ -17,28 +17,36 @@ class PDF(FPDF):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         
-        # Adjust path to find fonts/img relative to THIS file or project root
-        # Assuming this file is in backend/app/services/
-        # Assets are in backend/assets/ or root/img/ ?
-        # Original code used:
-        # script_dir = os.path.dirname(os.path.abspath(__file__))
-        # self.img_dir = os.path.join(script_dir, '..', 'img') 
-        # In new structure: backend/app/services -> ../../../img is root/img
+        # Path detection for Docker and local environments
+        # This file is in: backend/app/services/magazine/pdf_engine.py
+        # In Docker: /app/backend/app/services/magazine/pdf_engine.py
+        # In local: <project_root>/Intecmar_api/backend/app/services/magazine/pdf_engine.py
         
         current_dir = os.path.dirname(os.path.abspath(__file__))
-        # backend/app/services/../../.. -> root of project (Magazine_app)
-        self.root_dir = os.path.abspath(os.path.join(current_dir, '..', '..', '..'))
-        self.img_dir = os.path.join(self.root_dir, 'img')
         
-        # Handle font loading path
-        # Fonts are now in backend/fonts/
+        # Detect if running in Docker (working directory is /app)
+        # Go up from backend/app/services/magazine -> backend/app/services -> backend/app -> backend -> /app (root)
+        potential_root = os.path.abspath(os.path.join(current_dir, '..', '..', '..', '..'))
+        
+        # Check if this is Docker environment by looking for backend directory at the right level
+        docker_backend = os.path.join(potential_root, 'backend')
+        if os.path.isdir(docker_backend) and os.path.exists(os.path.join(docker_backend, 'app')):
+            # Running in Docker: root is /app
+            self.root_dir = potential_root
+        else:
+            # Running locally: go up 3 levels to Intecmar_api root
+            self.root_dir = os.path.abspath(os.path.join(current_dir, '..', '..', '..'))
+        
+        # Set paths relative to root
+        self.img_dir = os.path.join(self.root_dir, 'img')
         self.backend_dir = os.path.join(self.root_dir, 'backend')
         self.fonts_dir = os.path.join(self.backend_dir, 'fonts')
         
-        # Verify if fonts folder exists, else fallback to backend/ (if reverted)
+        # Load fonts from the detected fonts directory
         if os.path.isdir(self.fonts_dir):
             self._load_fonts(self.fonts_dir)
         else:
+            # Fallback: try loading from backend directory directly
             self._load_fonts(self.backend_dir)
         
     def _load_fonts(self, base_path):
