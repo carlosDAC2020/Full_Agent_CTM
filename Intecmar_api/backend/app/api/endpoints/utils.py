@@ -1,7 +1,8 @@
 import os
 import shutil
-from fastapi import APIRouter, UploadFile, File, HTTPException, Depends
+from fastapi import APIRouter, UploadFile, File, HTTPException, Depends, Request
 from fastapi.responses import FileResponse, RedirectResponse
+from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 
 from backend.app.core.config import settings
@@ -13,13 +14,14 @@ from backend.app.db import models
 
 router = APIRouter()
 
+# Initialize templates
+_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
+templates = Jinja2Templates(directory=os.path.join(_root, "templates"))
+
 @router.get("/viewer")
-async def viewer_page():
-    """Sirve el visor de PDF tipo flipbook básico (frontend/viewer.html)."""
-    front_view = os.path.join("frontend", "viewer.html")
-    if not os.path.exists(front_view):
-        raise HTTPException(status_code=404, detail="viewer.html no encontrado")
-    return FileResponse(front_view)
+async def viewer_page(request: Request):
+    """Sirve el visor de PDF tipo flipbook básico."""
+    return templates.TemplateResponse("magazine/viewer.html", {"request": request})
 
 @router.post("/upload_pdf")
 async def upload_pdf(pdf_file: UploadFile = File(...)):
