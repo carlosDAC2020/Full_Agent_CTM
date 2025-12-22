@@ -14,6 +14,9 @@ from backend.app.db import models as db_models
 from backend.app.services.magazine.redis_service import get_redis, task_key, release_flow_lock
 from backend.app.services.magazine.email_service import send_smtp_email
 from backend.app.services.magazine.agent_service import run_magazine_generation_stream, search_web, llm_invoke, agent_app
+from backend.app.services.magazine.pdf_engine import generate_pdf
+from backend.app.services.magazine.minio_storage import minio_storage
+from backend.app.utils.files import save_json_dict
 
 # Agent imports handled by agent_service, but we access agent_app directly in runs
 # If agent_app is needed, we imported it above from agent_service
@@ -100,9 +103,39 @@ def run_magazine(self, payload: Dict[str, Any] | None = None):
 
         pdf_path = result.get("pdf_path")
         pdf_url = None
+        if not pdf_path and result.get("contenido_curado"):
+            # Generar PDF si no vino del agente (legacy/refactor compatibility)
+            try:
+                print("⚠️  Generating PDF from worker (fallback)...")
+                pdf_path, pdf_name = generate_pdf(result.get("contenido_curado", []))
+                
+                # Upload to MinIO
+                user_email = (payload or {}).get("user_email")
+                if user_email:
+                    try:
+                        folder = f"{user_email}/Magazines"
+                        if os.path.exists(pdf_path):
+                            with open(pdf_path, "rb") as f:
+                                b = f.read()
+                            minio_storage.upload_file(file_data=b, folder=folder, filename=pdf_name)
+                    except Exception as e:
+                        print(f"⚠️ MinIO upload failed: {e}")
+
+                # Update result
+                result["pdf_path"] = pdf_path
+            except Exception as e:
+                print(f"⚠️ PDF Generation failed: {e}")
+
+        pdf_path = result.get("pdf_path")
+        pdf_url = None
         if pdf_path:
-            safe_path = str(pdf_path).replace("\\", "/")
-            pdf_url = f"/{safe_path}"
+            # Ensure correct URL format
+            if "outputs" in str(pdf_path):
+                 fname = os.path.basename(str(pdf_path))
+                 pdf_url = f"/outputs/{fname}"
+            else:
+                 safe_path = str(pdf_path).replace("\\", "/")
+                 pdf_url = f"/{safe_path}"
 
         # Persist PDF metadata in DB if user_id present
         try:
