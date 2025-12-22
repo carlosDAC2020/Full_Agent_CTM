@@ -40,10 +40,10 @@
 
                 if (currentHost.includes('github.dev') || currentHost.includes('csb.app')) {
                     // Codespaces: replace 8001 with 8000
-                    loginUrl = protocol + '//' + currentHost.replace('-8001', '-8000') + '/frontend/login.html';
+                    loginUrl = protocol + '//' + currentHost.replace('-8001', '-8000') + '/login';
                 } else {
                     // Localhost: use port 8000
-                    loginUrl = 'http://' + currentHost + ':8000/frontend/login.html';
+                    loginUrl = 'http://' + currentHost + ':8000/login';
                 }
 
                 // Redirect to Magazine App login

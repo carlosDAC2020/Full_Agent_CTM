@@ -19,9 +19,9 @@
             const API = window.location.origin;
             try {
                 const token = localStorage.getItem('auth_token');
-                if (!token) { window.location.replace('/frontend/login.html'); return; }
+                if (!token) { window.location.replace('/login'); return; }
                 // Optimistic check; will be revalidated by auth.js
-            } catch { window.location.replace('/frontend/login.html'); }
+            } catch { window.location.replace('/login'); }
         })();
     </script>
 </head>
@@ -701,7 +701,7 @@
                         localStorage.removeItem('user_email');
                     } catch { }
                     logoutActionBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Cerrando...';
-                    setTimeout(() => { window.location.href = '/frontend/login.html'; }, 600);
+                    setTimeout(() => { window.location.href = '/login'; }, 600);
                 });
             }
 

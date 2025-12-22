@@ -435,7 +435,7 @@
         if (token) {
           const r = await fetch(`${API_URL}/auth/me`, { headers: { 'Authorization': `Bearer ${token}` } });
           if (r.ok) {
-            window.location.href = '/frontend/index.html';
+            window.location.href = '/magazine';
             return;
           } else {
             localStorage.removeItem('auth_token');
