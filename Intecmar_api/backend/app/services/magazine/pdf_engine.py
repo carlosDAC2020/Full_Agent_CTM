@@ -174,12 +174,23 @@ def generate_pdf(items: List[dict]) -> str:
     pdf.set_auto_page_break(auto=True, margin=40)
     pdf.set_margins(left=40, top=40, right=40)
 
-    # Assets relative to the backend dir or root? 
-    # Logic in PDF class init tries to find project root
-    # We need to find 'assets' folder.
-    # Assuming assets is in ROOT/assets
-    backend_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))) # backend/app/services -> backend
-    root_dir = os.path.dirname(backend_dir)
+    # Assets directory detection (same logic as in PDF class __init__)
+    # In Docker: /app/assets
+    # In local: <project_root>/Intecmar_api/assets
+    current_file = os.path.abspath(__file__)
+    current_dir = os.path.dirname(current_file)
+    
+    # Try Docker path first (go up 4 levels from backend/app/services/magazine)
+    potential_root = os.path.abspath(os.path.join(current_dir, '..', '..', '..', '..'))
+    docker_backend = os.path.join(potential_root, 'backend')
+    
+    if os.path.isdir(docker_backend) and os.path.exists(os.path.join(docker_backend, 'app')):
+        # Running in Docker: root is /app
+        root_dir = potential_root
+    else:
+        # Running locally: go up 3 levels to Intecmar_api root
+        root_dir = os.path.abspath(os.path.join(current_dir, '..', '..', '..'))
+    
     assets_dir = os.path.join(root_dir, 'assets')
     
     inicio_cover = os.path.join(assets_dir, 'inicio.png')
