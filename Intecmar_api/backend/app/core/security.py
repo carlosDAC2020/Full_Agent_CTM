@@ -11,7 +11,7 @@ from backend.app.db.session import get_db
 from backend.app.db import models
 
 # Password hashing
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+pwd_context = CryptContext(schemes=["pbkdf2_sha256", "bcrypt"], deprecated="auto")
 
 # JWT settings
 JWT_SECRET = os.getenv("JWT_SECRET", "change-me")
