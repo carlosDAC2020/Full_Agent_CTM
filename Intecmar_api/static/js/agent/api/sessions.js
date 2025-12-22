@@ -1,7 +1,7 @@
 export async function fetchSessions() {
     try {
         const token = localStorage.getItem('auth_token');
-        const response = await fetch('/api/sessions', {
+        const response = await fetch('/api/agent_sessions', {
             headers: token ? { 'Authorization': `Bearer ${token}` } : {}
         });
         if (!response.ok) throw new Error('Error fetching sessions');
@@ -15,7 +15,7 @@ export async function fetchSessions() {
 export async function deleteSession(sessionId) {
     try {
         const token = localStorage.getItem('auth_token');
-        const response = await fetch(`/api/sessions/${sessionId}`, {
+        const response = await fetch(`/api/agent_sessions/${sessionId}`, {
             method: 'DELETE',
             headers: token ? { 'Authorization': `Bearer ${token}` } : {}
         });

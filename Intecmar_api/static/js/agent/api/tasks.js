@@ -1,6 +1,6 @@
 export async function getTaskStatus(taskId) {
     try {
-        const response = await fetch(`/api/tasks/${taskId}`);
+        const response = await fetch(`/api/agent_tasks/${taskId}`);
         if (!response.ok) throw new Error('Error fetching task status');
         return await response.json();
     } catch (error) {
