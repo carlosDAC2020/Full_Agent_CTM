@@ -25,9 +25,14 @@ async def list_convocatorias(db: Session = Depends(get_db)):
     rows = db.query(Convocatoria).order_by(Convocatoria.created_db_at.desc()).all()
     return rows
 
+from fastapi import APIRouter, File, UploadFile, Form
+import shutil
+import tempfile
+
 @router.post("/ingest")
 async def start_ingest(
-    request: IngestRequest,
+    text: str = Form(...),
+    files: List[UploadFile] = File(None),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
@@ -41,10 +46,33 @@ async def start_ingest(
     )
     db.add(session)
     db.commit()
+
+    # Upload files to context folder
+    context_docs_paths = []
+    if files:
+        for file in files:
+            # Create a temporary file to save the uploaded content
+            with tempfile.NamedTemporaryFile(delete=False, suffix=f"_{file.filename}") as tmp:
+                shutil.copyfileobj(file.file, tmp)
+                tmp_path = tmp.name
+            
+            try:
+                # Upload to MinIO in 'context' subfolder
+                object_key = storage_service.upload_file(tmp_path, session_id, subfolder="context")
+                if object_key:
+                    context_docs_paths.append(object_key)
+            finally:
+                # Clean up temporary file
+                if os.path.exists(tmp_path):
+                    os.remove(tmp_path)
     
     task = task_process_agent_step.delay(
         session_id=session_id, 
-        input_data={"text": request.text, "user_email": current_user.email}, 
+        input_data={
+            "text": text, 
+            "user_email": current_user.email,
+            "context_docs": context_docs_paths
+        }, 
         step_type="ingest"
     )
     return {"task_id": task.id, "session_id": session_id}

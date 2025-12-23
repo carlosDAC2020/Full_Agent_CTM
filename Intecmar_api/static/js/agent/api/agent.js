@@ -21,17 +21,25 @@ export async function getConvocatorias() {
     }
 }
 
-export async function ingestCall(text, title = "") {
+export async function ingestCall(text, files = []) {
     try {
+        const formData = new FormData();
+        formData.append('text', text);
+
+        if (files && files.length > 0) {
+            for (let i = 0; i < files.length; i++) {
+                formData.append('files', files[i]);
+            }
+        }
+
+        const token = localStorage.getItem('auth_token');
         const response = await fetch('/api/agent/ingest', {
             method: 'POST',
-            headers: getAuthHeaders(),
-            body: JSON.stringify({
-                text: text,
-                // Si el backend soportara título en el input_data lo mandaríamos, 
-                // pero por ahora solo 'text'. 
-                // El backend extraerá info de ahí.
-            })
+            headers: {
+                ...(token && { 'Authorization': `Bearer ${token}` })
+                // Let the browser set the Content-Type with boundary for FormData
+            },
+            body: formData
         });
 
         if (!response.ok) {

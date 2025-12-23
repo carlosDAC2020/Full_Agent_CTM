@@ -177,6 +177,18 @@ def task_process_agent_step(self, session_id: str, input_data: dict, step_type: 
         current_state["route_decision"] = "ingest"
         if "user_email" in input_data:
              current_state["user_email"] = input_data["user_email"]
+        
+        # Inyectar documentos de contexto si existen
+        if "context_docs" in input_data and input_data["context_docs"]:
+            if "call_info" not in current_state or not current_state["call_info"]:
+                current_state["call_info"] = CallInfo()
+            
+            # Si ya es un objeto CallInfo (por rehidratación), lo usamos
+            if hasattr(current_state["call_info"], "context_docs"):
+                current_state["call_info"].context_docs = input_data["context_docs"]
+            else:
+                # Si es un dict (raro aquí debido a rehidratación previa pero posible), lo actualizamos
+                current_state["call_info"]["context_docs"] = input_data["context_docs"]
     
     # Asegurar que user_email se preserva o actualiza si viene en input (para reanudaciones)
     if "user_email" in input_data and not current_state.get("user_email"):

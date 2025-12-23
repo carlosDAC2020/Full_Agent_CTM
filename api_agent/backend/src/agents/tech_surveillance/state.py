@@ -151,6 +151,7 @@ class CallInfo(BaseModel):
     important_dates: Optional[str] = Field(default=None, description="Fechas importantes (inicio, cierre)")
     benefits: Optional[List[str]] = Field(default=None, description="Beneficios listados")
     url: Optional[str] = Field(default=None, description="URL de más información")
+    context_docs: Optional[List[str]] = Field(default=None, description="Rutas de documentos de contexto subidos por el usuario")
 
 class ProposalIdea(BaseModel):
     """Idea de proyecto propuesta por el usuario."""

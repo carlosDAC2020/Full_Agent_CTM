@@ -26,7 +26,10 @@ export async function startAnalysis() {
 
     try {
         // 1. Start Ingestion Task
-        const { task_id, session_id } = await ingestCall(store.selectedCallText);
+        const fileInput = document.getElementById('file-upload');
+        const files = fileInput ? fileInput.files : [];
+
+        const { task_id, session_id } = await ingestCall(store.selectedCallText, files);
         store.sessionId = session_id;
         loadHistory(session_id); // Refresh history with new session
 

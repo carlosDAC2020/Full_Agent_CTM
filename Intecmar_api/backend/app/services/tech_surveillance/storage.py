@@ -28,7 +28,7 @@ class MinioService:
             print(f"🪣 Bucket '{self.bucket_name}' no encontrado. Creando...")
             self.s3_client.create_bucket(Bucket=self.bucket_name)
 
-    def upload_file(self, file_path: str, session_id: str) -> str:
+    def upload_file(self, file_path: str, session_id: str, subfolder: str = None) -> str:
         """
         Sube un archivo y retorna el 'object_key' (ruta en S3).
         Organiza por carpeta usando session_id.
@@ -38,8 +38,11 @@ class MinioService:
             return None
 
         filename = os.path.basename(file_path)
-        # Estructura: session_id/filename
-        object_name = f"{session_id}/{filename}"
+        # Estructura: session_id/[subfolder/]filename
+        if subfolder:
+            object_name = f"{session_id}/{subfolder}/{filename}"
+        else:
+            object_name = f"{session_id}/{filename}"
 
         try:
             print(f"⬆️ Subiendo {filename} a MinIO ({self.bucket_name})...")
