@@ -40,6 +40,8 @@ export async function startAnalysis() {
             (result) => {
                 // On Complete
                 renderStep1Result(result.data);
+                // Fix: Explicitly show step 1 ONLY here, when user initiates analysis
+                getElements().step1.classList.remove('hidden');
             },
             (error) => {
                 loaderText.innerText = "Error: " + error;
@@ -100,5 +102,6 @@ export function renderStep1Result(dataJson) {
         presBtn.classList.add('opacity-50', 'pointer-events-none');
     }
 
-    step1.classList.remove('hidden');
+    // Fix: Do NOT unhide step1 here. This function is shared with restoreSession.
+    // step1.classList.remove('hidden'); 
 }
