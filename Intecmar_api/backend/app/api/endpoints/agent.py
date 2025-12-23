@@ -1,3 +1,8 @@
+import os
+import shutil
+import tempfile
+from fastapi import File, UploadFile, Form
+
 import uuid
 from fastapi import APIRouter
 from backend.app.schemas.requests import IngestRequest, SelectionRequest, NextStepRequest
@@ -24,10 +29,6 @@ async def list_convocatorias(db: Session = Depends(get_db)):
     """Lista todas las convocatorias guardadas en la base de datos."""
     rows = db.query(Convocatoria).order_by(Convocatoria.created_db_at.desc()).all()
     return rows
-
-from fastapi import APIRouter, File, UploadFile, Form
-import shutil
-import tempfile
 
 @router.post("/ingest")
 async def start_ingest(
