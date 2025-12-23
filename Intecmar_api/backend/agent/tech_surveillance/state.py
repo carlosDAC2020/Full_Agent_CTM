@@ -154,7 +154,7 @@ class CallInfo(BaseModel):
         default=None, 
         description="URL de más información"
     )
-    context_docs_paths: Optional[List[str]] = Field(
+    context_docs: Optional[List[str]] = Field(
         default=None,
         description="Rutas a documentos relevantes de la convocatoria"
     )
