@@ -183,12 +183,13 @@ def task_process_agent_step(self, session_id: str, input_data: dict, step_type: 
             if "call_info" not in current_state or not current_state["call_info"]:
                 current_state["call_info"] = CallInfo()
             
-            # Si ya es un objeto CallInfo (por rehidratación), lo usamos
-            if hasattr(current_state["call_info"], "context_docs"):
-                current_state["call_info"].context_docs = input_data["context_docs"]
+            call_info = current_state["call_info"]
+            if hasattr(call_info, "__setattr__") and not isinstance(call_info, dict):
+                # Es un objeto Pydantic
+                call_info.context_docs = input_data["context_docs"]
             else:
-                # Si es un dict (raro aquí debido a rehidratación previa pero posible), lo actualizamos
-                current_state["call_info"]["context_docs"] = input_data["context_docs"]
+                # Es un diccionario
+                call_info["context_docs"] = input_data["context_docs"]
     
     # Asegurar que user_email se preserva o actualiza si viene en input (para reanudaciones)
     if "user_email" in input_data and not current_state.get("user_email"):

@@ -51,6 +51,9 @@ async def start_ingest(
     # Upload files to context folder
     context_docs_paths = []
     if files:
+        # Carpeta base para la sesión: user_email/Agent_Sessions/session_id
+        session_base_path = f"{current_user.email}/Agent_Sessions/{session_id}"
+        
         for file in files:
             # Create a temporary file to save the uploaded content
             with tempfile.NamedTemporaryFile(delete=False, suffix=f"_{file.filename}") as tmp:
@@ -59,7 +62,7 @@ async def start_ingest(
             
             try:
                 # Upload to MinIO in 'context' subfolder
-                object_key = storage_service.upload_file(tmp_path, session_id, subfolder="context")
+                object_key = storage_service.upload_file(tmp_path, session_base_path, subfolder="context")
                 if object_key:
                     context_docs_paths.append(object_key)
             finally:
