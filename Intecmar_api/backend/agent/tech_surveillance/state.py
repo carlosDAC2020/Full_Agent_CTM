@@ -150,7 +150,14 @@ class CallInfo(BaseModel):
     keywords: Optional[List[str]] = Field(default=None, description="Palabras clave de la convocatoria")
     important_dates: Optional[str] = Field(default=None, description="Fechas importantes (inicio, cierre)")
     benefits: Optional[List[str]] = Field(default=None, description="Beneficios listados")
-    url: Optional[str] = Field(default=None, description="URL de más información")
+    url: Optional[str] = Field(
+        default=None, 
+        description="URL de más información"
+    )
+    context_docs_paths: Optional[List[str]] = Field(
+        default=None,
+        description="Rutas a documentos relevantes de la convocatoria"
+    )
 
 class ProposalIdea(BaseModel):
     """Idea de proyecto propuesta por el usuario."""

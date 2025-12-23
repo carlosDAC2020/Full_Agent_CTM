@@ -40,30 +40,10 @@ https://minciencias.gov.co/convocatorias/convocatoria-colombia-inteligente-cienc
 
 pendientes 
 
-- revizar el sistema de logout para q sea compartido entre las aplicaciones 
-        parcielamente resuelto con la navegacion en una sola pestaña 
-
-- guardar la informaciond e las convocatorias en base de datos y traer la informacion a la api de agente 
-
-- hacer q las interfaces tengan un etsilo homogeneo entre los pasos 
-
 - agregra el uso de documentos de refenrecia para la genracion de la presentacion inicial
 
+- comodar el retroceso de pasos esta trayendo informacion no valida 
 
 
 
 
-
-----------------------------------------------------
-
-migracion de agente a magazine 
-
-- codogo del agente de vigilancia tecnologica 
-
-- esquemas 
-
-- modelos y coneccion a base de datos 
-
-- servicios 
-
-- coneccion de worker y tasks para el worker 
