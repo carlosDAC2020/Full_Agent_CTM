@@ -6,14 +6,16 @@ from langchain.agents import create_agent
 from backend.agent.tech_surveillance.state import GraphState
 from .prompts import SYSTEM_PROMPT, CONTENT_PROMPT_TEMPLATE
 
-from  backend.agent.tech_surveillance.tools import web_search
+from backend.agent.tech_surveillance.tools.rag import rag_search_documents
+from backend.agent.tech_surveillance.tools import web_search
 
 # Lista de herramientas
 web_research_tools = [
     web_search.tavily_search,
     web_search.brave_search,
     web_search.duckduckgo_search,
-    web_search.fetch_url_content
+    web_search.fetch_url_content,
+    rag_search_documents
 ]
 
 # --- 1. CONFIGURACIÓN DEL MODELO ---
@@ -39,6 +41,7 @@ async def presentation_generation_node(state: GraphState):
     print("🎨 INICIANDO AGENTE DE INVESTIGACIÓN Y PRESENTACIÓN...")
     
     call_info = state.get("call_info")
+    session_id = state.get("session_id")
     if not call_info:
         return {"final_report": "Error: Sin datos de entrada"}
 
@@ -58,6 +61,9 @@ async def presentation_generation_node(state: GraphState):
         dates_status=dates_status,
         url=call_info.url or "N/A"
     )
+
+    # Agregamos instrucción explícita sobre la sesión para RAG
+    prompt_content += f"\n\nNOTA: Si necesitas consultar documentos internos de esta sesión, usa la herramienta 'rag_search_documents' con el session_id: {session_id}"
 
     try:
         # 2. Invocar al Agente con Herramientas

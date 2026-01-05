@@ -45,6 +45,19 @@ services:
     networks:
       - agent_network
 
+  chromadb:
+    image: chromadb/chroma:latest
+    container_name: chromadb
+    ports:
+      - "8001:8000"
+    volumes:
+      - chromadb_data:/chroma/chroma
+    networks:
+      - agent_network
+    environment:
+      - IS_PERSISTENT=TRUE
+      - ANONYMIZED_TELEMETRY=FALSE
+
   # ==========================================
   # INTECMAR API (Núcleo Unificado)
   # ==========================================
@@ -68,6 +81,9 @@ services:
       - MINIO_SECRET_KEY=minioadmin
       - MINIO_SECURE=False
       - MINIO_BUCKET_USERS=users
+      # ChromaDB config
+      - CHROMA_HOST=chromadb
+      - CHROMA_PORT=8000
       # Agent specific envs
       - CELERY_BROKER_URL=redis://shared_redis:6379/0
       - CELERY_RESULT_BACKEND=redis://shared_redis:6379/0
@@ -77,6 +93,7 @@ services:
     depends_on:
       - shared-redis
       - shared_postgres
+      - chromadb
     networks:
       - agent_network
 
@@ -128,12 +145,16 @@ services:
       - MINIO_ACCESS_KEY=minioadmin
       - MINIO_SECRET_KEY=minioadmin
       - MINIO_BUCKET=agent-results
+      # ChromaDB config
+      - CHROMA_HOST=chromadb
+      - CHROMA_PORT=8000
     volumes:
       - ./Intecmar_api:/app
     depends_on:
       - shared-redis
       - shared-minio
       - shared_postgres
+      - chromadb
     networks:
       - agent_network
 
@@ -141,6 +162,7 @@ volumes:
   shared_redis_data:
   shared_postgres_data:
   shared_minio_data:
+  chromadb_data:
 
 networks:
   agent_network:

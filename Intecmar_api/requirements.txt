@@ -56,6 +56,13 @@ boto3
 botocore
 minio
 
+# --- RAG & Vector Database ---
+chromadb
+langchain-chroma
+pypdf
+docx2txt
+unstructured
+
 # --- Legacy / Merged App Support (Flask & MySQL) ---
 # (Se mantienen por la unión de las apps)
 Flask

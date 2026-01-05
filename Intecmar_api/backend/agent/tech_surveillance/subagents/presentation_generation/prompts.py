@@ -21,6 +21,11 @@ REGLAS DE FORMATO DE SALIDA (CRÍTICO):
 - NO escribas introducciones ni conclusiones fuera de los bloques.
 - NO generes la estructura completa del documento (html/head/body), SOLO el contenido interno de los bloques.
 - Limítate estrictamente a los separadores `[SECCION]...[/SECCION]`.
+
+**PROTOCOLOS RAG (NUEVO):**
+- Si necesitas información detallada de los documentos locales subidos por el usuario (PDFs, Word, etc.), utiliza siempre la herramienta 'rag_search_documents' proporcionando el query y el session_id.
+- Primero intenta buscar información en los documentos internos con 'rag_search_documents' si la consulta parece ser sobre bases de la convocatoria, cronogramas específicos o requisitos internos.
+- Si no encuentras la información en los documentos internos, procede a realizar búsquedas en la web.
 """
 
 CONTENT_PROMPT_TEMPLATE = """\

@@ -16,6 +16,7 @@ from backend.agent.tech_surveillance.nodes.initial_schema_proyect.node import in
 from backend.agent.tech_surveillance.nodes.initial_schema_proyect_doc.node import initial_schema_proyect_doc_node
 from backend.agent.tech_surveillance.nodes.ipropose_ides.node import propose_ides_node
 from backend.agent.tech_surveillance.nodes.presentation.node import presentation_generation_docs_node
+from backend.agent.tech_surveillance.nodes.vectorizer.node import vectorizer_node
 
 # importamos subagentes 
 from backend.agent.tech_surveillance.subagents.academic_reseacrh.node import academic_research_node
@@ -36,6 +37,7 @@ workflow.add_node("router", router_node)
 
 # seleccion de convocatoria 
 workflow.add_node("ingest", ingestion_node)
+workflow.add_node("vectorizer", vectorizer_node)
 workflow.add_node("presentation_generator", presentation_generation_node)
 workflow.add_node("presentation_generator_docs", presentation_generation_docs_node)
 
@@ -68,7 +70,8 @@ workflow.add_conditional_edges(
 )
 
 # flujo para invetsiagcion de convocatorias
-workflow.add_edge("ingest", "presentation_generator")
+workflow.add_edge("ingest", "vectorizer")
+workflow.add_edge("vectorizer", "presentation_generator")
 workflow.add_edge("presentation_generator", "presentation_generator_docs")
 workflow.add_edge("presentation_generator_docs", END)
 
