@@ -208,10 +208,3 @@ async def search_semantic_scholar(query: str, max_results: int = 5) -> str:
     return results
 
 
-# Lista de herramientas
-research_tools = [
-    search_arxiv,
-    search_pubmed,
-    academic_search,
-    search_semantic_scholar 
-]

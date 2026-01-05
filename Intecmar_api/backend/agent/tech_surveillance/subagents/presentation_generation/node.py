@@ -6,8 +6,15 @@ from langchain.agents import create_agent
 from backend.agent.tech_surveillance.state import GraphState
 from .prompts import SYSTEM_PROMPT, CONTENT_PROMPT_TEMPLATE
 
-from .tools import research_tools
+from  backend.agent.tech_surveillance.tools import web_search
 
+# Lista de herramientas
+web_research_tools = [
+    web_search.tavily_search,
+    web_search.brave_search,
+    web_search.duckduckgo_search,
+    web_search.fetch_url_content
+]
 
 # --- 1. CONFIGURACIÓN DEL MODELO ---
 model = ChatGoogleGenerativeAI(
@@ -19,7 +26,7 @@ model = ChatGoogleGenerativeAI(
 # Creamos el agente con herramientas
 academic_research_agent = create_agent(
     model=model,  
-    tools=research_tools,
+    tools=web_research_tools,
     system_prompt=SYSTEM_PROMPT
 )
 

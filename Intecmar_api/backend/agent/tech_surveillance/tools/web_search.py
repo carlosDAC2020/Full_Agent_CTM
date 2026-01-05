@@ -8,7 +8,6 @@ from langchain_community.tools import BraveSearch
 from langchain_community.tools import DuckDuckGoSearchResults
 
 
-
 @tool
 async def tavily_search(query: str, max_results: int = 5) -> str:
     """
@@ -41,7 +40,6 @@ async def tavily_search(query: str, max_results: int = 5) -> str:
         )
     
     return "\n\n" + "="*80 + "\n\n".join(formatted_results)
-
 
 @tool
 async def brave_search(query: str, max_results: int = 5) -> str:
@@ -129,10 +127,3 @@ async def fetch_url_content(url: str) -> str:
         return f"Error fetching URL content: {e}"
 
 
-# Lista de herramientas
-research_tools = [
-    tavily_search,
-    brave_search,
-    duckduckgo_search,
-    fetch_url_content
-]

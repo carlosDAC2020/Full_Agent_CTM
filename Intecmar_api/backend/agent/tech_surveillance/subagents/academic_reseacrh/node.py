@@ -4,9 +4,17 @@ from langchain.agents import create_agent
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.messages import AIMessage, HumanMessage
 
-from .tools import research_tools
+from backend.agent.tech_surveillance.tools import academic_research
 from .prompts import RESEARCH_PROMPT_TEMPLATE
 from backend.agent.tech_surveillance.state import GraphState, ReportSchema, TheoreticalFramework
+
+# Lista de herramientas
+research_tools = [
+    academic_research.search_arxiv,
+    academic_research.search_pubmed,
+    academic_research.academic_search,
+    academic_research.search_semantic_scholar 
+]
 
 # Initialize model 
 model = ChatGoogleGenerativeAI(
