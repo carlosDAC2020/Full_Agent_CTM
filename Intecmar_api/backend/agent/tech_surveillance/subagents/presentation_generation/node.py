@@ -112,9 +112,14 @@ async def presentation_generation_node(state: GraphState):
 
         except Exception as e:
             error_str = str(e)
-            if ("429" in error_str or "RESOURCE_EXHAUSTED" in error_str) and attempt < max_retries - 1:
-                wait_time = (2 ** attempt) * 10 
-                print(f"⚠️ [PRESENTATION] Cuota agotada (429). Reintentando en {wait_time}s (Intento {attempt+1}/{max_retries})...")
+            # Manejar tanto 429 (Cuota) como 503 (Servicio Sobrecargado)
+            is_rate_limit = "429" in error_str or "RESOURCE_EXHAUSTED" in error_str
+            is_overloaded = "503" in error_str or "UNAVAILABLE" in error_str
+            
+            if (is_rate_limit or is_overloaded) and attempt < max_retries - 1:
+                wait_time = (2 ** attempt) * 12 # Aumentamos ligeramente el multiplicador
+                reason = "Cuota agotada" if is_rate_limit else "Modelo sobrecargado"
+                print(f"⚠️ [PRESENTATION] {reason} ({'429' if is_rate_limit else '503'}). Reintentando en {wait_time}s (Intento {attempt+1}/{max_retries})...")
                 time.sleep(wait_time)
                 continue
             
