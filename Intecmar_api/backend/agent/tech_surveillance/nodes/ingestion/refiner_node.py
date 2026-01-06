@@ -38,11 +38,16 @@ async def call_info_refiner_node(state: GraphState):
     REPORTE DE INVESTIGACIÓN DETALLADO:
     {presentation_summary}
 
-    INSTRUCCIONES:
-    1. Si el reporte contiene fechas exactas, montos de financiamiento detallados o un objetivo más preciso que los actuales, ACTUALÍZALOS.
-    2. Mantén los documentos de contexto ('context_docs') y la URL intactos si ya existen.
-    3. Asegúrate de extraer palabras clave relevantes y beneficios si se mencionan en el reporte.
-    4. El resultado debe ser un objeto CallInfo completo y refinado.
+    INSTRUCCIONES CRÍTICAS:
+    1. **FECHAS (important_dates)**: Busca específicamente la "Fecha de Apertura" y la "Fecha de Cierre" en el REPORTE. 
+       - Si las encuentras, actualiza 'important_dates' con un formato claro (ej: 'Apertura: 20 Nov 2025 | Cierre: 29 Ene 2026'). 
+       - PRIORIZA las fechas del reporte sobre las actuales si el reporte es más específico.
+    2. **FINANCIAMIENTO (funding)**: Extrae montos máximos, porcentajes de financiación y si es no dilutiva.
+    3. **OBJETIVO (objective)**: Refina el objetivo si el reporte describe mejor para qué sirve la convocatoria.
+    4. **DOCS Y URL**: Mantén los documentos de contexto ('context_docs') e 'url' intactos si ya existen.
+    5. **KEYWORDS Y BENEFICIOS**: Asegúrate de capturar los beneficios encontrados en el reporte.
+    
+    El resultado debe ser un objeto CallInfo completo, profesional y refinado.
     """
 
     max_retries = 3
@@ -56,7 +61,11 @@ async def call_info_refiner_node(state: GraphState):
             if hasattr(current_call_info, "url") and current_call_info.url and not refined_info.url:
                 refined_info.url = current_call_info.url
 
-            print(f"✅ [REFINER] Información refinada con éxito: {refined_info.title}")
+            print(f"✅ [REFINER] Información refinada:")
+            print(f"   - Título: {refined_info.title}")
+            print(f"   - Fechas Extraídas: {refined_info.important_dates}") # DEBUG CLAVE
+            print(f"   - Funding: {refined_info.funding}")
+            
             return {"call_info": refined_info}
             
         except Exception as e:

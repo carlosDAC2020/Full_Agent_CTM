@@ -15,9 +15,9 @@ template = """You are an expert consultant in research project formulation and g
 {{
     "title": "Exact name of the call or null",
     "objective": "Main objective or null",
-    "funding": "Funding info or null",
+    "funding": "Funding info (amounts, currency) or null",
     "keywords": ["key1", "key2"] or null,
-    "important_dates": "Dates or null",
+    "important_dates": "Opening and closing dates (e.g., 'Abre: [Fecha] | Cierra: [Fecha]') or null",
     "benefits": ["benefit1"] or null,
     "url": "URL or null"
   }}
