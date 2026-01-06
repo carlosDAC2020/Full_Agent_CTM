@@ -37,6 +37,12 @@ def ingestion_node(state: GraphState) -> dict:
         confirmation_text = ""
         
         if ingestion_result:
+            # Llenamos ambos campos para evitar problemas de compatibilidad
+            if ingestion_result.important_dates:
+                ingestion_result.dates = ingestion_result.important_dates
+            elif ingestion_result.dates:
+                ingestion_result.important_dates = ingestion_result.dates
+
             confirmation_text += f"✅ **Convocatoria Detectada:** {ingestion_result.title}\n"
             if ingestion_result.url:
                 confirmation_text += f"🔗 **URL:** {ingestion_result.url}\n"

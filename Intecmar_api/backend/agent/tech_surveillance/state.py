@@ -149,6 +149,7 @@ class CallInfo(BaseModel):
     funding: Optional[str] = Field(default=None, description="Información sobre financiamiento")
     keywords: Optional[List[str]] = Field(default=None, description="Palabras clave de la convocatoria")
     important_dates: Optional[str] = Field(default=None, description="Opening and closing dates of the call (e.g., 'Apertura: [Fecha] | Cierre: [Fecha]')")
+    dates: Optional[str] = Field(default=None, description="Alias for important_dates to ensure compatibility")
     benefits: Optional[List[str]] = Field(default=None, description="Beneficios listados")
     url: Optional[str] = Field(
         default=None, 

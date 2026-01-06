@@ -55,6 +55,12 @@ async def call_info_refiner_node(state: GraphState):
         try:
             refined_info = await extraction_llm.ainvoke(prompt)
             
+            # Llenamos ambos campos para evitar problemas de compatibilidad
+            if refined_info.important_dates:
+                refined_info.dates = refined_info.important_dates
+            elif refined_info.dates:
+                refined_info.important_dates = refined_info.dates
+            
             # Preservar datos técnicos que no cambian
             if hasattr(current_call_info, "context_docs") and current_call_info.context_docs:
                 refined_info.context_docs = current_call_info.context_docs
@@ -63,8 +69,7 @@ async def call_info_refiner_node(state: GraphState):
 
             print(f"✅ [REFINER] Información refinada:")
             print(f"   - Título: {refined_info.title}")
-            print(f"   - Fechas Extraídas: {refined_info.important_dates}") # DEBUG CLAVE
-            print(f"   - Funding: {refined_info.funding}")
+            print(f"   - Fechas Extraídas: {refined_info.important_dates or refined_info.dates}")
             
             return {"call_info": refined_info}
             
