@@ -140,11 +140,15 @@ export function renderStep1Result(dataJson) {
     document.getElementById('res-funding').innerText = callInfo.funding || "No especificado";
     document.getElementById('res-dates').innerText = callInfo.important_dates || callInfo.dates || "Fechas no detectadas";
 
-    // Keywords
+    // Keywords (Visual Refresh)
     const tagsDiv = document.getElementById('res-keywords');
     tagsDiv.innerHTML = '';
     if (callInfo.keywords && Array.isArray(callInfo.keywords)) {
-        callInfo.keywords.forEach(t => tagsDiv.innerHTML += `<span class="bg-blue-50 text-blue-700 border border-blue-100 px-2 py-1 rounded-md shadow-sm text-xs font-medium whitespace-nowrap">#${t}</span>`);
+        callInfo.keywords.forEach(t => tagsDiv.innerHTML += `
+            <span class="bg-gray-100 hover:bg-blue-50 text-gray-600 hover:text-blue-600 border border-gray-200 hover:border-blue-200 px-3 py-1.5 rounded-full text-xs font-semibold transition-all cursor-default select-none">
+                #${t}
+            </span>
+        `);
     }
 
     // --- LOGICA DE ESTADO: ¿Investigación hecha? ---

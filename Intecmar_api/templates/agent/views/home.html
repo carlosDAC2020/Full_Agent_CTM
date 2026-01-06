@@ -301,27 +301,42 @@
                         </div>
                     </div>
 
-                    <!-- Botón de Investigación Profunda (NUEVO) -->
-                    <div id="research-action-container" class="mt-6 mb-4 hidden">
-                        <button onclick="startResearch()"
-                            class="w-full py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl font-bold shadow-lg hover:shadow-xl transition-all hover:-translate-y-0.5 flex items-center justify-center gap-3 group">
-                            <div class="p-1.5 bg-white/20 rounded-lg group-hover:bg-white/30 transition-colors">
-                                <i class="ph-fill ph-rocket-launch text-xl"></i>
+                    <!-- Botón de Investigación Profunda (MEJORADO) -->
+                    <div id="research-action-container" class="mt-8 mb-6 hidden">
+                        <div class="relative group cursor-pointer" onclick="startResearch()">
+                            <div
+                                class="absolute -inset-1 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl blur opacity-25 group-hover:opacity-75 transition duration-1000 group-hover:duration-200">
                             </div>
-                            <span>Iniciar Análisis Técnico Profundo</span>
-                            <i class="ph-bold ph-arrow-right group-hover:translate-x-1 transition-transform"></i>
-                        </button>
-                        <p class="text-xs text-center text-gray-400 mt-2">Genera reporte técnico y presentación
-                            ejecutiva basada en los documentos.</p>
+                            <button
+                                class="relative w-full py-5 bg-white border border-gray-100 ring-1 ring-gray-900/5 rounded-xl flex items-center justify-between px-8 hover:bg-gray-50 transition-all">
+                                <div class="flex items-center gap-4">
+                                    <div
+                                        class="w-12 h-12 bg-blue-600 text-white rounded-lg flex items-center justify-center shadow-lg shadow-blue-600/20 group-hover:scale-110 transition-transform">
+                                        <i class="ph-fill ph-rocket-launch text-2xl"></i>
+                                    </div>
+                                    <div class="text-left">
+                                        <h3
+                                            class="text-lg font-bold text-gray-900 group-hover:text-blue-700 transition-colors">
+                                            Iniciar Análisis Técnico Profundo</h3>
+                                        <p class="text-xs text-gray-500 font-medium">Genera reporte técnico y
+                                            presentación ejecutiva</p>
+                                    </div>
+                                </div>
+                                <div
+                                    class="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center group-hover:translate-x-1 transition-transform">
+                                    <i class="ph-bold ph-arrow-right text-lg"></i>
+                                </div>
+                            </button>
+                        </div>
                     </div>
 
-                    <!-- Historial de Presentaciones (NUEVO) -->
+                    <!-- Historial de Versiones (NUEVO) -->
                     <div id="res-history-container" class="mt-8 hidden animate-fade-in border-t border-gray-100 pt-6">
                         <label
                             class="text-[10px] font-extrabold text-cotecmar-mid uppercase tracking-[0.2em] mb-4 block flex items-center gap-2">
                             <i class="ph ph-clock-counter-clockwise text-lg"></i> HISTORIAL DE VERSIONES
                         </label>
-                        <div id="res-history-list" class="space-y-2">
+                        <div id="res-history-list" class="space-y-2 max-h-40 overflow-y-auto custom-scrollbar pr-2">
                             <!-- Se llena con JS -->
                         </div>
                     </div>
@@ -345,10 +360,17 @@
                             <input type="file" id="append-docs-input" class="hidden" multiple
                                 onchange="appendDocs(this)">
                         </div>
+
+                        <!-- Keywords Section (Moved here for better flow) -->
+                        <div class="mt-6 pt-6 border-t border-gray-100">
+                            <label
+                                class="text-[10px] font-extrabold text-gray-400 uppercase tracking-[0.2em] mb-3 block">Palabras
+                                Clave Detectadas</label>
+                            <div id="res-keywords" class="flex flex-wrap gap-2"></div>
+                        </div>
                     </div>
                 </div>
-                <div class="bg-gray-50 p-4 flex justify-between items-center border-t border-gray-100">
-                    <div id="res-keywords" class="flex gap-2 text-xs text-gray-500"></div>
+                <div class="bg-gray-50 p-4 flex justify-end items-center border-t border-gray-100">
                     <div class="flex gap-2">
                         <!-- Generar Ideas siempre disponible -->
                         <button onclick="goToStep2()"

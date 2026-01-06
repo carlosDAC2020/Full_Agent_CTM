@@ -1,5 +1,5 @@
 import { fetchSessions, deleteSession } from '../api/sessions.js';
-import { restoreSession } from './wizard.js'; // Import logic
+import { restoreSession } from './wizard.js';
 import { store } from '../data/store.js';
 
 export function toggleSidebar() {
