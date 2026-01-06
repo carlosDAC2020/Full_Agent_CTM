@@ -1,9 +1,11 @@
 import os
 import shutil
 import tempfile
+import time
 from typing import List
 import chromadb
 from langchain_chroma import Chroma
+# ... rest of imports ...
 from langchain_community.document_loaders import (
     PyPDFLoader, 
     Docx2txtLoader, 
@@ -123,9 +125,22 @@ async def vectorizer_node(state: GraphState):
             embedding_function=embeddings
         )
         
-        print(f"🚀 [VECTORIZER] Indexando {len(splits)} chunks...")
-        # Usamos la función con reintentos
-        add_documents_with_retry(vectorstore, splits)
+        # Estrategia de Batching: Enviar de 20 en 20 chunks para no saturar TPM/RPM
+        batch_size = 20
+        total_chunks = len(splits)
+        print(f"🚀 [VECTORIZER] Indexando {total_chunks} chunks en batches de {batch_size}...")
+        
+        for i in range(0, total_chunks, batch_size):
+            batch = splits[i : i + batch_size]
+            print(f"📦 [VECTORIZER] Enviando batch {i//batch_size + 1} ({len(batch)} chunks)...")
+            
+            # Usamos la función con reintentos
+            add_documents_with_retry(vectorstore, batch)
+            
+            # Pequeño respiro entre batches para la cuota de la API
+            if i + batch_size < total_chunks:
+                print("🕒 [VECTORIZER] Pausa de 2s entre batches...")
+                time.sleep(2)
         
         print(f"✅ [VECTORIZER] Vectorización completada con éxito.")
         

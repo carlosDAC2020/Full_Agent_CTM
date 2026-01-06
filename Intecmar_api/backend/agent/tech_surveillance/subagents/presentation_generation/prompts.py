@@ -36,6 +36,9 @@ OBJETIVO: {objective}
 FINANCIACIÓN: {funding} {funding_status}
 FECHAS: {important_dates} {dates_status}
 URL: {url}
+PALABRAS CLAVE: {keywords}
+BENEFICIOS IDENTIFICADOS:
+{benefits}
 
 Eres un Consultor Senior en Licitaciones Públicas. Tu trabajo no es solo copiar y pegar, sino INVESTIGAR A FONDO y SINTETIZAR técnicamente.
 

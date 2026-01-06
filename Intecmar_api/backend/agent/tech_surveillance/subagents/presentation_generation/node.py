@@ -22,7 +22,7 @@ web_research_tools = [
 
 # --- 1. CONFIGURACIÓN DEL MODELO ---
 model = ChatGoogleGenerativeAI(
-    model="gemini-1.5-flash",
+    model="gemini-2.5-flash",
     api_key=os.environ.get("GEMINI_API_KEY"),
     temperature=0.7,
     max_retries=6
@@ -54,6 +54,10 @@ async def presentation_generation_node(state: GraphState):
     dates_status = "(⚠️ FALTANTE - BUSCAR CRONOGRAMA)" if not call_info.important_dates or call_info.important_dates == "N/A" else ""
     title_status = "(⚠️ FALTANTE - BUSCAR TÍTULO)" if not call_info.title else ""
 
+    # Identificar campos adicionales para enriquecer el contexto
+    keywords = ", ".join(call_info.keywords) if call_info.keywords else "N/A"
+    benefits = "\n- ".join(call_info.benefits) if call_info.benefits else "N/A"
+
     prompt_content = CONTENT_PROMPT_TEMPLATE.format(
         title=call_info.title or "Sin título",
         title_status=title_status,
@@ -62,7 +66,9 @@ async def presentation_generation_node(state: GraphState):
         funding_status=funding_status,
         important_dates=call_info.important_dates or "N/A",
         dates_status=dates_status,
-        url=call_info.url or "N/A"
+        url=call_info.url or "N/A",
+        keywords=keywords,
+        benefits=benefits
     )
 
     # Agregamos instrucción explícita sobre la sesión para RAG

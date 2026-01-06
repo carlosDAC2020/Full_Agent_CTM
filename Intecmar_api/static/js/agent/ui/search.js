@@ -154,7 +154,17 @@ export function selectOption(id) {
     if (!item) return;
 
     store.selectedValue = id;
-    store.selectedCallText = `Título: ${item.title}\n\nDescripción: ${item.description || ''}\n\nObjetivo: ${item.objective || item.description || ''}\n\nRequisitos: ${JSON.stringify(item.requisitos || [])}`;
+    store.selectedCallText = `
+        TÍTULO: ${item.title}
+        DESCRIPCIÓN: ${item.description || item.objective || ''}
+        OBJETIVO: ${item.objective || ''}
+        FINANCIACIÓN: ${item.funding || item.financiacion || 'No especificado'}
+        FECHAS: ${item.deadline || item.fecha_cierre || 'No especificado'}
+        TIPO: ${item.type || ''}
+        FUENTE: ${item.source || ''}
+        REQUISITOS: ${JSON.stringify(item.requisitos || [])}
+        KEYWORDS: ${JSON.stringify(item.keywords || item.tags || [])}
+    `.trim();
 
     const { noSelectionState, selectionDetails } = getElements();
 

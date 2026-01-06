@@ -89,7 +89,7 @@ export function renderStep1Result(dataJson) {
     }
 
     // Dates 
-    document.getElementById('res-dates').innerText = callInfo.dates || "Fechas no detectadas";
+    document.getElementById('res-dates').innerText = callInfo.important_dates || "Fechas no detectadas";
 
     // Update Presentation Link: Use correct key 'presentation_oath_pdf' from state.py
     const presBtn = document.getElementById('btn-presentation-link');

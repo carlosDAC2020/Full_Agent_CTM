@@ -10,6 +10,7 @@ from backend.agent.tech_surveillance.routes.manager.route import router_node
 
 # importamos nodos 
 from backend.agent.tech_surveillance.nodes.ingestion.node import ingestion_node
+from backend.agent.tech_surveillance.nodes.ingestion.refiner_node import call_info_refiner_node
 from backend.agent.tech_surveillance.nodes.chat.node import chat_node
 from backend.agent.tech_surveillance.nodes.report.node import report_node
 from backend.agent.tech_surveillance.nodes.initial_schema_proyect.node import initial_schema_node
@@ -39,6 +40,7 @@ workflow.add_node("router", router_node)
 workflow.add_node("ingest", ingestion_node)
 workflow.add_node("vectorizer", vectorizer_node)
 workflow.add_node("presentation_generator", presentation_generation_node)
+workflow.add_node("call_info_refiner", call_info_refiner_node)
 workflow.add_node("presentation_generator_docs", presentation_generation_docs_node)
 
 # geenracion de ideas
@@ -72,7 +74,8 @@ workflow.add_conditional_edges(
 # flujo para invetsiagcion de convocatorias
 workflow.add_edge("ingest", "vectorizer")
 workflow.add_edge("vectorizer", "presentation_generator")
-workflow.add_edge("presentation_generator", "presentation_generator_docs")
+workflow.add_edge("presentation_generator", "call_info_refiner")
+workflow.add_edge("call_info_refiner", "presentation_generator_docs")
 workflow.add_edge("presentation_generator_docs", END)
 
 # flujo para generacion de ideas de proyecto
