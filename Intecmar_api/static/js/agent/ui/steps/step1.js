@@ -115,8 +115,13 @@ export function renderStep1Result(dataJson) {
             contextDocsContainer.classList.remove('hidden');
             callInfo.context_docs.forEach(doc => {
                 // El backend ahora envía {name, url} para los docs presignados
-                const docName = typeof doc === 'object' ? doc.name : doc;
+                let docName = typeof doc === 'object' ? doc.name : doc;
                 const docUrl = typeof doc === 'object' ? doc.url : doc;
+
+                // Limpieza de seguridad: si el nombre aún tiene la ruta completa, tomamos solo el final
+                if (docName && docName.includes('/')) {
+                    docName = docName.split('/').pop();
+                }
 
                 contextDocsDiv.innerHTML += `
                     <a href="${docUrl}" target="_blank" class="flex items-center p-3 bg-white border border-gray-100 rounded-xl hover:border-blue-200 hover:bg-blue-50/50 transition-all group shadow-sm">
