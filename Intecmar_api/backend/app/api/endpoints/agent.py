@@ -258,15 +258,35 @@ async def get_session_history(
         # Así que debemos procesar CADA paso en el history_map porsiaca el frontend lee de uno específico.
         
         if step_data and isinstance(step_data, dict):
+            # 1. Docs Paths (Direct Keys)
             if "docs_paths" in step_data and step_data["docs_paths"]:
                 docs = step_data["docs_paths"]
                 for key, val in docs.items():
                      if val and isinstance(val, str) and "/" in val: 
                          docs[key] = storage_service.get_presigned_url(val)
                 step_data["docs_paths"] = docs
+            
+            # 2. Call Info (Nested History and Context)
+            if "call_info" in step_data and step_data["call_info"]:
+                ci = step_data["call_info"]
                 
-            # Si el step data es string (a veces pasa por serialización doble accidental), parsear, firmar, stringificar.
-            # Pero en la DB 'output_data' es JSONB (Postgres) o JSON. Asumimos dict.
+                # Presign Presentation History
+                if "presentation_history" in ci and isinstance(ci["presentation_history"], list):
+                    for entry in ci["presentation_history"]:
+                        if "url" in entry and entry["url"] and "/" in entry["url"]:
+                            entry["url"] = storage_service.get_presigned_url(entry["url"])
+                
+                # Presign Context Docs
+                if "context_docs" in ci and isinstance(ci["context_docs"], list):
+                    for i, doc in enumerate(ci["context_docs"]):
+                        # Handle both string keys and dict {name, url}
+                        if isinstance(doc, str) and "/" in doc:
+                            url = storage_service.get_presigned_url(doc)
+                            ci["context_docs"][i] = {"name": os.path.basename(doc), "url": url}
+                        elif isinstance(doc, dict) and "url" in doc and "/" in doc["url"]:
+                            doc["url"] = storage_service.get_presigned_url(doc["url"])
+                
+                step_data["call_info"] = ci
         
         history_map[step.step_type] = step_data
 

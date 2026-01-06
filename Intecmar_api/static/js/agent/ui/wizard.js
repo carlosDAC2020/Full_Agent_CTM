@@ -57,7 +57,11 @@ export function resetInterface() {
     if (noSelectionState) noSelectionState.classList.remove('hidden');
     if (selectionDetails) selectionDetails.classList.add('hidden');
 
-    // 6. Refresh History and List
+    // 6. Hide Modals (if open)
+    const researchModal = document.getElementById('research-loading-modal');
+    if (researchModal) researchModal.classList.add('hidden');
+
+    // 7. Refresh History and List
     loadHistory();
     import('./search.js').then(search => search.filterOptions());
 }

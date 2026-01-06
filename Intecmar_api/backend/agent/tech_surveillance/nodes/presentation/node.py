@@ -69,9 +69,25 @@ def presentation_generation_docs_node(state: GraphState):
     docs_paths.presentation_oath_pdf = pdf_key
     docs_paths.presentation_oath_pptx = pptx_key
     
+    # --- NUEVO: Actualizar historial en CallInfo ---
+    if not hasattr(call_info, "presentation_history") or call_info.presentation_history is None:
+        call_info.presentation_history = []
+    
+    # Crear entrada de historial (usaremos la key de MinIO, que el API firmará después)
+    history_entry = {
+        "name": f"Presentación {datetime.datetime.now().strftime('%d/%m/%Y %H:%M')}",
+        "url": pdf_key,
+        "date": datetime.datetime.now().isoformat(),
+        "type": "pdf"
+    }
+    
+    # Evitar duplicados si por alguna razón se re-ejecuta el mismo archivo (poco probable por el timestamp)
+    call_info.presentation_history.append(history_entry)
+
     return {
         "messages": [AIMessage(content=msg_content)],
         "random_response": final_marp,
-        "docs_paths": docs_paths
+        "docs_paths": docs_paths,
+        "call_info": call_info
     }
     

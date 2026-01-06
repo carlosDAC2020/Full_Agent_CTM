@@ -157,14 +157,12 @@ export function renderStep1Result(dataJson) {
     const historyContainer = document.getElementById('res-history-container');
     const historyList = document.getElementById('res-history-list');
 
-    // 1. Botón Principal (Ver Presentación vs Iniciar Investigación)
-    if (docs.presentation_oath_pdf) {
-        // PRESENTACIÓN LISTA
-        if (presBtn) {
+    // 1. Botón Principal (Ver Presentación AND Iniciar/Regenerar Investigación)
+    if (presBtn) {
+        if (docs.presentation_oath_pdf) {
             presBtn.href = docs.presentation_oath_pdf;
             presBtn.target = "_blank";
             presBtn.classList.remove('hidden', 'opacity-50', 'pointer-events-none');
-            presBtn.classList.remove('bg-gray-100', 'border-gray-200'); // Reset styles if needed
             presBtn.innerHTML = `
                 <div class="w-8 h-8 rounded-full bg-red-500 text-white flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
                     <i class="ph ph-presentation text-lg"></i>
@@ -174,12 +172,26 @@ export function renderStep1Result(dataJson) {
                     <div class="text-sm font-bold text-red-700">Ver Presentación</div>
                 </div>
             `;
+        } else {
+            presBtn.classList.add('hidden');
         }
-        if (researchContainer) researchContainer.classList.add('hidden'); // Ocultar botón grande
-    } else {
-        // NO HAY PRESENTACIÓN AÚN
-        if (presBtn) presBtn.classList.add('hidden'); // Ocultar link superior
-        if (researchContainer) researchContainer.classList.remove('hidden'); // Mostrar botón grande
+    }
+
+    if (researchContainer) {
+        researchContainer.classList.remove('hidden'); // Siempre visible si estamos aquí
+        const researchBtnTitle = researchContainer.querySelector('h3');
+        const researchBtnSubtitle = researchContainer.querySelector('p');
+        const researchBtnIcon = researchContainer.querySelector('.ph-rocket-launch');
+
+        if (docs.presentation_oath_pdf) {
+            if (researchBtnTitle) researchBtnTitle.innerText = "Regenerar Análisis Técnico";
+            if (researchBtnSubtitle) researchBtnSubtitle.innerText = "Actualiza el reporte con nuevos documentos o datos";
+            if (researchBtnIcon) researchBtnIcon.className = "ph-fill ph-arrows-clockwise text-2xl"; // Cambio icono a recarga
+        } else {
+            if (researchBtnTitle) researchBtnTitle.innerText = "Iniciar Análisis Técnico Profundo";
+            if (researchBtnSubtitle) researchBtnSubtitle.innerText = "Genera reporte técnico y presentación ejecutiva";
+            if (researchBtnIcon) researchBtnIcon.className = "ph-fill ph-rocket-launch text-2xl";
+        }
     }
 
     // 2. Historial de Versiones
