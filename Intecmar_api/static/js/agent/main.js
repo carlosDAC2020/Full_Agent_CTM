@@ -77,6 +77,8 @@ document.addEventListener('DOMContentLoaded', () => {
     window.setCategoryFilter = setCategoryFilter;
 
     window.startAnalysis = startAnalysis;
+    window.startResearch = startResearch;
+    window.appendDocs = appendDocs;
     window.updateFileStatus = updateFileStatus;
     window.goToStep2 = goToStep2;
     window.cancelEdit = cancelEdit;
