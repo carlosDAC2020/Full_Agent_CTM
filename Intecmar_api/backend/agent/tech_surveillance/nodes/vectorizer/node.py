@@ -59,6 +59,10 @@ async def vectorizer_node(state: GraphState):
     chroma_host = os.getenv("CHROMA_HOST", "chromadb")
     chroma_port = int(os.getenv("CHROMA_PORT", "8000"))
     
+    # Directorio temporal para descargar archivos
+    temp_dir = tempfile.mkdtemp()
+    
+    try:
         # Conectar a ChromaDB y guardar
         print(f"🚀 [VECTORIZER] Conectando a ChromaDB collection: session_{session_id}")
         
