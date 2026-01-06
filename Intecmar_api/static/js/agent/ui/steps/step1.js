@@ -106,6 +106,36 @@ export function renderStep1Result(dataJson) {
         presBtn.classList.add('opacity-50', 'pointer-events-none');
     }
 
+    // Context Documents (NUEVO)
+    const contextDocsContainer = document.getElementById('res-context-docs-container');
+    const contextDocsDiv = document.getElementById('res-context-docs');
+    if (contextDocsContainer && contextDocsDiv) {
+        contextDocsDiv.innerHTML = '';
+        if (callInfo.context_docs && Array.isArray(callInfo.context_docs) && callInfo.context_docs.length > 0) {
+            contextDocsContainer.classList.remove('hidden');
+            callInfo.context_docs.forEach(doc => {
+                // El backend ahora envía {name, url} para los docs presignados
+                const docName = typeof doc === 'object' ? doc.name : doc;
+                const docUrl = typeof doc === 'object' ? doc.url : doc;
+
+                contextDocsDiv.innerHTML += `
+                    <a href="${docUrl}" target="_blank" class="flex items-center p-3 bg-white border border-gray-100 rounded-xl hover:border-blue-200 hover:bg-blue-50/50 transition-all group shadow-sm">
+                        <div class="w-10 h-10 bg-blue-50 text-blue-500 rounded-lg flex items-center justify-center group-hover:bg-blue-100 transition-colors">
+                            <i class="ph ph-file-text text-xl"></i>
+                        </div>
+                        <div class="ml-3 overflow-hidden">
+                            <div class="text-[11px] font-bold text-gray-800 truncate">${docName}</div>
+                            <div class="text-[9px] text-gray-400 font-medium uppercase tracking-wider">Documento de Apoyo</div>
+                        </div>
+                        <i class="ph ph-arrow-square-out ml-auto text-gray-300 group-hover:text-blue-400"></i>
+                    </a>
+                `;
+            });
+        } else {
+            contextDocsContainer.classList.add('hidden');
+        }
+    }
+
     // Fix: Do NOT unhide step1 here. This function is shared with restoreSession.
     // step1.classList.remove('hidden'); 
 }

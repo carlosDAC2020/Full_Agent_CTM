@@ -42,19 +42,32 @@ async def get_task_status(task_id: str):
                 # Deserializamos para inyectar URLs firmadas
                 state_dict = json.loads(result_data["data"])
                 
-                # Búscamos si hay 'docs_paths' en el estado
+                # 1. Búscamos si hay 'docs_paths' en el estado
                 if "docs_paths" in state_dict and state_dict["docs_paths"]:
                     docs = state_dict["docs_paths"]
-                    
-                    # Convertir Keys de S3 a URLs Presignadas
                     for key, val in docs.items():
-                        # Verificación simple: si es string y tiene "/", asumimos que es una ruta de S3
                         if val and isinstance(val, str) and "/" in val: 
                             docs[key] = storage_service.get_presigned_url(val)
-                    
-                    # Actualizar data y volver a serializar
                     state_dict["docs_paths"] = docs
-                    result_data["data"] = json.dumps(state_dict)
+                
+                # 2. Búscamos si hay 'context_docs' en 'call_info'
+                if "call_info" in state_dict and state_dict["call_info"]:
+                    call_info = state_dict["call_info"]
+                    if "context_docs" in call_info and call_info["context_docs"]:
+                        presigned_docs = []
+                        for val in call_info["context_docs"]:
+                            if val and isinstance(val, str) and "/" in val:
+                                presigned_docs.append({
+                                    "name": val.split("/")[-1],
+                                    "url": storage_service.get_presigned_url(val)
+                                })
+                            else:
+                                presigned_docs.append(val)
+                        call_info["context_docs"] = presigned_docs
+                    state_dict["call_info"] = call_info
+
+                # Actualizar data y volver a serializar
+                result_data["data"] = json.dumps(state_dict)
                     
             except Exception as e:
                 print(f"Error procesando URLs de MinIO: {e}")
