@@ -151,6 +151,7 @@ class CallInfo(BaseModel):
     important_dates: Optional[str] = Field(default=None, description="Opening and closing dates of the call (e.g., 'Apertura: [Fecha] | Cierre: [Fecha]')")
     dates: Optional[str] = Field(default=None, description="Alias for important_dates to ensure compatibility")
     benefits: Optional[List[str]] = Field(default=None, description="Beneficios listados")
+    presentation_history: Optional[List[dict]] = Field(default=None, description="History of generated presentations (versions).")
     url: Optional[str] = Field(
         default=None, 
         description="URL de más información"

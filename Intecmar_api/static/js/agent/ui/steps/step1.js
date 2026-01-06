@@ -1,11 +1,11 @@
 import { mockDB } from '../../data/mocks.js';
 import { store } from '../../data/store.js';
-import { ingestCall } from '../../api/agent.js';
+import { ingestCall, researchCall, appendDocsCall } from '../../api/agent.js';
 import { pollTask } from '../../api/tasks.js';
 import { getElements, updateStepper } from '../common.js';
-import { loadHistory } from '../sidebar.js'; // Helper for sidebar updates
+import { loadHistory } from '../sidebar.js';
 
-// Paso 1: Iniciar Análisis
+// Paso 1: Iniciar Análisis (Ingesta)
 export async function startAnalysis() {
     const { initialView, resultsView, globalStepper, loader, loaderText } = getElements();
     if (!store.selectedValue) return;
@@ -21,29 +21,22 @@ export async function startAnalysis() {
 
     // Call API
     loader.classList.remove('hidden');
-    loaderText.innerText = "Iniciando ingesta de convocatoria...";
+    loaderText.innerText = "Iniciando ingesta de convocatoria y extracción básica...";
     updateStepper(1);
 
     try {
-        // 1. Start Ingestion Task
         const fileInput = document.getElementById('file-upload');
         const files = fileInput ? fileInput.files : [];
 
         const { task_id, session_id } = await ingestCall(store.selectedCallText, files);
         store.sessionId = session_id;
-        loadHistory(session_id); // Refresh history with new session
+        loadHistory(session_id);
 
-        // 2. Poll Task Progress
         pollTask(
             task_id,
-            (message) => {
-                // Update loader text with progress message from backend
-                loaderText.innerText = message || "Procesando...";
-            },
+            (message) => { loaderText.innerText = message || "Procesando..."; },
             (result) => {
-                // On Complete
                 renderStep1Result(result.data);
-                // Fix: Explicitly show step 1 ONLY here, when user initiates analysis
                 getElements().step1.classList.remove('hidden');
             },
             (error) => {
@@ -53,78 +46,173 @@ export async function startAnalysis() {
         );
 
     } catch (err) {
-        loaderText.innerText = "Error de conexión: " + err.message;
+        loaderText.innerText = "Error: " + err.message;
         loaderText.classList.add('text-red-500');
+    }
+}
+
+// Fase 1.5: Iniciar Investigación Profunda
+export async function startResearch() {
+    if (!store.sessionId) return;
+
+    const researchModal = document.getElementById('research-loading-modal');
+    const statusText = document.getElementById('research-status-text');
+
+    researchModal.classList.remove('hidden');
+    statusText.innerText = "Conectando con agente de investigación...";
+
+    try {
+        const { task_id } = await researchCall(store.sessionId);
+
+        pollTask(
+            task_id,
+            (message) => { statusText.innerText = message || "Analizando..."; },
+            (result) => {
+                renderStep1Result(result.data); // Refresca UI con presentación generada
+                researchModal.classList.add('hidden');
+            },
+            (error) => {
+                statusText.innerText = "Error crítico: " + error;
+                statusText.classList.add('text-red-500');
+                setTimeout(() => researchModal.classList.add('hidden'), 5000);
+            }
+        );
+    } catch (err) {
+        console.error(err);
+        researchModal.classList.add('hidden');
+        alert("Error iniciando investigación: " + err.message);
+    }
+}
+
+// Fase 1.x: Añadir más documentos
+export async function appendDocs(inputElement) {
+    if (!store.sessionId || !inputElement.files.length) return;
+
+    const files = inputElement.files;
+    // UI Feedack simple (se podría mejorar)
+    const btn = inputElement.previousElementSibling;
+    const originalText = btn.innerHTML;
+    btn.innerHTML = `<i class="ph ph-spinner animate-spin"></i> Subiendo...`;
+    btn.disabled = true;
+
+    try {
+        const { task_id } = await appendDocsCall(store.sessionId, files);
+
+        // Polling rápido para la vectorización
+        pollTask(
+            task_id,
+            (msg) => { /* opcional status */ },
+            (result) => {
+                // Éxito: refrescar lista de docs
+                renderStep1Result(result.data);
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                inputElement.value = ''; // Reset input
+            },
+            (err) => {
+                console.error(err);
+                btn.innerHTML = `<i class="ph-bold ph-warning"></i> Error`;
+                btn.classList.add('text-red-500');
+            }
+        );
+    } catch (err) {
+        console.error(err);
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+        alert("Error subiendo documentos: " + err.message);
     }
 }
 
 export function renderStep1Result(dataJson) {
     const { loader, step1 } = getElements();
-
-    // Parse backend data (which is a JSON string inside the result wrapper)
     let data;
-    try {
-        data = typeof dataJson === 'string' ? JSON.parse(dataJson) : dataJson;
-    } catch (e) { console.error("Error parsing JSON", e); return; }
+    try { data = typeof dataJson === 'string' ? JSON.parse(dataJson) : dataJson; }
+    catch (e) { console.error("Error parsing JSON", e); return; }
 
     const callInfo = data.call_info || {};
-    const docs = data.docs_paths || {}; // URLs of generated docs
+    const docs = data.docs_paths || {};
 
-    // Hide Loader
     loader.classList.add('hidden');
 
-    // Populate UI
+    // Basic Info
     document.getElementById('res-title').innerText = callInfo.title || "Sin Título";
     document.getElementById('res-objective').innerText = callInfo.objective || "Sin objetivos detectados";
     document.getElementById('res-funding').innerText = callInfo.funding || "No especificado";
+    document.getElementById('res-dates').innerText = callInfo.important_dates || callInfo.dates || "Fechas no detectadas";
 
     // Keywords
     const tagsDiv = document.getElementById('res-keywords');
-    tagsDiv.className = "flex flex-wrap gap-2 mt-2"; // Better container styling
     tagsDiv.innerHTML = '';
     if (callInfo.keywords && Array.isArray(callInfo.keywords)) {
-        callInfo.keywords.forEach(t => tagsDiv.innerHTML += `
-            <span class="bg-blue-50 text-blue-700 border border-blue-100 px-2 py-1 rounded-md shadow-sm text-xs font-medium whitespace-nowrap">#${t}</span>
-        `);
+        callInfo.keywords.forEach(t => tagsDiv.innerHTML += `<span class="bg-blue-50 text-blue-700 border border-blue-100 px-2 py-1 rounded-md shadow-sm text-xs font-medium whitespace-nowrap">#${t}</span>`);
     }
 
-    // Dates 
-    console.log("DEBUG: CallInfo arriving at Step 1:", callInfo);
-    document.getElementById('res-dates').innerText = callInfo.important_dates || callInfo.dates || "Fechas no detectadas";
-
-    // Update Presentation Link: Use correct key 'presentation_oath_pdf' from state.py
+    // --- LOGICA DE ESTADO: ¿Investigación hecha? ---
     const presBtn = document.getElementById('btn-presentation-link');
-    if (presBtn && docs.presentation_oath_pdf) {
-        presBtn.href = docs.presentation_oath_pdf;
-        presBtn.target = "_blank";
-        presBtn.classList.remove('opacity-50', 'pointer-events-none');
+    const researchContainer = document.getElementById('research-action-container');
+    const historyContainer = document.getElementById('res-history-container');
+    const historyList = document.getElementById('res-history-list');
 
-        // Visual indicator that it is ready
-        presBtn.classList.add('animate-pulse-slow');
-        setTimeout(() => presBtn.classList.remove('animate-pulse-slow'), 3000);
-    } else if (presBtn) {
-        presBtn.classList.add('opacity-50', 'pointer-events-none');
+    // 1. Botón Principal (Ver Presentación vs Iniciar Investigación)
+    if (docs.presentation_oath_pdf) {
+        // PRESENTACIÓN LISTA
+        if (presBtn) {
+            presBtn.href = docs.presentation_oath_pdf;
+            presBtn.target = "_blank";
+            presBtn.classList.remove('hidden', 'opacity-50', 'pointer-events-none');
+            presBtn.classList.remove('bg-gray-100', 'border-gray-200'); // Reset styles if needed
+            presBtn.innerHTML = `
+                <div class="w-8 h-8 rounded-full bg-red-500 text-white flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
+                    <i class="ph ph-presentation text-lg"></i>
+                </div>
+                <div class="text-left">
+                    <div class="text-[10px] text-red-400 font-bold uppercase">Evaluación</div>
+                    <div class="text-sm font-bold text-red-700">Ver Presentación</div>
+                </div>
+            `;
+        }
+        if (researchContainer) researchContainer.classList.add('hidden'); // Ocultar botón grande
+    } else {
+        // NO HAY PRESENTACIÓN AÚN
+        if (presBtn) presBtn.classList.add('hidden'); // Ocultar link superior
+        if (researchContainer) researchContainer.classList.remove('hidden'); // Mostrar botón grande
     }
 
-    // Context Documents (NUEVO)
+    // 2. Historial de Versiones
+    if (callInfo.presentation_history && Array.isArray(callInfo.presentation_history) && callInfo.presentation_history.length > 0) {
+        historyContainer.classList.remove('hidden');
+        historyList.innerHTML = '';
+        callInfo.presentation_history.forEach(ver => {
+            // ver es { name, url, date... }
+            historyList.innerHTML += `
+                <a href="${ver.url}" target="_blank" class="flex items-center justify-between p-2 bg-gray-50 hover:bg-white border border-transparent hover:border-gray-200 rounded-lg transition-all group">
+                    <div class="flex items-center gap-3">
+                        <i class="ph-fill ph-clock-counter-clockwise text-gray-400 group-hover:text-blue-500"></i>
+                        <span class="text-xs font-medium text-gray-600 group-hover:text-gray-900">${ver.name || 'Versión Anterior'}</span>
+                    </div>
+                    <i class="ph-bold ph-download-simple text-gray-400 group-hover:text-blue-500"></i>
+                </a>
+             `;
+        });
+    } else {
+        historyContainer.classList.add('hidden');
+    }
+
+    // 3. Documentos de Contexto
     const contextDocsContainer = document.getElementById('res-context-docs-container');
     const contextDocsDiv = document.getElementById('res-context-docs');
+
     if (contextDocsContainer && contextDocsDiv) {
         contextDocsDiv.innerHTML = '';
         if (callInfo.context_docs && Array.isArray(callInfo.context_docs) && callInfo.context_docs.length > 0) {
             contextDocsContainer.classList.remove('hidden');
             callInfo.context_docs.forEach(doc => {
-                // El backend ahora envía {name, url} para los docs presignados
                 let docName = typeof doc === 'object' ? doc.name : doc;
                 const docUrl = typeof doc === 'object' ? doc.url : doc;
-
-                // Limpieza de seguridad: si el nombre aún tiene la ruta completa, tomamos solo el final
-                if (docName && docName.includes('/')) {
-                    docName = docName.split('/').pop();
-                }
+                if (docName && docName.includes('/')) docName = docName.split('/').pop();
 
                 contextDocsDiv.innerHTML += `
-                    <a href="${docUrl}" target="_blank" class="flex items-center p-3 bg-white border border-gray-100 rounded-xl hover:border-blue-200 hover:bg-blue-50/50 transition-all group shadow-sm">
+                    <a href="${docUrl || '#'}" target="_blank" class="flex items-center p-3 bg-white border border-gray-100 rounded-xl hover:border-blue-200 hover:bg-blue-50/50 transition-all group shadow-sm">
                         <div class="w-10 h-10 bg-blue-50 text-blue-500 rounded-lg flex items-center justify-center group-hover:bg-blue-100 transition-colors">
                             <i class="ph ph-file-text text-xl"></i>
                         </div>
@@ -136,11 +224,12 @@ export function renderStep1Result(dataJson) {
                     </a>
                 `;
             });
-        } else {
-            contextDocsContainer.classList.add('hidden');
+        }
+        // Nota: No ocultamos el container si está vacío porque ahora contiene el botón de subir más docs
+        if (!callInfo.context_docs || callInfo.context_docs.length === 0) {
+            // Solo si queremos ocultar la lista pero dejar el botón...
+            // Dejamos el container visible para ver el botón "Añadir más"
+            contextDocsContainer.classList.remove('hidden');
         }
     }
-
-    // Fix: Do NOT unhide step1 here. This function is shared with restoreSession.
-    // step1.classList.remove('hidden'); 
 }

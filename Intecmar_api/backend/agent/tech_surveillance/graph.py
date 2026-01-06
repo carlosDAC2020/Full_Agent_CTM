@@ -67,13 +67,16 @@ workflow.add_conditional_edges(
         "ingest": "ingest",
         "proposal_ideas": "propose_ideas",
         "project_idea": "proyect_idea",
-        "generate_proyect": "academic_research"
+        "generate_proyect": "academic_research",
+        "research": "presentation_generator",
+        "vectorize": "vectorizer"
     }
 )
 
 # flujo para invetsiagcion de convocatorias
 workflow.add_edge("ingest", "vectorizer")
-workflow.add_edge("vectorizer", "presentation_generator")
+workflow.add_edge("vectorizer", END)
+
 workflow.add_edge("presentation_generator", "call_info_refiner")
 workflow.add_edge("call_info_refiner", "presentation_generator_docs")
 workflow.add_edge("presentation_generator_docs", END)

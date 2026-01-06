@@ -3,6 +3,8 @@ import { loadHistory, toggleSidebar } from './ui/sidebar.js';
 import { initInitialView, filterOptions, selectOption, setStatusFilter, setCategoryFilter } from './ui/search.js';
 import {
     startAnalysis,
+    startResearch,
+    appendDocs,
     updateFileStatus,
     goToStep2,
     cancelEdit,
@@ -27,7 +29,7 @@ async function loadUserInfo() {
 
     try {
         const res = await fetch('/api/auth/me', {
-            headers: { 'Authorization': `Bearer ${token}` }
+            headers: { 'Authorization': `Bearer ${token} ` }
         });
 
         if (!res.ok) {

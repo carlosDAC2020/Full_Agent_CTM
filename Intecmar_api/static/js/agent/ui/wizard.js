@@ -9,7 +9,8 @@ import { loadHistory } from './sidebar.js';
 export { updateFileStatus, navigateToStep } from './common.js';
 
 // Step Logic
-export { startAnalysis } from './steps/step1.js';
+// Step Logic
+export { startAnalysis, startResearch, appendDocs } from './steps/step1.js';
 export { goToStep2, cancelEdit } from './steps/step2.js';
 export { confirmIdea } from './steps/step3.js';
 export { generateFinal } from './steps/step4.js';

@@ -40,7 +40,8 @@ NODE_MESSAGES = {
     "academic_research": "🔍 Realizando investigación académica y estado del arte...",
     "project_schemas": "✍️ Redactando contenido técnico (Metodología, Justificación, Riesgos)...",
     "images_generator": "🎨 Diseñando póster promocional con IA Generativa...",
-    "report": "📑 Ensamblando reporte final y propuesta técnica..."
+    "report": "📑 Ensamblando reporte final y propuesta técnica...",
+    "vectorizer": "📚 Indexando documentos y conocimientos..."
 }
 
 def json_serializer(obj):
@@ -194,6 +195,33 @@ def task_process_agent_step(self, session_id: str, input_data: dict, step_type: 
     # Asegurar que user_email se preserva o actualiza si viene en input (para reanudaciones)
     if "user_email" in input_data and not current_state.get("user_email"):
         current_state["user_email"] = input_data["user_email"]
+    
+    # NUEVO: Lógica para iniciar investigación profunda
+    elif step_type == "research":
+        current_state["route_decision"] = "research"
+
+    # NUEVO: Lógica para añadir documentos y vectorizar
+    elif step_type == "append_docs":
+        current_state["route_decision"] = "vectorize"
+        
+        # Añadir nuevos docs a la lista existente
+        if "context_docs" in input_data and input_data["context_docs"]:
+            # Inicializar si no existe
+            if "call_info" not in current_state or not current_state["call_info"]:
+                 current_state["call_info"] = CallInfo()
+            
+            call_info = current_state["call_info"]
+            
+            # Helper para obtener/setear lista
+            if isinstance(call_info, dict):
+                current_list = call_info.get("context_docs") or []
+                current_list.extend(input_data["context_docs"])
+                call_info["context_docs"] = current_list
+            else:
+                # Objeto Pydantic
+                if not call_info.context_docs:
+                    call_info.context_docs = []
+                call_info.context_docs.extend(input_data["context_docs"])
     
     elif step_type == "proposal_ideas":
         current_state["route_decision"] = "proposal_ideas"

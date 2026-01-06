@@ -146,6 +146,79 @@ async def finalize_project(
 
 
 
+@router.post("/research")
+async def start_research(
+    request: NextStepRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Inicia la fase de investigación técnica profunda (Presentation Generation)."""
+    # Verify session belongs to user
+    session = db.query(AgentSession).filter(
+        AgentSession.id == request.session_id,
+        AgentSession.user_id == current_user.id
+    ).first()
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found or access denied")
+    
+    task = task_process_agent_step.delay(
+        session_id=request.session_id, 
+        input_data={"user_email": current_user.email}, 
+        step_type="research"
+    )
+    return {"task_id": task.id, "session_id": request.session_id}
+
+
+@router.post("/append-docs")
+async def append_documents(
+    session_id: str = Form(...),
+    files: List[UploadFile] = File(...),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Sube documentos adicionales y re-ejecuta la vectorización."""
+    # Verify session
+    session = db.query(AgentSession).filter(
+        AgentSession.id == session_id,
+        AgentSession.user_id == current_user.id
+    ).first()
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found or access denied")
+
+    # Upload files to context folder
+    new_docs_paths = []
+    if files:
+        session_base_path = f"{current_user.email}/Agent_Sessions/{session_id}"
+        print(f"📂 [APPEND] Subiendo docs a: {session_base_path}")
+        for file in files:
+            with tempfile.NamedTemporaryFile(delete=False, suffix=f"_{file.filename}") as tmp:
+                shutil.copyfileobj(file.file, tmp)
+                tmp_path = tmp.name
+            
+            try:
+                # Upload to MinIO
+                object_key = storage_service.upload_file(tmp_path, session_base_path, subfolder="context")
+                if object_key:
+                    new_docs_paths.append(object_key)
+            finally:
+                if os.path.exists(tmp_path):
+                    os.remove(tmp_path)
+    
+    if not new_docs_paths:
+        return {"status": "no_files_uploaded", "message": "No valid files received"}
+
+    # Trigger vectorizer task with NEW docs
+    task = task_process_agent_step.delay(
+        session_id=session_id, 
+        input_data={
+            "user_email": current_user.email,
+            "context_docs": new_docs_paths # Only passing new docs to append logic
+        }, 
+        step_type="append_docs"
+    )
+    return {"task_id": task.id, "session_id": session_id, "added_docs": len(new_docs_paths)}
+
+
 @router.get("/history/{session_id}")
 async def get_session_history(
     session_id: str,

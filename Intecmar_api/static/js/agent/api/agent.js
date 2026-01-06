@@ -134,3 +134,47 @@ export async function finalizeProject(sessionId) {
         throw error;
     }
 }
+
+export async function researchCall(sessionId) {
+    try {
+        const response = await fetch('/api/agent/research', {
+            method: 'POST',
+            headers: getAuthHeaders(),
+            body: JSON.stringify({ session_id: sessionId })
+        });
+        if (!response.ok) {
+            const err = await response.json();
+            throw new Error(err.detail || 'Error starting research');
+        }
+        return await response.json();
+    } catch (error) {
+        console.error('API Research Error:', error);
+        throw error;
+    }
+}
+
+export async function appendDocsCall(sessionId, files) {
+    try {
+        const formData = new FormData();
+        formData.append('session_id', sessionId);
+        if (files && files.length > 0) {
+            for (let i = 0; i < files.length; i++) {
+                formData.append('files', files[i]);
+            }
+        }
+        const token = localStorage.getItem('auth_token');
+        const response = await fetch('/api/agent/append-docs', {
+            method: 'POST',
+            headers: { ...(token && { 'Authorization': `Bearer ${token}` }) },
+            body: formData
+        });
+        if (!response.ok) {
+            const err = await response.json();
+            throw new Error(err.detail || 'Error appending docs');
+        }
+        return await response.json();
+    } catch (error) {
+        console.error('API Append Docs Error:', error);
+        throw error;
+    }
+}
