@@ -30,7 +30,7 @@ def rag_search_documents(query: str, session_id: str) -> str:
             return "❌ No se encontraron documentos de referencia para esta sesión. Por favor, usa herramientas de búsqueda web."
 
         embeddings = GoogleGenerativeAIEmbeddings(
-            model="models/embedding-001",
+            model="models/text-embedding-004",
             google_api_key=os.environ.get("GEMINI_API_KEY")
         )
 

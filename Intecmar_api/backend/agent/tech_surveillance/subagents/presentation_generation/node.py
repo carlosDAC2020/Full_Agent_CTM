@@ -1,4 +1,6 @@
 import os
+import time
+
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.messages import AIMessage, HumanMessage
 from langchain.agents import create_agent
@@ -20,9 +22,10 @@ web_research_tools = [
 
 # --- 1. CONFIGURACIÓN DEL MODELO ---
 model = ChatGoogleGenerativeAI(
-    model="gemini-2.5-flash",
+    model="gemini-1.5-flash",
     api_key=os.environ.get("GEMINI_API_KEY"),
-    temperature=0.7
+    temperature=0.7,
+    max_retries=6
 )
 
 # Creamos el agente con herramientas
@@ -38,7 +41,7 @@ async def presentation_generation_node(state: GraphState):
     """
     Nodo para la generacion de los documentos de presentacion
     """
-    print("🎨 INICIANDO AGENTE DE INVESTIGACIÓN Y PRESENTACIÓN...")
+    print("🎨 [PRESENTATION] INICIANDO AGENTE DE INVESTIGACIÓN Y PRESENTACIÓN...")
     
     call_info = state.get("call_info")
     session_id = state.get("session_id")
@@ -65,51 +68,55 @@ async def presentation_generation_node(state: GraphState):
     # Agregamos instrucción explícita sobre la sesión para RAG
     prompt_content += f"\n\nNOTA: Si necesitas consultar documentos internos de esta sesión, usa la herramienta 'rag_search_documents' con el session_id: {session_id}"
 
-    try:
-        # 2. Invocar al Agente con Herramientas
-        # El agente decidirá si llamar a 'tavily_search' basándose en los status FALTANTE
-        result = await academic_research_agent.ainvoke(
-            {"messages": [HumanMessage(content=prompt_content)]}
-        )
+    max_retries = 5
+    for attempt in range(max_retries):
+        try:
+            # Espera inicial para despejar la cuota de la vectorización
+            if attempt == 0:
+                time.sleep(2) 
+                
+            # 2. Invocar al Agente con Herramientas
+            result = await academic_research_agent.ainvoke(
+                {"messages": [HumanMessage(content=prompt_content)]}
+            )
 
-        last_message = result["messages"][-1]
-        print(f"📝 Mensaje final del agente recibido. Procesando...")
+            last_message = result["messages"][-1]
+            print(f"📝 [PRESENTATION] Mensaje final del agente recibido. Procesando...")
 
-        # 3. Extraer texto final
-        # Lógica de extracción segura para Gemini/LangChain
-        text_response = ""
-        
-        if isinstance(last_message.content, str):
-            # Caso A: Respuesta es texto plano
-            text_response = last_message.content
-        elif isinstance(last_message.content, list):
-            # Caso B: Respuesta es lista de bloques (Multimodal)
-            # Iteramos y unimos todos los bloques que sean de tipo 'text'
-            parts = []
-            for block in last_message.content:
-                if isinstance(block, dict) and block.get("type") == "text":
-                    parts.append(block.get("text", ""))
-            text_response = "\n".join(parts)
-        else:
-            # Caso C: Fallback
-            text_response = str(last_message.content)
-        
-        
-        print(f"✅ Agente finalizado. Longitud respuesta: {len(text_response)} caracteres")
-        
-        message = AIMessage(content="✅ Resumen de presentación generado correctamente.")
-        
-        return {
-            "messages": [message],
-            "presentation_summary": text_response,
-        }
-
-    except Exception as e:
-        print(f"❌ Error crítico en nodo: {e}")
-        return {
-            "messages": [
-                AIMessage(content=f"❌ Error crítico en nodo: {e}")
-                ]
+            # 3. Extraer texto final
+            text_response = ""
+            if isinstance(last_message.content, str):
+                text_response = last_message.content
+            elif isinstance(last_message.content, list):
+                parts = []
+                for block in last_message.content:
+                    if isinstance(block, dict) and block.get("type") == "text":
+                        parts.append(block.get("text", ""))
+                text_response = "\n".join(parts)
+            else:
+                text_response = str(last_message.content)
+            
+            print(f"✅ [PRESENTATION] Agente finalizado. Longitud respuesta: {len(text_response)} caracteres")
+            message = AIMessage(content="✅ Resumen de presentación generado correctamente.")
+            
+            return {
+                "messages": [message],
+                "presentation_summary": text_response,
             }
+
+        except Exception as e:
+            error_str = str(e)
+            if ("429" in error_str or "RESOURCE_EXHAUSTED" in error_str) and attempt < max_retries - 1:
+                wait_time = (2 ** attempt) * 10 
+                print(f"⚠️ [PRESENTATION] Cuota agotada (429). Reintentando en {wait_time}s (Intento {attempt+1}/{max_retries})...")
+                time.sleep(wait_time)
+                continue
+            
+            print(f"❌ [PRESENTATION] Error crítico en nodo: {e}")
+            return {
+                "messages": [
+                    AIMessage(content=f"❌ Error crítico en nodo: {e}")
+                    ]
+                }
 
 

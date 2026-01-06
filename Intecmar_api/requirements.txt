@@ -15,6 +15,7 @@ langchain-google-genai
 google-genai
 tavily-python
 deepagents
+tenacity
 
 # --- Specialized Data Sources & Scraping ---
 arxiv

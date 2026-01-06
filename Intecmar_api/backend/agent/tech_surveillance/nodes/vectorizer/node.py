@@ -15,6 +15,18 @@ from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from backend.agent.tech_surveillance.state import GraphState
 from backend.app.services.tech_surveillance.storage import MinioService
 
+from tenacity import retry, stop_after_attempt, wait_exponential
+
+# Definimos una función con reintentos para agregar documentos
+@retry(
+    stop=stop_after_attempt(5),
+    wait=wait_exponential(multiplier=2, min=4, max=60),
+    reraise=True
+)
+def add_documents_with_retry(vectorstore, splits):
+    return vectorstore.add_documents(documents=splits)
+
+
 async def vectorizer_node(state: GraphState):
     """
     Nodo para vectorizar documentos de contexto de la convocatoria.
@@ -38,7 +50,7 @@ async def vectorizer_node(state: GraphState):
 
     storage_service = MinioService()
     embeddings = GoogleGenerativeAIEmbeddings(
-        model="models/embedding-001",
+        model="models/text-embedding-004", 
         google_api_key=os.environ.get("GEMINI_API_KEY")
     )
     
@@ -110,9 +122,15 @@ async def vectorizer_node(state: GraphState):
             collection_name=f"session_{session_id}",
             embedding_function=embeddings
         )
-        vectorstore.add_documents(documents=splits)
         
-        print(f"✅ [VECTORIZER] Vectorización completada con éxito. {len(splits)} chunks indexados.")
+        print(f"🚀 [VECTORIZER] Indexando {len(splits)} chunks...")
+        # Usamos la función con reintentos
+        add_documents_with_retry(vectorstore, splits)
+        
+        print(f"✅ [VECTORIZER] Vectorización completada con éxito.")
+        
+        # Pequeña espera de cortesía antes del siguiente nodo
+        time.sleep(2)
         
     except Exception as e:
         print(f"❌ [VECTORIZER] Error crítico en vectorización: {e}")
