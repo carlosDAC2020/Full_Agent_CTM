@@ -53,7 +53,7 @@ async def start_ingest(
     if files:
         # Carpeta base para la sesión: user_email/Agent_Sessions/session_id
         session_base_path = f"{current_user.email}/Agent_Sessions/{session_id}"
-        
+        print(f"id de session: {session_base_path}")
         for file in files:
             # Create a temporary file to save the uploaded content
             with tempfile.NamedTemporaryFile(delete=False, suffix=f"_{file.filename}") as tmp:

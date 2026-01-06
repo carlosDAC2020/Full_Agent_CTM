@@ -25,6 +25,15 @@ async def get_task_status(task_id: str):
 
     # CASO 2: COMPLETADO (SUCCESS / FAILURE)
     elif task_result.ready():
+        # Si la tarea falló (excepción no capturada en el worker)
+        if task_result.failed():
+            response["status"] = "FAILURE"
+            response["result"] = {
+                "status": "error",
+                "message": f"Error interno en el worker: {str(task_result.result)}"
+            }
+            return response
+
         result_data = task_result.result # Dict {status, step, data}
         
         # Lógica de procesamiento de URLs de MinIO (Tu código original intacto)
