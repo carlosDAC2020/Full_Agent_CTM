@@ -66,6 +66,8 @@ async def call_info_refiner_node(state: GraphState):
                 refined_info.context_docs = current_call_info.context_docs
             if hasattr(current_call_info, "url") and current_call_info.url and not refined_info.url:
                 refined_info.url = current_call_info.url
+            if hasattr(current_call_info, "presentation_history") and current_call_info.presentation_history:
+                refined_info.presentation_history = current_call_info.presentation_history
 
             print(f"✅ [REFINER] Información refinada:")
             print(f"   - Título: {refined_info.title}")

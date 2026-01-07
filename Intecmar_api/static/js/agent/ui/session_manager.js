@@ -92,7 +92,7 @@ export async function restoreSession(sessionId) {
                     objectives: ideaData.idea_objectives || ideaData.objectives || []
                 };
             }
-            if (data && data.schema_markdown) { // Check if schema exists
+            if (data && data.initial_schema) { // Corrected key: initial_schema
                 renderSchema(data);
             }
         }
@@ -104,7 +104,8 @@ export async function restoreSession(sessionId) {
             if (typeof data === 'string') {
                 try { data = JSON.parse(data); } catch (e) { }
             }
-            if (data && data.final_document_pdf) { // Only render if actually finished
+            // Corrected check: look into docs_paths for the PDF
+            if (data && data.docs_paths && data.docs_paths.proyect_proposal_pdf) {
                 renderFinalResult(data);
             }
         }

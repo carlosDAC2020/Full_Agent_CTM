@@ -51,14 +51,20 @@ def ingestion_node(state: GraphState) -> dict:
         else:
             confirmation_text = "No he detectado información clara sobre una convocatoria en tu mensaje. Por favor, proporciona más detalles."
 
-        # 3. Preservar documentos de contexto si ya existen en el estado
+        # 3. Preservar documentos de contexto e historial si ya existen en el estado
         old_call_info = state.get("call_info")
         if old_call_info and ingestion_result:
-            # Manejar tanto si es objeto como dict
+            # Context Docs
             if hasattr(old_call_info, "context_docs") and old_call_info.context_docs:
                 ingestion_result.context_docs = old_call_info.context_docs
             elif isinstance(old_call_info, dict) and old_call_info.get("context_docs"):
                 ingestion_result.context_docs = old_call_info["context_docs"]
+            
+            # Presentation History
+            if hasattr(old_call_info, "presentation_history") and old_call_info.presentation_history:
+                ingestion_result.presentation_history = old_call_info.presentation_history
+            elif isinstance(old_call_info, dict) and old_call_info.get("presentation_history"):
+                ingestion_result.presentation_history = old_call_info["presentation_history"]
 
         # 4. Devuelve la nueva estructura del estado
         return {
