@@ -9,7 +9,8 @@ class AgentSession(Base):
     id = Column(String, primary_key=True, index=True) # UUID
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)  # NEW: Link to user
     created_at = Column(DateTime, default=datetime.utcnow)
-    status = Column(String, default="active") # active, completed, failed
+    status = Column(String, default="active") # active, completed, failed, researching
+    current_task_id = Column(String, nullable=True) # ID de la tarea Celery activa
     
     # Relación con los pasos
     steps = relationship("AgentStep", back_populates="session")

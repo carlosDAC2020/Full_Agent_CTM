@@ -290,14 +290,35 @@
                     <p id="res-objective"
                         class="text-gray-600 mt-4 text-sm bg-blue-50/30 p-4 rounded-lg border border-blue-50">---</p>
 
-                    <div class="grid grid-cols-2 gap-4 mt-6">
-                        <div class="p-3 bg-gray-50 rounded border">
-                            <div class="text-xs font-bold text-gray-500 mb-1">DINERO</div>
-                            <div id="res-funding" class="text-sm font-mono text-gray-800">---</div>
+                    <div class="flex flex-col md:flex-row gap-4 mt-8">
+                        <!-- DINERO (Card) -->
+                        <div
+                            class="flex-1 bg-white border border-gray-100 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow group/card">
+                            <div class="flex items-center gap-3 mb-3">
+                                <div
+                                    class="w-10 h-10 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center group-hover/card:scale-110 transition-transform">
+                                    <i class="ph-fill ph-money text-xl"></i>
+                                </div>
+                                <label
+                                    class="text-[10px] font-extrabold text-gray-400 uppercase tracking-[0.15em]">Financiamiento</label>
+                            </div>
+                            <div id="res-funding"
+                                class="text-sm font-semibold text-gray-700 leading-relaxed min-h-[3rem]">---</div>
                         </div>
-                        <div class="p-3 bg-gray-50 rounded border">
-                            <div class="text-xs font-bold text-gray-500 mb-1">FECHA</div>
-                            <div id="res-dates" class="text-sm text-gray-800">---</div>
+
+                        <!-- FECHA (Card) -->
+                        <div
+                            class="md:w-5/12 bg-white border border-gray-100 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow group/card">
+                            <div class="flex items-center gap-3 mb-3">
+                                <div
+                                    class="w-10 h-10 bg-orange-50 text-orange-600 rounded-xl flex items-center justify-center group-hover/card:scale-110 transition-transform">
+                                    <i class="ph-fill ph-calendar-star text-xl"></i>
+                                </div>
+                                <label
+                                    class="text-[10px] font-extrabold text-gray-400 uppercase tracking-[0.15em]">Cronograma</label>
+                            </div>
+                            <div id="res-dates"
+                                class="text-sm font-semibold text-gray-700 leading-relaxed min-h-[3rem]">---</div>
                         </div>
                     </div>
 

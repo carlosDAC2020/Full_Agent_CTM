@@ -198,15 +198,30 @@ export function renderStep1Result(dataJson) {
     if (callInfo.presentation_history && Array.isArray(callInfo.presentation_history) && callInfo.presentation_history.length > 0) {
         historyContainer.classList.remove('hidden');
         historyList.innerHTML = '';
+
+        // El actual es el que coincide con docs.presentation_oath_pdf
+        const currentPdf = docs.presentation_oath_pdf;
+
         callInfo.presentation_history.forEach(ver => {
-            // ver es { name, url, date... }
+            const isLatest = ver.url === currentPdf;
             historyList.innerHTML += `
-                <a href="${ver.url}" target="_blank" class="flex items-center justify-between p-2 bg-gray-50 hover:bg-white border border-transparent hover:border-gray-200 rounded-lg transition-all group">
+                <a href="${ver.url}" target="_blank" 
+                   class="flex items-center justify-between p-3 rounded-xl transition-all group mb-2
+                          ${isLatest ? 'bg-blue-50 border-2 border-blue-200 shadow-sm' : 'bg-gray-50 hover:bg-white border border-transparent hover:border-gray-200'}"
+                >
                     <div class="flex items-center gap-3">
-                        <i class="ph-fill ph-clock-counter-clockwise text-gray-400 group-hover:text-blue-500"></i>
-                        <span class="text-xs font-medium text-gray-600 group-hover:text-gray-900">${ver.name || 'Versión Anterior'}</span>
+                        <div class="w-8 h-8 rounded-lg flex items-center justify-center ${isLatest ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-500'} group-hover:scale-110 transition-transform">
+                            <i class="ph-fill ph-presentation"></i>
+                        </div>
+                        <div class="flex flex-col">
+                            <span class="text-xs font-bold ${isLatest ? 'text-blue-900' : 'text-gray-700'}">${ver.name || 'Versión Anterior'}</span>
+                            <span class="text-[9px] text-gray-400 font-medium">${ver.date || 'S/F'}</span>
+                        </div>
                     </div>
-                    <i class="ph-bold ph-download-simple text-gray-400 group-hover:text-blue-500"></i>
+                    <div class="flex items-center gap-2">
+                        ${isLatest ? '<span class="text-[9px] font-black text-blue-500 bg-blue-100 px-2 py-0.5 rounded-md tracking-tighter">ACTUAL</span>' : ''}
+                        <i class="ph-bold ph-download-simple ${isLatest ? 'text-blue-500' : 'text-gray-300 group-hover:text-blue-400'}"></i>
+                    </div>
                 </a>
              `;
         });

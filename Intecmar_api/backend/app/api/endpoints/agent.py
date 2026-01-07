@@ -79,6 +79,12 @@ async def start_ingest(
         }, 
         step_type="ingest"
     )
+    
+    # Guardar task_id y actualizar status
+    session.current_task_id = task.id
+    session.status = "researching"
+    db.commit()
+
     return {"task_id": task.id, "session_id": session_id}
 
 @router.post("/generate-ideas")
@@ -166,6 +172,12 @@ async def start_research(
         input_data={"user_email": current_user.email}, 
         step_type="research"
     )
+    
+    # Guardar task_id y actualizar status
+    session.current_task_id = task.id
+    session.status = "researching"
+    db.commit()
+
     return {"task_id": task.id, "session_id": request.session_id}
 
 
@@ -293,6 +305,7 @@ async def get_session_history(
     response = {
         "session_id": session_id,
         "status": session.status,
+        "current_task_id": session.current_task_id,
         "created_at": session.created_at,
         "steps_data": history_map,
         "last_step": steps[-1].step_type if steps else None

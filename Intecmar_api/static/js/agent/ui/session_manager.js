@@ -130,6 +130,30 @@ export async function restoreSession(sessionId) {
 
         updateStepper(targetStep);
 
+        // --- NEW: Restore Modal if Researching ---
+        if (historyData.status === 'researching' && historyData.current_task_id) {
+            console.log("🔄 Reanudando monitoreo de investigación...");
+            const researchModal = document.getElementById('research-loading-modal');
+            const statusText = document.getElementById('research-status-text');
+            const { pollTask } = await import('../api/tasks.js');
+
+            researchModal.classList.remove('hidden');
+            statusText.innerText = "Reconectando con el agente...";
+
+            pollTask(
+                historyData.current_task_id,
+                (msg) => { statusText.innerText = msg || "Analizando..."; },
+                (result) => {
+                    renderStep1Result(result.data);
+                    researchModal.classList.add('hidden');
+                },
+                (err) => {
+                    statusText.innerText = "Error recuperado: " + err;
+                    setTimeout(() => researchModal.classList.add('hidden'), 3000);
+                }
+            );
+        }
+
     } catch (err) {
         console.error(err);
         loader.classList.add('hidden');

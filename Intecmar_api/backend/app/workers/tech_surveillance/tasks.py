@@ -271,6 +271,12 @@ def task_process_agent_step(self, session_id: str, input_data: dict, step_type: 
              session_record = db.query(AgentSession).filter(AgentSession.id == session_id).first()
              if session_record:
                  session_record.status = "completed"
+                 session_record.current_task_id = None
+        elif step_type in ["research", "ingest", "append_docs"]:
+             session_record = db.query(AgentSession).filter(AgentSession.id == session_id).first()
+             if session_record:
+                 session_record.status = "active"
+                 session_record.current_task_id = None
 
         db.commit()
     except Exception as e:

@@ -1,19 +1,26 @@
+/* Thinner, more premium scrollbar */
 .custom-scrollbar::-webkit-scrollbar { 
-    width: 5px; 
+    width: 4px; 
 }
 
 .custom-scrollbar::-webkit-scrollbar-track { 
-    background: rgba(30, 58, 138, 0.2); 
-    border-radius: 10px;
+    background: transparent;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb { 
-    background: rgba(96, 165, 250, 0.3); 
-    border-radius: 10px; 
+    background: rgba(94, 114, 228, 0.2); 
+    border-radius: 20px; 
+    border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover { 
-    background: rgba(96, 165, 250, 0.5); 
+    background: rgba(94, 114, 228, 0.4); 
+}
+
+/* Sidebar item animations */
+.sidebar-item-active {
+    background: linear-gradient(90deg, rgba(59, 130, 246, 0.15) 0%, transparent 100%);
+    border-left: 3px solid #3b82f6;
 }
 
 .bg-cotecmar-gradient {
