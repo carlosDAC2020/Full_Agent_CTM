@@ -57,32 +57,34 @@ export async function restoreSession(sessionId) {
 
         // ---------------------------------------------------------
         // 2. SYSTEMATIC RENDER OF ALL AVAILABLE HISTORY
-        // ---------------------------------------------------------
+        // Use latestState for shared collections like call_info or docs if available
+        const latestState = historyData.latest_data;
 
         // A. Render Step 1 (Ingest) - Always expected
-        if (stepsMap['ingest']) {
-            renderStep1Result(stepsMap['ingest']);
+        if (stepsMap['ingest'] || latestState) {
+            renderStep1Result(latestState || stepsMap['ingest']);
         }
 
         // B. Render Step 2 (Ideas)
-        if (stepsMap['proposal_ideas']) {
-            let data = stepsMap['proposal_ideas'];
+        if (stepsMap['proposal_ideas'] || latestState) {
+            let data = stepsMap['proposal_ideas'] || latestState;
             // Handle potential double-serialization or string format
             if (typeof data === 'string') {
                 try { data = JSON.parse(data); } catch (e) { }
             }
-            renderIdeas(data);
+            if (data && data.proposal_ideas) { // Check if ideas exist in the state
+                renderIdeas(data);
+            }
         }
 
         // C. Render Step 3 (Schema)
-        if (stepsMap['project_idea']) {
-            let data = stepsMap['project_idea'];
+        if (stepsMap['project_idea'] || latestState) {
+            let data = stepsMap['project_idea'] || latestState;
             if (typeof data === 'string') {
                 try { data = JSON.parse(data); } catch (e) { }
             }
 
-            // CRITICAL: Restore User Selection for State Continuity
-            if (data.selected_idea) {
+            if (data && data.selected_idea) {
                 const ideaData = data.selected_idea;
                 store.currentSelectedIdea = {
                     title: ideaData.idea_title || ideaData.title,
@@ -90,17 +92,21 @@ export async function restoreSession(sessionId) {
                     objectives: ideaData.idea_objectives || ideaData.objectives || []
                 };
             }
-            renderSchema(data);
+            if (data && data.schema_markdown) { // Check if schema exists
+                renderSchema(data);
+            }
         }
 
         // D. Render Step 4 (Final)
-        const finalData = stepsMap['generate_project'] || stepsMap['generate_proyect'] || stepsMap['report'];
+        const finalData = stepsMap['generate_project'] || stepsMap['generate_proyect'] || stepsMap['report'] || latestState;
         if (finalData) {
             let data = finalData;
             if (typeof data === 'string') {
                 try { data = JSON.parse(data); } catch (e) { }
             }
-            renderFinalResult(data);
+            if (data && data.final_document_pdf) { // Only render if actually finished
+                renderFinalResult(data);
+            }
         }
 
         // ---------------------------------------------------------

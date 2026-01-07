@@ -247,27 +247,17 @@ async def get_session_history(
     if not session:
         raise HTTPException(status_code=404, detail="Sesión no encontrada o acceso denegado")
 
-    # 2. Buscar todos los pasos ejecutados
-    steps = db.query(AgentStep).filter(AgentStep.session_id == session_id).all()
+    # 2. Buscar todos los pasos ejecutados (ORDENADOS por fecha)
+    steps = db.query(AgentStep).filter(
+        AgentStep.session_id == session_id
+    ).order_by(AgentStep.created_at.asc()).all()
     
     # 3. Determinar el estado actual
     history_map = {}
+    last_processed_data = None
     
     for step in steps:
         step_data = step.output_data
-        
-        # PROCESAMIENTO DE URLs DE MINIO (Firma)
-        # Y new_state tiene todo acumulado. 
-        # Así que 'ingest' puede tener 'docs_paths' si se generaron ahí (el grafo dice 'presentation_generator' -> 'ingest'? No, es paralelo o secuencial).
-        # En tu grafo, 'ingest' -> 'presentation_generator' -> ...
-        # El paso guardado es 'ingest' y luego 'presentation_generator'.
-        
-        # Si step.step_type es 'ingest' o 'presentation_generator' o cualquiera que tenga docs_paths...
-        # Como el estado SE ACUMULA, el último paso tendrá todo. Pero los pasos intermedios también tienen su snapshot.
-        # Si el frontend usa history_map['ingest'], espera ver los docs ahí?
-        # El frontend usa: if(stepsMap['ingest']) { renderStep1Result(stepsMap['ingest']); }
-        
-        # Así que debemos procesar CADA paso en el history_map porsiaca el frontend lee de uno específico.
         
         if step_data and isinstance(step_data, dict):
             # 1. Docs Paths (Direct Keys)
@@ -291,7 +281,6 @@ async def get_session_history(
                 # Presign Context Docs
                 if "context_docs" in ci and isinstance(ci["context_docs"], list):
                     for i, doc in enumerate(ci["context_docs"]):
-                        # Handle both string keys and dict {name, url}
                         if isinstance(doc, str) and "/" in doc:
                             url = storage_service.get_presigned_url(doc)
                             ci["context_docs"][i] = {"name": os.path.basename(doc), "url": url}
@@ -299,6 +288,8 @@ async def get_session_history(
                             doc["url"] = storage_service.get_presigned_url(doc["url"])
                 
                 step_data["call_info"] = ci
+            
+            last_processed_data = step_data
         
         history_map[step.step_type] = step_data
 
@@ -308,6 +299,7 @@ async def get_session_history(
         "current_task_id": session.current_task_id,
         "created_at": session.created_at,
         "steps_data": history_map,
+        "latest_data": last_processed_data,
         "last_step": steps[-1].step_type if steps else None
     }
     

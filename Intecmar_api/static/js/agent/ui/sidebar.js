@@ -13,6 +13,8 @@ export function toggleSidebar() {
 // Mapeo de step_type a nombres amigables y colores
 const STEP_INFO = {
     'ingest': { name: 'Evaluación', color: 'bg-blue-500/90', icon: 'ph-file-magnifying-glass' },
+    'append_docs': { name: 'Investigando', color: 'bg-indigo-500/90', icon: 'ph-magnifying-glass-plus' },
+    'research': { name: 'Investigando', color: 'bg-indigo-500/90', icon: 'ph-magnifying-glass-plus' },
     'proposal_ideas': { name: 'Ideas', color: 'bg-yellow-500/90', icon: 'ph-lightbulb' },
     'project_idea': { name: 'Esquema', color: 'bg-purple-500/90', icon: 'ph-file-text' },
     'generate_project': { name: 'Final', color: 'bg-green-500/90', icon: 'ph-check-circle' }
