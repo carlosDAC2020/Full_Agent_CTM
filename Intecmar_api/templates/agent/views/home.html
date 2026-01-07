@@ -391,12 +391,21 @@
                         </div>
                     </div>
                 </div>
-                <div class="bg-gray-50 p-4 flex justify-end items-center border-t border-gray-100">
-                    <div class="flex gap-2">
-                        <!-- Generar Ideas siempre disponible -->
+                <div class="bg-gray-50/50 p-6 flex justify-end items-center border-t border-gray-100">
+                    <div class="flex gap-3">
+                        <!-- Generar Ideas: Rediseño Premium -->
                         <button onclick="goToStep2()"
-                            class="bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 px-4 py-2 rounded-lg font-medium shadow-sm flex items-center gap-2 transition-all active:scale-95 text-sm">
-                            Generar Ideas <i class="ph-bold ph-lightbulb text-yellow-500"></i>
+                            class="relative group px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-2xl font-bold shadow-xl shadow-blue-500/20 
+                                       hover:shadow-blue-500/40 hover:-translate-y-0.5 active:scale-95 transition-all duration-300 flex items-center gap-3 overflow-hidden">
+                            <span class="relative z-10">Generar Ideas de Proyecto</span>
+                            <div
+                                class="relative z-10 w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center group-hover:bg-white/30 transition-colors">
+                                <i class="ph-fill ph-lightbulb text-yellow-300 group-hover:animate-pulse"></i>
+                            </div>
+                            <!-- Efecto de brillo al pasar el mouse -->
+                            <div
+                                class="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000">
+                            </div>
                         </button>
                     </div>
                 </div>
