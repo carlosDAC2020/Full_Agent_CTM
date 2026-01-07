@@ -1,26 +1,44 @@
-/* Thinner, more premium scrollbar */
-.custom-scrollbar::-webkit-scrollbar { 
-    width: 4px; 
+/* --- PREMIUM SCROLLBAR SYSTEM --- */
+/* Target everything to ensure consistency */
+*::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
 }
 
-.custom-scrollbar::-webkit-scrollbar-track { 
+*::-webkit-scrollbar-track {
     background: transparent;
 }
 
-.custom-scrollbar::-webkit-scrollbar-thumb { 
-    background: rgba(94, 114, 228, 0.2); 
-    border-radius: 20px; 
-    border: 1px solid rgba(255, 255, 255, 0.05);
+*::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.05);
+    /* Very subtle by default */
+    border-radius: 20px;
+    border: 1px solid transparent;
+    background-clip: content-box;
+    transition: background 0.3s ease;
 }
 
-.custom-scrollbar::-webkit-scrollbar-thumb:hover { 
-    background: rgba(94, 114, 228, 0.4); 
+/* Specific for dark sidebar */
+#sidebar *::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
 }
 
-/* Sidebar item animations */
+*::-webkit-scrollbar-thumb:hover {
+    background: rgba(var(--primary-rgb, 59, 130, 246), 0.5);
+    background-clip: content-box;
+}
+
+/* Force for the specific container */
+.custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+}
+
+/* --- SIDEBAR REFINEMENTS --- */
 .sidebar-item-active {
-    background: linear-gradient(90deg, rgba(59, 130, 246, 0.15) 0%, transparent 100%);
-    border-left: 3px solid #3b82f6;
+    background: linear-gradient(90deg, rgba(59, 130, 246, 0.12) 0%, transparent 100%);
+    border-left: 3px solid #3b82f6 !important;
+    backdrop-filter: blur(8px);
 }
 
 .bg-cotecmar-gradient {
