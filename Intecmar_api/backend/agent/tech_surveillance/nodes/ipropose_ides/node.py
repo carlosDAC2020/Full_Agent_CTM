@@ -45,10 +45,13 @@ def propose_ides_node(state: GraphState) -> dict:
     }
 
     # 3. Preparar el Prompt
-    # (Asegúrate de importar 'propose_ideas_template' donde lo hayas definido)
+    presentation_summary = state.get("presentation_summary") or "No research report available."
+    
+    data_for_prompt["research_report"] = presentation_summary
+
     prompt_template = PromptTemplate(
         template=propose_ideas_template, 
-        input_variables=["title", "objective", "funding", "keywords", "important_dates", "benefits"]
+        input_variables=["title", "objective", "funding", "keywords", "important_dates", "benefits", "research_report"]
     )
     
     formatted_prompt = prompt_template.format(**data_for_prompt)

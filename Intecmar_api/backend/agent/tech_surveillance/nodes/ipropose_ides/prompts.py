@@ -10,6 +10,9 @@ Your goal is to analyze the provided details of a "Call for Proposals" (Grant/Fu
 - **Important Dates:** {important_dates}
 - **Benefits:** {benefits}
 
+### DETAILED RESEARCH REPORT / PRESENTATION SUMMARY:
+{research_report}
+
 ### GUIDELINES FOR IDEA GENERATION:
 1. **Focus on Realism & Viability:** The ideas must be implementable with current technology (TRL 4-7). Avoid theoretical physics, quantum computing, or sci-fi concepts unless the call specifically asks for them.
 2. **Preferred Technologies:** Focus on Applied AI (Machine Learning, NLP, Computer Vision), IoT, Data Analytics, Cloud Computing, Software Platforms, Automation, or Sustainable Engineering.
