@@ -9,12 +9,13 @@ from backend.app.api.endpoints import (
     agent,
     agent_sessions,
     agent_tasks,
-    agent_tasks
+    users
 ) 
 
 api_router = APIRouter()
 
 api_router.include_router(auth.router)
+api_router.include_router(users.router)
 api_router.include_router(magazines.router) # /magazines, /saved, /history, /generate
 api_router.include_router(tasks.router) # /tasks, /flows
 api_router.include_router(sources.router) # /sources

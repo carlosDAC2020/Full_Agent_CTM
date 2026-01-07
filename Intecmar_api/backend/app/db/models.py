@@ -13,6 +13,11 @@ class User(Base):
     password_hash = Column(String(255), nullable=False)
     name = Column(String(255), nullable=True)
     role = Column(String(50), nullable=True, default="admin")
+    profile_picture = Column(String(512), nullable=True)
+    phone = Column(String(50), nullable=True)
+    bio = Column(Text, nullable=True)
+    reset_token = Column(String(255), nullable=True, index=True)
+    reset_token_expires = Column(DateTime, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
 
     magazines = relationship("Magazine", back_populates="user", cascade="all, delete-orphan")

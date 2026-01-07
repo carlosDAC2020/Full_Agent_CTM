@@ -88,6 +88,18 @@ async def magazine_index(request: Request):
 async def login_page(request: Request):
     return templates.TemplateResponse("magazine/login.html", {"request": request})
 
+@app.get("/forgot-password", response_class=HTMLResponse)
+async def forgot_password_page(request: Request):
+    return templates.TemplateResponse("magazine/forgot_password.html", {"request": request})
+
+@app.get("/reset-password", response_class=HTMLResponse)
+async def reset_password_page(request: Request):
+    return templates.TemplateResponse("magazine/reset_password.html", {"request": request})
+
+@app.get("/profile", response_class=HTMLResponse)
+async def profile_page(request: Request):
+    return templates.TemplateResponse("magazine/profile.html", {"request": request})
+
 @app.get("/home_agent", response_class=HTMLResponse)
 async def home_agent(request: Request):
     return templates.TemplateResponse("agent/views/home.html", {"request": request})
