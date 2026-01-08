@@ -106,7 +106,7 @@ export function getAssetUrl(path) {
     // Si es una ruta de MinIO (key), convertirla a proxy URL
     // Ejemplo: "email@test.com/Agent_Sessions/..."
     if (path.includes('/')) {
-        return `/api/utils/minio_agent/${path}`;
+        return `/api/minio_agent/${path}`;
     }
 
     return path;

@@ -33,6 +33,10 @@ async def serve_minio_unified(bucket_type: str, path: str):
     """
     from fastapi.responses import Response
     import mimetypes
+    from urllib.parse import unquote
+    
+    # Decodificar caracteres como %40 (@)
+    path = unquote(path)
     
     # Intentar descargar
     data = storage_service.download_file(path)

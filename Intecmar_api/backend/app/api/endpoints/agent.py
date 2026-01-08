@@ -265,7 +265,7 @@ async def get_session_history(
                 for key, val in docs.items():
                      if val and isinstance(val, str) and "/" in val: 
                          # Usar el proxy para mayor estabilidad
-                         docs[key] = f"/api/utils/minio_agent/{val}"
+                         docs[key] = f"/api/minio_agent/{val}"
                 step_data["docs_paths"] = docs
             
             # 2. Call Info (Nested History and Context)
@@ -277,17 +277,17 @@ async def get_session_history(
                     for entry in ci["presentation_history"]:
                         if "url" in entry and entry["url"] and "/" in entry["url"]:
                             if not entry["url"].startswith("/api/"):
-                                entry["url"] = f"/api/utils/minio_agent/{entry['url']}"
+                                entry["url"] = f"/api/minio_agent/{entry['url']}"
                 
                 # Proxy Context Docs
                 if "context_docs" in ci and isinstance(ci["context_docs"], list):
                     for i, doc in enumerate(ci["context_docs"]):
                         if isinstance(doc, str) and "/" in doc:
-                            url = f"/api/utils/minio_agent/{doc}"
+                            url = f"/api/minio_agent/{doc}"
                             ci["context_docs"][i] = {"name": os.path.basename(doc), "url": url}
                         elif isinstance(doc, dict) and "url" in doc and "/" in doc["url"]:
                             if not doc["url"].startswith("/api/"):
-                                doc["url"] = f"/api/utils/minio_agent/{doc['url']}"
+                                doc["url"] = f"/api/minio_agent/{doc['url']}"
                 
                 step_data["call_info"] = ci
             
