@@ -37,25 +37,54 @@ async def academic_research_node(state: GraphState):
     """Much simpler node—structured output handles formatting."""
     print("--- Ejecutando Nodo: Investigación Académica ---")
     
-    current_report = state.get("report_components") or ReportSchema()
+    # --- REHIDRATACIÓN DEFENSIVA ---
+    if isinstance(current_report, dict):
+        try:
+            current_report = ReportSchema(**current_report)
+        except Exception as e:
+            print(f"⚠️ Error rehidratando ReportSchema: {e}")
+            current_report = ReportSchema()
+
     general_info = current_report.general_info
     
-    # Validación defensiva
-    if not general_info:
-        project_title = "Unknown Topic"
-        project_desc = ""
-        keywords = []
-    else:
-        project_title = general_info.project_title or "Unknown topic"
+    # --- LÓGICA DE FALLBACK ROBUSTA ---
+    # Intentamos obtener la información del reporte, si no, de la idea seleccionada, si no, de la convocatoria
+    project_title = "Unknown Topic"
+    project_desc = ""
+    keywords = []
+
+    if general_info and (general_info.project_title or general_info.project_description):
+        print("✅ Usando información de general_info (ReportSchema)")
+        project_title = general_info.project_title or "Unknown Topic"
         project_desc = general_info.project_description or ""
         keywords = general_info.keywords or []
+    else:
+        # Fallback 1: selected_idea
+        selected_idea = state.get("selected_idea")
+        if selected_idea:
+            print("🔍 Fallback 1: Usando información de selected_idea")
+            project_title = selected_idea.idea_title or "Unknown Topic"
+            project_desc = selected_idea.idea_description or ""
+            # Si es un objeto Pydantic o dict
+            if hasattr(selected_idea, "idea_objectives"):
+                 # añadir objetivos a la descripción para más contexto
+                 project_desc += "\n\nObjetivos:\n" + "\n".join(selected_idea.idea_objectives or [])
+        else:
+            # Fallback 2: call_info
+            call_info = state.get("call_info")
+            if call_info:
+                print("🔍 Fallback 2: Usando información de call_info")
+                project_title = getattr(call_info, "title", "Unknown Topic")
+                project_desc = getattr(call_info, "objective", "")
+                keywords = getattr(call_info, "keywords", [])
+
+    print(f"DEBUG: Título proyecto para investigación: {project_title}")
 
     system_content = RESEARCH_PROMPT_TEMPLATE.format(
         project_title=project_title,
         project_desc=project_desc,
-        keywords=', '.join(keywords)
+        keywords=', '.join(keywords) if isinstance(keywords, list) else keywords
     )
-    
     
     try:
         # Invoke agent

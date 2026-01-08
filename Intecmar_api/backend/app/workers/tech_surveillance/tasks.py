@@ -144,8 +144,10 @@ def task_process_agent_step(self, session_id: str, input_data: dict, step_type: 
 
         # 2. report_components
         if "report_components" in current_state and isinstance(current_state["report_components"], dict):
-            try: current_state["report_components"] = ReportSchema(**current_state["report_components"])
-            except: pass
+            try: 
+                current_state["report_components"] = ReportSchema(**current_state["report_components"])
+            except Exception as e:
+                print(f"⚠️ Error rehydrating report_components: {e}")
 
         # 3. docs_paths
         if "docs_paths" in current_state and isinstance(current_state["docs_paths"], dict):
