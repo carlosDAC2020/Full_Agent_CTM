@@ -50,8 +50,10 @@ def change_password(
     db.commit()
     return {"message": "Contraseña actualizada correctamente"}
 
+from backend.app.services.magazine.minio_storage import minio_storage
+
 @router.post("/me/profile-picture", response_model=schemas.User)
-def upload_profile_picture(
+async def upload_profile_picture(
     file: UploadFile = File(...),
     current_user: models.User = Depends(get_current_user),
     db: Session = Depends(get_db)
@@ -60,36 +62,34 @@ def upload_profile_picture(
     if not file.content_type.startswith("image/"):
         raise HTTPException(status_code=400, detail="El archivo debe ser una imagen")
     
-    # Directorio para guardar
-    upload_dir = os.path.join(settings.OUTPUTS_DIR, "profile_pictures")
-    ensure_outputs(upload_dir)
+    # Leer datos
+    file_data = await file.read()
     
     # Nombre único
     ext = file.filename.split(".")[-1] if "." in file.filename else "jpg"
-    filename = f"{current_user.id}_{uuid.uuid4().hex}.{ext}"
-    file_path = os.path.join(upload_dir, filename)
+    filename = f"avatar_{uuid.uuid4().hex}.{ext}"
     
-    with open(file_path, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
+    # Carpeta en MinIO (basada en email del usuario)
+    folder = f"{current_user.email}/profile_picture"
+    
+    # Subir a MinIO
+    success = minio_storage.upload_file(
+        file_data=file_data,
+        folder=folder,
+        filename=filename,
+        content_type=file.content_type
+    )
+    
+    if not success:
+        raise HTTPException(status_code=500, detail="Error al subir la imagen a MinIO")
         
-    # Guardar ruta relativa o URL
-    # Asumimos que /outputs está montado en /outputs
-    # Backend path: /outputs/profile_pictures/filename
-    # Frontend URL: /outputs/profile_pictures/filename
+    # La nueva URL apunta al proxy de MinIO
+    new_url = f"/api/minio_avatar/{current_user.email}/{filename}"
     
-    relative_path = f"/outputs/profile_pictures/{filename}"
+    # Si había una imagen local antigua, podríamos intentar limpiarla, 
+    # pero el usuario pidió migrar a MinIO, así que priorizamos la nueva lógica.
     
-    # Eliminar imagen anterior si existe
-    if current_user.profile_picture and current_user.profile_picture.startswith("/outputs/"):
-        old_path = current_user.profile_picture.replace("/outputs", settings.OUTPUTS_DIR, 1)
-        # Solo eliminar si es un archivo local y no una URL externa
-        if os.path.exists(old_path) and "profile_pictures" in old_path:
-             try:
-                 os.remove(old_path)
-             except Exception:
-                 pass
-
-    current_user.profile_picture = relative_path
+    current_user.profile_picture = new_url
     db.commit()
     db.refresh(current_user)
     return current_user

@@ -42,6 +42,28 @@ async def serve_minio_pdf(user_email: str, filename: str):
         headers={"Content-Disposition": f"inline; filename={filename}"}
     )
 
+@router.get("/minio_avatar/{user_email:path}/{filename}")
+async def serve_minio_avatar(user_email: str, filename: str):
+    """Sirve una foto de perfil desde MinIO."""
+    from fastapi.responses import Response
+    import mimetypes
+    
+    folder = f"{user_email}/profile_picture"
+    img_data = minio_storage.download_file(folder, filename)
+    
+    if img_data is None:
+        raise HTTPException(status_code=404, detail="Imagen de perfil no encontrada en MinIO")
+    
+    mime_type, _ = mimetypes.guess_type(filename)
+    if not mime_type:
+        mime_type = "image/jpeg"
+        
+    return Response(
+        content=img_data,
+        media_type=mime_type,
+        headers={"Cache-Control": "max-age=3600"}
+    )
+
 @router.post("/upload_pdf")
 async def upload_pdf(pdf_file: UploadFile = File(...)):
     """Recibe un archivo PDF y lo guarda en outputs/uploads/ devolviendo su ruta relativa."""
