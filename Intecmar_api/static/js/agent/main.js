@@ -14,54 +14,8 @@ import {
     resetInterface
 } from './ui/wizard.js';
 
-// ===== NEW: Load User Info from /api/me =====
-async function loadUserInfo() {
-    // Helper to get login URL dynamically (Codespaces vs Localhost)
-    const getLoginUrl = () => {
-        return '/login';
-    };
-
-    const token = localStorage.getItem('auth_token');
-    if (!token) {
-        window.location.href = getLoginUrl();
-        return;
-    }
-
-    try {
-        const res = await fetch('/api/auth/me', {
-            headers: { 'Authorization': `Bearer ${token} ` }
-        });
-
-        if (!res.ok) {
-            throw new Error('Auth failed');
-        }
-
-        const user = await res.json();
-
-        // Update sidebar user info
-        const userNameEl = document.getElementById('user-name');
-        const userRoleEl = document.getElementById('user-role');
-        const userAvatarEl = document.getElementById('user-avatar');
-
-        if (userNameEl) userNameEl.textContent = user.name || 'Usuario';
-        if (userRoleEl) userRoleEl.textContent = user.role || 'Usuario';
-
-        // Update avatar with initials
-        if (userAvatarEl) {
-            const initials = (user.name || 'U').split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
-            userAvatarEl.textContent = initials;
-        }
-
-    } catch (err) {
-        console.error('Failed to load user:', err);
-        localStorage.removeItem('auth_token');
-        window.location.href = getLoginUrl();
-    }
-}
-
 document.addEventListener('DOMContentLoaded', () => {
-    // Load user info first
-    loadUserInfo();
+    // Componentes ya cargados por auth.js (si existe en el layout)
 
     // Inicializar componentes
     loadHistory();

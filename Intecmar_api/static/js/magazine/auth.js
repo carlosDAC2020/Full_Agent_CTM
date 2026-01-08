@@ -54,22 +54,65 @@
     const userBadge = document.getElementById('userBadge');
     const authSuccess = document.getElementById('authSuccess');
 
-    function setAuthedUI(email) {
+    function setAuthedUI(user) {
+      const email = user ? user.email : '';
+      const name = user ? user.name : '';
+      const pic = user ? user.profile_picture : null;
+
       if (userBadge) userBadge.textContent = email ? `Conectado: ${email}` : 'Sin sesión';
       if (loginBtn) loginBtn.classList.toggle('hidden', !!email);
       if (logoutBtn) logoutBtn.classList.toggle('hidden', !email);
+
+      // Update Magazine Header
+      const headerUserName = document.getElementById('headerUserName');
+      const dropdownName = document.getElementById('dropdownName');
+      const dropdownEmail = document.getElementById('dropdownEmail');
+      const avatarCircle = document.querySelector('.avatar-circle');
+
+      if (headerUserName) headerUserName.textContent = (name || email || 'Usuario').split(' ')[0];
+      if (dropdownName) dropdownName.textContent = name || email || 'Usuario';
+      if (dropdownEmail) dropdownEmail.textContent = email;
+
+      if (avatarCircle) {
+        if (pic) {
+          avatarCircle.innerHTML = `<img src="${pic}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;" onerror="this.src='/img/default-avatar.png'">`;
+        } else {
+          avatarCircle.innerHTML = `<i class="fa-solid fa-user"></i>`;
+        }
+      }
+
+      // Update Agent Sidebar
+      const agentUserAvatar = document.getElementById('user-avatar');
+      const agentUserName = document.getElementById('user-name');
+      const agentUserRole = document.getElementById('user-role');
+
+      if (agentUserName) agentUserName.textContent = name || email || 'Usuario';
+      if (agentUserRole && user && user.role) agentUserRole.textContent = user.role.charAt(0).toUpperCase() + user.role.slice(1);
+
+      if (agentUserAvatar) {
+        if (pic) {
+          agentUserAvatar.innerHTML = `<img src="${pic}" class="w-full h-full object-cover rounded-full" onerror="this.src='/img/default-avatar.png'">`;
+          agentUserAvatar.classList.remove('bg-gradient-to-tr', 'from-blue-500', 'to-cyan-400');
+        } else {
+          const initials = (name || email || 'U').charAt(0).toUpperCase();
+          agentUserAvatar.textContent = initials;
+          agentUserAvatar.classList.add('bg-gradient-to-tr', 'from-blue-500', 'to-cyan-400');
+        }
+      }
     }
+
     async function refreshMe() {
       try {
         const me = await apiMe(API_URL);
-        setAuthedUI(me.email || '');
+        setAuthedUI(me);
         try {
           if (me?.email) localStorage.setItem('user_email', me.email);
           if (me?.name) localStorage.setItem('user_name', me.name);
+          if (me?.profile_picture) localStorage.setItem('user_pic', me.profile_picture);
         } catch { }
       }
       catch {
-        setAuthedUI('');
+        setAuthedUI(null);
       }
     }
 

@@ -670,16 +670,6 @@
     <script src="/static/js/magazine/savedMagazines.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            // Usuario en header/dropdown
-            const userNameDisplay = document.getElementById('headerUserName');
-            const dropdownName = document.getElementById('dropdownName');
-            const dropdownEmail = document.getElementById('dropdownEmail');
-            const savedName = localStorage.getItem('user_name') || 'Usuario Invitado';
-            const savedEmail = localStorage.getItem('user_email') || 'invitado@cotecmar.com';
-            if (userNameDisplay) userNameDisplay.textContent = (savedName || 'Usuario').split(' ')[0];
-            if (dropdownName) dropdownName.textContent = savedName || 'Usuario';
-            if (dropdownEmail) dropdownEmail.textContent = savedEmail;
-
             // Toggle del dropdown
             const accountBtn = document.getElementById('accountBtn');
             const accountDropdown = document.getElementById('accountDropdown');
