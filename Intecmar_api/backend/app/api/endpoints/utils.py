@@ -86,9 +86,19 @@ async def serve_minio_agent_asset(path: str):
     folder = "/".join(parts[:-1])
     
     try:
-        data = storage.s3_client.get_object(Bucket=storage.bucket_name, Key=path)['Body'].read()
-    except Exception:
-        raise HTTPException(status_code=404, detail="Asset no encontrado en MinIO")
+        # Intentar en el bucket del agente primero
+        print(f"DEBUG: Buscando en {storage.bucket_name} Key: {path} (Endpoint: {storage.endpoint})")
+        try:
+            data = storage.s3_client.get_object(Bucket=storage.bucket_name, Key=path)['Body'].read()
+        except Exception as e1:
+            print(f"DEBUG: No encontrado en {storage.bucket_name}, intentando en 'users'. Error: {e1}")
+            # Intentar en el bucket de usuarios si falla
+            data = storage.s3_client.get_object(Bucket="users", Key=path)['Body'].read()
+            print(f"DEBUG: ¡Encontrado en 'users'!")
+            
+    except Exception as e:
+        print(f"EROR FINAL MinIO (proxy_agent): {e}")
+        raise HTTPException(status_code=404, detail=f"Asset no encontrado en ningún bucket: {str(e)}")
     
     mime_type, _ = mimetypes.guess_type(filename)
     if not mime_type:
