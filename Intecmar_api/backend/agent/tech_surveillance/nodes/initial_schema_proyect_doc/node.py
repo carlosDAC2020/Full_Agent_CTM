@@ -12,10 +12,7 @@ from reportlab.lib import colors
 from backend.agent.tech_surveillance.state import GraphState, DocsPaths
 from backend.agent.tech_surveillance.utils.pdf_generation import get_custom_styles, PageTemplate, markdown_to_flowables, ReportDocTemplate, COTECMAR_BLUE, COTECMAR_DARK_BLUE
 
-from backend.app.services.tech_surveillance.storage import MinioService
-
-# Instanciamos el servicio
-storage_service = MinioService()
+from backend.app.services.core.storage import storage_service
 
 def initial_schema_proyect_doc_node(state: GraphState) -> dict:
     """
@@ -179,8 +176,8 @@ def initial_schema_proyect_doc_node(state: GraphState) -> dict:
     # upload_file maneja internamente la estructura session_id/nombre_archivo
     minio_folder = f"{user_email}/Agent_Sessions/{session_id}/initial_schema"
     
-    md_key = storage_service.upload_file(md_filepath, minio_folder)
-    pdf_key = storage_service.upload_file(pdf_filepath, minio_folder)
+    md_key = storage_service.upload_file(md_filepath, f"{minio_folder}/{md_filename}")
+    pdf_key = storage_service.upload_file(pdf_filepath, f"{minio_folder}/{pdf_filename}")
 
     # ========================================
     # ACTUALIZAR RUTAS EN EL ESTADO

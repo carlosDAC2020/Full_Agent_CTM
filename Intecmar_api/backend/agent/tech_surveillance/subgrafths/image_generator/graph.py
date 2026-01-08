@@ -14,10 +14,7 @@ from io import BytesIO
 from backend.agent.tech_surveillance.state import GraphState, ReportSchema, DocsPaths
 from .prompts import template_image_prompt
 
-from backend.app.services.tech_surveillance.storage import MinioService
-
-# Instanciamos el servicio de almacenamiento
-storage_service = MinioService()
+from backend.app.services.core.storage import storage_service
 
 # Cliente de Google Genai para generación de imágenes
 genai_client = genai.Client(api_key=os.environ.get("NANO_BANANA_API_KEY"))
@@ -195,7 +192,7 @@ def generator_image_node(state: GraphState):
                 # D. Subir a MinIO
                 print("   ☁️ Subiendo póster a MinIO...")
                 minio_folder = f"{user_email}/Agent_Sessions/{session_id}/generated_images"
-                minio_key = storage_service.upload_file(full_image_path, minio_folder)
+                minio_key = storage_service.upload_file(full_image_path, f"{minio_folder}/{image_filename}")
                 break 
         
         if image_path:

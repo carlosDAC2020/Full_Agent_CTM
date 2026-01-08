@@ -26,6 +26,9 @@ class Settings:
     
     API_INTERNAL_URL = os.getenv("API_INTERNAL_URL", "http://localhost:8000")
     
+    # MinIO
+    MINIO_BUCKET_NAME = os.getenv("MINIO_BUCKET_NAME", "intecmar-data")
+    
     # SMTP / Demo mode
     DEMO_MODE = os.getenv("DEMO_MODE", "true").lower() == "true"
     SMTP_HOST = os.getenv("SMTP_HOST", "")

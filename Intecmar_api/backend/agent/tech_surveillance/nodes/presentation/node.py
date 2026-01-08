@@ -7,10 +7,7 @@ from langchain_core.messages import AIMessage
 
 from .utils import create_marp_from_text,  convert_marp_to_formats
 
-from backend.app.services.tech_surveillance.storage import MinioService
-
-# Instanciar servicio (o hacerlo global)
-storage_service = MinioService()
+from backend.app.services.core.storage import storage_service
 
 # Usar variable de entorno si existe (Docker), sino carpeta local
 OUTPUT_DIR = os.getenv("SHARED_DATA_PATH", "generated_presentations") 
@@ -57,9 +54,10 @@ def presentation_generation_docs_node(state: GraphState):
     minio_folder = f"{user_email}/Agent_Sessions/{session_id}/presentation"
     
     # Subir y obtener las KEYS (ej: "email/Agent_Sessions/uuid/presentation/archivo.pdf")
-    md_key = storage_service.upload_file(filename, minio_folder)
-    pdf_key = storage_service.upload_file(pdf_path, minio_folder)
-    pptx_key = storage_service.upload_file(pptx_path, minio_folder)
+    # Subir y obtener las KEYS (ej: "email/Agent_Sessions/uuid/presentation/archivo.pdf")
+    md_key = storage_service.upload_file(filename, f"{minio_folder}/{os.path.basename(filename)}")
+    pdf_key = storage_service.upload_file(pdf_path, f"{minio_folder}/{os.path.basename(pdf_path)}")
+    pptx_key = storage_service.upload_file(pptx_path, f"{minio_folder}/{os.path.basename(pptx_path)}")
     
     # Actualizamos el estado con las KEYS de MinIO, no las rutas locales
     docs_paths: DocsPaths = state.get("docs_paths") or DocsPaths()

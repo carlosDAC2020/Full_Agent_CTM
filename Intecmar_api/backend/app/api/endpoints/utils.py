@@ -12,7 +12,7 @@ from backend.app.utils.files import ensure_outputs
 from backend.app.db.session import get_db
 from backend.app.db import models
 
-from backend.app.services.magazine.minio_storage import minio_storage
+from backend.app.services.core.storage import storage_service
 
 router = APIRouter()
 
@@ -25,81 +25,22 @@ async def viewer_page(request: Request):
     """Sirve el visor de PDF tipo flipbook básico."""
     return templates.TemplateResponse("magazine/viewer.html", {"request": request})
 
-@router.get("/minio_pdf/{user_email:path}/{filename}")
-async def serve_minio_pdf(user_email: str, filename: str):
-    """Sirve un PDF desde MinIO."""
-    from fastapi.responses import Response
-    
-    folder = f"{user_email}/Magazines"
-    pdf_data = minio_storage.download_file(folder, filename)
-    
-    if pdf_data is None:
-        raise HTTPException(status_code=404, detail="PDF no encontrado en MinIO")
-    
-    return Response(
-        content=pdf_data,
-        media_type="application/pdf",
-        headers={"Content-Disposition": f"inline; filename={filename}"}
-    )
-
-@router.get("/minio_avatar/{user_email:path}/{filename}")
-async def serve_minio_avatar(user_email: str, filename: str):
-    """Sirve una foto de perfil desde MinIO."""
+@router.get("/minio/{bucket_type}/{path:path}")
+async def serve_minio_unified(bucket_type: str, path: str):
+    """
+    Proxy universal para MinIO.
+    bucket_type: 'users', 'agent' (aunque ahora todo esté en intecmar-data).
+    """
     from fastapi.responses import Response
     import mimetypes
     
-    folder = f"{user_email}/profile_picture"
-    img_data = minio_storage.download_file(folder, filename)
+    # Intentar descargar
+    data = storage_service.download_file(path)
     
-    if img_data is None:
-        raise HTTPException(status_code=404, detail="Imagen de perfil no encontrada en MinIO")
+    if data is None:
+        raise HTTPException(status_code=404, detail="Archivo no encontrado en MinIO")
     
-    mime_type, _ = mimetypes.guess_type(filename)
-    if not mime_type:
-        mime_type = "image/jpeg"
-        
-    return Response(
-        content=img_data,
-        media_type=mime_type,
-        headers={"Cache-Control": "max-age=3600"}
-    )
-
-@router.get("/minio_agent/{path:path}")
-async def serve_minio_agent_asset(path: str):
-    """Sirve archivos (imágenes, PDFs, etc.) desde el bucket agent-results en MinIO."""
-    from fastapi.responses import Response
-    import mimetypes
-    from backend.app.services.tech_surveillance.storage import MinioService
-    
-    storage = MinioService()
-    # En agent-results, la estructura es: email/Agent_Sessions/session_id/.../file.ext
-    # O simplemente la key completa que guardamos en la DB.
-    
-    # download_file en MinioService toma (folder, filename)
-    # pero a veces guardamos la key completa.
-    # Vamos a extraer folder y filename del path.
-    parts = path.split('/')
-    if len(parts) < 2:
-        raise HTTPException(status_code=400, detail="Ruta de asset inválida")
-    
-    filename = parts[-1]
-    folder = "/".join(parts[:-1])
-    
-    try:
-        # Intentar en el bucket del agente primero
-        print(f"DEBUG: Buscando en {storage.bucket_name} Key: {path} (Endpoint: {storage.endpoint})")
-        try:
-            data = storage.s3_client.get_object(Bucket=storage.bucket_name, Key=path)['Body'].read()
-        except Exception as e1:
-            print(f"DEBUG: No encontrado en {storage.bucket_name}, intentando en 'users'. Error: {e1}")
-            # Intentar en el bucket de usuarios si falla
-            data = storage.s3_client.get_object(Bucket="users", Key=path)['Body'].read()
-            print(f"DEBUG: ¡Encontrado en 'users'!")
-            
-    except Exception as e:
-        print(f"EROR FINAL MinIO (proxy_agent): {e}")
-        raise HTTPException(status_code=404, detail=f"Asset no encontrado en ningún bucket: {str(e)}")
-    
+    filename = path.split('/')[-1]
     mime_type, _ = mimetypes.guess_type(filename)
     if not mime_type:
         if filename.endswith('.md'): mime_type = "text/markdown"
@@ -110,6 +51,19 @@ async def serve_minio_agent_asset(path: str):
         media_type=mime_type,
         headers={"Cache-Control": "max-age=3600"}
     )
+
+@router.get("/minio_pdf/{user_email:path}/{filename}")
+async def serve_minio_pdf(user_email: str, filename: str):
+    return await serve_minio_unified("magazine", f"{user_email}/Magazines/{filename}")
+
+@router.get("/minio_avatar/{user_email:path}/{filename}")
+async def serve_minio_avatar(user_email: str, filename: str):
+    return await serve_minio_unified("profile", f"{user_email}/profile_picture/{filename}")
+
+@router.get("/minio_agent/{path:path}")
+async def serve_minio_agent_asset(path: str):
+    return await serve_minio_unified("agent", path)
+
 
 @router.post("/upload_pdf")
 async def upload_pdf(pdf_file: UploadFile = File(...)):

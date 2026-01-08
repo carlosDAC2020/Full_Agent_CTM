@@ -50,7 +50,7 @@ def change_password(
     db.commit()
     return {"message": "Contraseña actualizada correctamente"}
 
-from backend.app.services.magazine.minio_storage import minio_storage
+from backend.app.services.core.storage import storage_service
 
 @router.post("/me/profile-picture", response_model=schemas.User)
 async def upload_profile_picture(
@@ -73,14 +73,14 @@ async def upload_profile_picture(
     folder = f"{current_user.email}/profile_picture"
     
     # Subir a MinIO
-    success = minio_storage.upload_file(
-        file_data=file_data,
-        folder=folder,
-        filename=filename,
+    object_key = f"{folder}/{filename}"
+    key = storage_service.upload_file(
+        file_path_or_data=file_data,
+        object_key=object_key,
         content_type=file.content_type
     )
     
-    if not success:
+    if not key:
         raise HTTPException(status_code=500, detail="Error al subir la imagen a MinIO")
         
     # La nueva URL apunta al proxy de MinIO

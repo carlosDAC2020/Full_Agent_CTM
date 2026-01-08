@@ -20,6 +20,7 @@ from backend.app.core.config import settings
 from backend.app.api.api_v1 import api_router
 from backend.app.db.session import engine, Base
 from backend.scripts.migrate_convocatorias import migrate_convocatorias, migrate_sources
+from backend.scripts.migrate_minio import migrate_minio_buckets
 
 # Create tables
 # In production, use Alembic
@@ -36,6 +37,7 @@ async def startup_event():
     try:
         migrate_convocatorias()
         migrate_sources()
+        migrate_minio_buckets()
         print("Migración de datos completada exitosamente.")
     except Exception as e:
         print(f"Error durante la migración en el arranque: {e}")

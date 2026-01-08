@@ -15,7 +15,7 @@ from langchain_community.document_loaders import (
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from backend.agent.tech_surveillance.state import GraphState
-from backend.app.services.tech_surveillance.storage import MinioService
+from backend.app.services.core.storage import storage_service
 
 from tenacity import retry, stop_after_attempt, wait_exponential
 
@@ -50,7 +50,7 @@ async def vectorizer_node(state: GraphState):
 
     print(f"📂 [VECTORIZER] Se encontraron {len(context_docs)} documentos para procesar.")
 
-    storage_service = MinioService()
+    # storage_service already imported
     embeddings = GoogleGenerativeAIEmbeddings(
         model="models/text-embedding-004", 
         google_api_key=os.environ.get("GEMINI_API_KEY")
@@ -93,12 +93,13 @@ async def vectorizer_node(state: GraphState):
 
             local_path = os.path.join(temp_dir, filename)
             try:
-                print(f"📥 [VECTORIZER] Descargando {obj_key} de MinIO...")
-                storage_service.s3_client.download_file(
-                    storage_service.bucket_name, 
-                    obj_key, 
-                    local_path
-                )
+                # Use storage_service.download_file which returns bytes, then write to local_path
+                data = storage_service.download_file(obj_key)
+                if data:
+                    with open(local_path, "wb") as f:
+                        f.write(data)
+                else:
+                    raise Exception(f"No se pudo descargar {obj_key} de MinIO")
                 
                 # Cargar según extensión
                 ext = os.path.splitext(filename)[1].lower()

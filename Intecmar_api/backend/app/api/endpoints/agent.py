@@ -17,12 +17,11 @@ from backend.app.db.models import User
 
 import json
 from typing import List
-from backend.app.services.tech_surveillance.storage import MinioService
+from backend.app.services.core.storage import storage_service
 from backend.app.db.models import Convocatoria
 from backend.app.schemas.requests import IngestRequest, SelectionRequest, NextStepRequest, ConvocatoriaOut
 
 router = APIRouter(prefix="/agent", tags=["Agent Actions"])
-storage_service = MinioService()
 
 @router.get("/convocatorias", response_model=List[ConvocatoriaOut])
 async def list_convocatorias(db: Session = Depends(get_db)):

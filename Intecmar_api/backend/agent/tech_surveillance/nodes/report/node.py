@@ -14,10 +14,7 @@ from backend.agent.tech_surveillance.state import GraphState, ReportSchema, Docs
 from backend.agent.tech_surveillance.utils.pdf_generation  import get_custom_styles, PageTemplate, markdown_to_flowables, ReportDocTemplate, COTECMAR_BLUE, COTECMAR_DARK_BLUE
 
 
-from backend.app.services.tech_surveillance.storage import MinioService
-
-# Instanciamos el servicio
-storage_service = MinioService()
+from backend.app.services.core.storage import storage_service
 
 # --- Carpeta de Reportes ---
 REPORTS_DIR = "generated_reports"
@@ -329,14 +326,14 @@ def report_node(state: GraphState):
         # ========================================
         print("☁️ Subiendo reporte final a MinIO...")
         minio_folder = f"{user_email}/Agent_Sessions/{session_id}/final_project_proposal"
-        pdf_key = storage_service.upload_file(pdf_filepath, minio_folder)
-        md_key = storage_service.upload_file(md_filepath, minio_folder)
+        pdf_key = storage_service.upload_file(pdf_filepath, f"{minio_folder}/{pdf_filename}")
+        md_key = storage_service.upload_file(md_filepath, f"{minio_folder}/{md_filename}")
         
         # Nota: La imagen de portada ya debería haber sido subida en su propio nodo,
         # pero si no, podrías subirla aquí también si quisieras tener el link directo.
         img_key = None
         if final_img_path:
-             img_key = storage_service.upload_file(final_img_path, minio_folder)
+             img_key = storage_service.upload_file(final_img_path, f"{minio_folder}/{os.path.basename(final_img_path)}")
 
         # ========================================
         # ACTUALIZACIÓN DE ESTADO

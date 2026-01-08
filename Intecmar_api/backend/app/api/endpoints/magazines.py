@@ -13,7 +13,7 @@ from backend.app.schemas.convocatoria import ConvocatoriaOut
 from backend.app.services.magazine.redis_service import get_redis, task_key
 from backend.app.services.magazine.agent_service import run_magazine_generation_stream
 from backend.app.services.magazine.pdf_engine import generate_pdf
-from backend.app.services.magazine.minio_storage import minio_storage
+from backend.app.services.core.storage import storage_service
 from backend.app.utils.files import load_json_list, save_json_dict
 
 router = APIRouter()
@@ -216,10 +216,9 @@ async def generate_pdf_from_ids(
 
                 user_folder = f"{current_user.email}/Magazines"
                 background_tasks.add_task(
-                    minio_storage.upload_file,
-                    file_data=pdf_bytes,
-                    folder=user_folder,
-                    filename=pdf_name,
+                    storage_service.upload_file,
+                    file_path_or_data=pdf_bytes,
+                    object_key=f"{user_folder}/{pdf_name}",
                 )
         except Exception as e:
             # No interrumpe la respuesta al usuario si falla el upload
