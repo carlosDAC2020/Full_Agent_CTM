@@ -30,9 +30,11 @@ async def run_magazine_generation_stream(tema: str):
     result = {}
     
     for output in agent_app.stream(inputs):
-        for key, value in output.items():
-            if key in ['contenido_curado', 'pdf_path']:
-                result[key] = value
+        # LangGraph yields: { node_name: { state_key: update } }
+        for node_name, state_update in output.items():
+            for key in ['contenido_curado', 'pdf_path']:
+                if key in state_update:
+                    result[key] = state_update[key]
     return result
 
 def llm_invoke(prompt: str) -> str:

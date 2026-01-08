@@ -35,7 +35,7 @@ def _publish_event(event_type: str, payload: Dict[str, Any]):
 def _post_flow_status(task_id: str, status: str, name: Optional[str] = None, meta: Optional[Dict[str, Any]] = None):
     try:
         base_url = os.getenv("API_INTERNAL_URL") or os.getenv("BACKEND_BASE_URL") or "http://localhost:8000"
-        url = f"{base_url}/flows/{task_id}/status"
+        url = f"{base_url}/api/flows/{task_id}/status"
         headers = {"Content-Type": "application/json"}
         worker_token = settings.WORKER_TOKEN
         if worker_token:
@@ -109,9 +109,10 @@ def run_magazine(self, payload: Dict[str, Any] | None = None):
         for output in agent_app.stream(inputs):
             # Emitir progreso básico cada iteración
             _publish_event("task_progress", {"id": task_id, "type": "magazine", "message": "procesando..."})
-            for key, value in output.items():
-                if key == "contenido_curado":
-                    result[key] = value
+            # LangGraph yields: { node_name: { state_key: update } }
+            for node_name, state_update in output.items():
+                if "contenido_curado" in state_update:
+                    result["contenido_curado"] = state_update["contenido_curado"]
 
         # El agente ya guardó las convocatorias en la BD
         # El usuario generará el PDF manualmente desde la interfaz
