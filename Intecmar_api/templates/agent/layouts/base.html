@@ -113,13 +113,32 @@
             <div id="history-list"></div>
         </div>
 
-        <div class="p-4 bg-black/20 flex items-center gap-3 text-sm min-w-[16rem]">
+        <div class="p-4 bg-black/20 flex items-center gap-3 text-sm min-w-[16rem] relative">
             <div id="user-avatar"
                 class="w-8 h-8 rounded-full bg-gradient-to-tr from-blue-500 to-cyan-400 flex items-center justify-center font-bold text-xs flex-shrink-0">
                 U</div>
-            <div class="leading-tight">
-                <div id="user-name" class="font-medium">Cargando...</div>
-                <div id="user-role" class="text-[10px] text-blue-300 opacity-80">Usuario</div>
+            <div class="leading-tight flex-1 overflow-hidden">
+                <div id="user-name" class="font-medium truncate">Cargando...</div>
+                <div id="user-role" class="text-[10px] text-blue-300 opacity-80 truncate">Usuario</div>
+            </div>
+            <!-- Botón de Opciones (Tres puntos) -->
+            <button id="agentUserMenuBtn" class="text-blue-300 hover:text-white transition-colors p-1">
+                <i class="ph-bold ph-dots-three-vertical text-lg"></i>
+            </button>
+
+            <!-- Menu Dropdown del Agente -->
+            <div id="agentUserDropdown"
+                class="hidden absolute bottom-full left-4 mb-2 w-48 bg-cotecmar-dark border border-blue-900/50 rounded-lg shadow-2xl overflow-hidden animate-slide-up z-50">
+                <a href="/profile"
+                    class="flex items-center gap-3 px-4 py-3 text-xs text-blue-100 hover:bg-blue-900/40 transition-colors border-b border-blue-900/30">
+                    <i class="ph ph-user-circle text-base text-blue-400"></i>
+                    <span>Mi Perfil</span>
+                </a>
+                <button id="agentLogoutBtn"
+                    class="w-full flex items-center gap-3 px-4 py-3 text-xs text-red-300 hover:bg-red-900/20 transition-colors">
+                    <i class="ph ph-sign-out text-base"></i>
+                    <span>Cerrar Sesión</span>
+                </button>
             </div>
         </div>
 

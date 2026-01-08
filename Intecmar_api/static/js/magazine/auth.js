@@ -87,7 +87,8 @@
       const agentUserRole = document.getElementById('user-role');
 
       if (agentUserName) agentUserName.textContent = name || email || 'Usuario';
-      if (agentUserRole && user && user.role) agentUserRole.textContent = user.role.charAt(0).toUpperCase() + user.role.slice(1);
+      // User requested to show email instead of role below the name in the agent
+      if (agentUserRole) agentUserRole.textContent = email || (user && user.role) || 'Usuario';
 
       if (agentUserAvatar) {
         if (pic) {
@@ -98,6 +99,26 @@
           agentUserAvatar.textContent = initials;
           agentUserAvatar.classList.add('bg-gradient-to-tr', 'from-blue-500', 'to-cyan-400');
         }
+      }
+
+      // Initialize Agent User Menu (Three Dots)
+      const agentMenuBtn = document.getElementById('agentUserMenuBtn');
+      const agentDropdown = document.getElementById('agentUserDropdown');
+      const agentLogout = document.getElementById('agentLogoutBtn');
+
+      if (agentMenuBtn && agentDropdown) {
+        agentMenuBtn.onclick = (e) => {
+          e.stopPropagation();
+          agentDropdown.classList.toggle('hidden');
+        };
+        document.addEventListener('click', () => agentDropdown.classList.add('hidden'));
+      }
+
+      if (agentLogout) {
+        agentLogout.onclick = () => {
+          setToken('');
+          window.location.href = '/login';
+        };
       }
     }
 
