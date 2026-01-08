@@ -15,7 +15,10 @@ from backend.app.utils.files import ensure_outputs
 _TEMPLATE_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))), "templates")
 email_env = Environment(loader=FileSystemLoader(_TEMPLATE_DIR))
 
-def send_smtp_email(to_list: List[str], subject: str, html_content: str, sender: str = None, attachments: List[str] = []):
+def send_smtp_email(to_list: List[str], subject: str, html_content: str, sender: str = None, attachments: List[str] = [], inline_attachments: List[tuple] = []):
+    """
+    inline_attachments: List of (file_path, content_id) tuples.
+    """
     if not sender:
         sender = settings.DEFAULT_SENDER_EMAIL
 
@@ -30,8 +33,24 @@ def send_smtp_email(to_list: List[str], subject: str, html_content: str, sender:
     msg["From"] = sender
     msg["To"] = ", ".join(to_list)
     msg["Subject"] = subject
+    
+    # Use make_related() or set_content then add_related
+    # Simplest for HTML with inline images:
     msg.set_content(html_content, subtype="html")
 
+    # Add inline attachments (images referenced by cid:xxxx)
+    for path, cid in inline_attachments:
+        if not os.path.exists(path):
+            print(f"Inline attachment not found: {path}")
+            continue
+        ctype, _ = mimetypes.guess_type(path)
+        maintype, subtype = (ctype.split("/", 1) if ctype else ("application", "octet-stream"))
+        
+        with open(path, "rb") as f:
+            file_data = f.read()
+            msg.add_related(file_data, maintype=maintype, subtype=subtype, cid=f"<{cid}>", filename=os.path.basename(path))
+
+    # Add regular attachments
     for path in attachments:
         if not os.path.exists(path):
             continue
@@ -68,14 +87,13 @@ def send_smtp_email(to_list: List[str], subject: str, html_content: str, sender:
             server.send_message(msg)
     except Exception as e:
         print(f"Error sending email: {e}")
-        # Don't crash the app for email errors, but log it
         pass
 
-def send_template_email(to_email: str, subject: str, template_name: str, context: Dict[str, Any]):
+def send_template_email(to_email: str, subject: str, template_name: str, context: Dict[str, Any], inline_attachments: List[tuple] = []):
     try:
         template = email_env.get_template(template_name)
         html_content = template.render(**context)
-        send_smtp_email([to_email], subject, html_content)
+        send_smtp_email([to_email], subject, html_content, inline_attachments=inline_attachments)
     except Exception as e:
         print(f"Template rendering error: {e}")
 
@@ -88,4 +106,17 @@ def send_reset_password_email(to_email: str, token: str):
         "reset_link": link,
         "email": to_email
     }
-    send_template_email(to_email, subject, "emails/reset_password.html", context)
+    
+    # Locate Logo
+    # _TEMPLATE_DIR is .../templates
+    # We need .../static/images/CotecmarLogo_white.png
+    root_dir = os.path.dirname(_TEMPLATE_DIR) # Intecmar_api
+    logo_path = os.path.join(root_dir, "static", "images", "CotecmarLogo_white.png")
+    
+    inline = []
+    if os.path.exists(logo_path):
+        inline = [(logo_path, "logo_cotecmar")]
+    else:
+        print("Warning: Logo file not found for email embedding.")
+
+    send_template_email(to_email, subject, "emails/reset_password.html", context, inline_attachments=inline)

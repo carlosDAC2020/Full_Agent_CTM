@@ -71,15 +71,22 @@
 <body>
     <div class="container">
         <div class="header">
-            <img src="https://www.cotecmar.com/sites/default/files/logo-cotecmar.png" alt="Cotecmar"
-                style="height: 50px; margin-bottom: 10px;">
-            <h1>{{ project_name }}</h1>
+            <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%">
+                <tr>
+                    <td style="vertical-align: middle; width: 60px;">
+                        <img src="cid:logo_cotecmar" alt="Cotecmar" style="height: 45px; display: block;" border="0">
+                    </td>
+                    <td style="vertical-align: middle; padding-left: 15px;">
+                        <h1 style="margin: 0; text-align: left;">{{ project_name }}</h1>
+                    </td>
+                </tr>
+            </table>
         </div>
         <div class="content">
             {% block content %}{% endblock %}
         </div>
         <div class="footer">
-            <p>&copy; 2024 Cotecmar - Todos los derechos reservados.</p>
+            <p>&copy; 2025 Cotecmar - Todos los derechos reservados.</p>
             <p>Este es un mensaje automático, por favor no responder a este correo.</p>
         </div>
     </div>
