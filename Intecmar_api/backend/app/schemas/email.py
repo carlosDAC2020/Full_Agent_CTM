@@ -13,5 +13,6 @@ class SendEmailRequest(BaseModel):
     pdf_url: Optional[str] = None
     pdf_path: Optional[str] = None
     sender: str
+    user_name: Optional[str] = None
     recipients: List[str]
-    subject: Optional[str] = "Revista de Convocatorias COTECMAR"
+    subject: Optional[str] = "Revista de Convocatorias INTECMAR AI"

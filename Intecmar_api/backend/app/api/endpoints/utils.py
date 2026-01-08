@@ -172,11 +172,17 @@ async def send_email(payload: SendEmailRequest):
         
         # Send to each recipient using the branded template
         for recipient in payload.recipients:
+            title = "Revista Compartida"
+            if payload.user_name:
+                body = f"La persona <strong>{payload.user_name}</strong> te comparte la siguiente información sobre el magazine de convocatorias que te podrían interesar investigar."
+            else:
+                body = "Adjuntamos la revista de convocatorias que te podrían interesar investigar."
+                
             send_notification_email(
                 to_email=recipient,
                 subject=payload.subject or "Revista de Convocatorias INTECMAR AI",
-                title="Revista Generada",
-                body="Adjuntamos la revista de convocatorias que has solicitado.",
+                title=title,
+                body=body,
                 attachments=[pdf_path]
             )
         return {"status": "sent"}

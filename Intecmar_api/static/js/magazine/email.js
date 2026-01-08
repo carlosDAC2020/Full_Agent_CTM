@@ -474,9 +474,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 body: JSON.stringify({
                     pdf_path: hasPath ? pdfPath : undefined,
                     pdf_url: !hasPath && hasUrl ? currentPdfUrl : undefined,
-                    sender: (senderInput && isValidEmail(senderInput.value.trim())) ? senderInput.value.trim() : currentSenderEmail,
+                    sender: currentSenderEmail,
+                    user_name: localStorage.getItem('user_name') || '',
                     recipients: recipients.map(r => r.email),
-                    subject: 'Revista de Convocatorias COTECMAR'
+                    subject: 'Revista de Convocatorias INTECMAR AI'
                 })
             });
 

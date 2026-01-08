@@ -181,7 +181,8 @@ def run_magazine(self, payload: Dict[str, Any] | None = None):
             fallback = os.getenv("TEST_EMAIL") or ""
             to = [e for e in [user_email or fallback] if e]
             if sender and to:
-                _send_smtp(sender, to, "Flujo magazine falló", f"Error: {str(e)}", [])
+                friendly_error = "Algo salió mal con la generación del magazine. Si lo desea, puede realizar su investigación más tarde."
+                _send_smtp(sender, to, "Flujo magazine falló", friendly_error, [])
         except Exception:
             pass
         finally:
@@ -360,7 +361,8 @@ def run_requisitos(self, payload: Dict[str, Any] | None = None):
             fallback = os.getenv("TEST_EMAIL") or ""
             to = [e for e in [user_email or fallback] if e]
             if sender and to:
-                _send_smtp(sender, to, "Flujo requisitos falló", f"Error: {str(e)}", [])
+                friendly_error = "Algo salió mal con la extracción de requisitos. Si lo desea, puede realizar su investigación más tarde."
+                _send_smtp(sender, to, "Flujo requisitos falló", friendly_error, [])
         except Exception:
             pass
         # Dejar que Celery marque el estado como FAILURE basado en la excepción propagada.
@@ -448,7 +450,8 @@ def run_fuentes(self, payload: Dict[str, Any] | None = None):
             fallback = os.getenv("TEST_EMAIL") or ""
             to = [e for e in [user_email or fallback] if e]
             if sender and to:
-                _send_smtp(sender, to, "Flujo fuentes falló", f"Error: {str(e)}", [])
+                friendly_error = "Algo salió mal con el descubrimiento de fuentes. Si lo desea, puede realizar su investigación más tarde."
+                _send_smtp(sender, to, "Flujo fuentes falló", friendly_error, [])
         except Exception:
             pass
         self.update_state(state=states.FAILURE, meta={"exc": str(e)})
