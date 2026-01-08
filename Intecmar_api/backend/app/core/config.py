@@ -2,7 +2,7 @@ import os
 from pathlib import Path
 
 class Settings:
-    PROJECT_NAME = "Magazine App"
+    PROJECT_NAME = "Intecmar AI"
     VERSION = "1.0.0"
     API_V1_STR = "/api/v1"
     
