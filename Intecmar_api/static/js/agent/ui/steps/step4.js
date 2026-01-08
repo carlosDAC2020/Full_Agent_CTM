@@ -1,7 +1,7 @@
 import { store } from '../../data/store.js';
 import { finalizeProject } from '../../api/agent.js';
 import { pollTask } from '../../api/tasks.js';
-import { getElements, updateStepper } from '../common.js';
+import { getElements, updateStepper, getAssetUrl } from '../common.js';
 import { loadHistory } from '../sidebar.js';
 
 // Paso 4: Resultados Finales
@@ -66,13 +66,14 @@ export function renderFinalResult(data) {
     const viewPosterBtn = document.getElementById('btn-view-poster');
 
     if (docs.poster_image_path) {
-        posterImg.src = docs.poster_image_path;
+        const absoluteUrl = getAssetUrl(docs.poster_image_path);
+        posterImg.src = absoluteUrl;
         posterImg.classList.remove('hidden');
         posterPlaceholder.classList.add('hidden');
         posterOverlay.classList.remove('hidden');
 
         // Botón ver en HD
-        viewPosterBtn.onclick = () => window.open(docs.poster_image_path, '_blank');
+        viewPosterBtn.onclick = () => window.open(absoluteUrl, '_blank');
     } else {
         posterImg.classList.add('hidden');
         posterPlaceholder.classList.remove('hidden');
@@ -82,7 +83,7 @@ export function renderFinalResult(data) {
     // 2. Configurar Botón PDF
     const pdfBtn = document.getElementById('final-btn-pdf');
     if (docs.proyect_proposal_pdf) {
-        pdfBtn.href = docs.proyect_proposal_pdf;
+        pdfBtn.href = getAssetUrl(docs.proyect_proposal_pdf);
         pdfBtn.classList.remove('opacity-50', 'pointer-events-none');
         pdfBtn.classList.add('ring-2', 'ring-red-100', 'bg-red-50');
     } else {
@@ -93,7 +94,7 @@ export function renderFinalResult(data) {
     // 3. Configurar Botón Markdown
     const mdBtn = document.getElementById('final-btn-md');
     if (docs.proyect_proposal_md) {
-        mdBtn.href = docs.proyect_proposal_md;
+        mdBtn.href = getAssetUrl(docs.proyect_proposal_md);
         mdBtn.classList.remove('opacity-50', 'pointer-events-none');
         mdBtn.classList.add('ring-2', 'ring-gray-200', 'bg-gray-50');
     } else {

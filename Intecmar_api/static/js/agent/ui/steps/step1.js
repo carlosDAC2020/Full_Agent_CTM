@@ -2,7 +2,7 @@ import { mockDB } from '../../data/mocks.js';
 import { store } from '../../data/store.js';
 import { ingestCall, researchCall, appendDocsCall } from '../../api/agent.js';
 import { pollTask } from '../../api/tasks.js';
-import { getElements, updateStepper } from '../common.js';
+import { getElements, updateStepper, getAssetUrl } from '../common.js';
 import { loadHistory } from '../sidebar.js';
 
 // Paso 1: Iniciar Análisis (Ingesta)
@@ -160,7 +160,7 @@ export function renderStep1Result(dataJson) {
     // 1. Botón Principal (Ver Presentación AND Iniciar/Regenerar Investigación)
     if (presBtn) {
         if (docs.presentation_oath_pdf) {
-            presBtn.href = docs.presentation_oath_pdf;
+            presBtn.href = getAssetUrl(docs.presentation_oath_pdf);
             presBtn.target = "_blank";
             presBtn.classList.remove('hidden', 'opacity-50', 'pointer-events-none');
             presBtn.innerHTML = `
@@ -204,8 +204,9 @@ export function renderStep1Result(dataJson) {
 
         callInfo.presentation_history.forEach(ver => {
             const isLatest = ver.url === currentPdf;
+            const absoluteUrl = getAssetUrl(ver.url);
             historyList.innerHTML += `
-                <a href="${ver.url}" target="_blank" 
+                <a href="${absoluteUrl}" target="_blank" 
                    class="flex items-center justify-between p-3 rounded-xl transition-all group mb-2
                           ${isLatest ? 'bg-blue-50 border-2 border-blue-200 shadow-sm' : 'bg-gray-50 hover:bg-white border border-transparent hover:border-gray-200'}"
                 >
@@ -239,11 +240,13 @@ export function renderStep1Result(dataJson) {
             contextDocsContainer.classList.remove('hidden');
             callInfo.context_docs.forEach(doc => {
                 let docName = typeof doc === 'object' ? doc.name : doc;
-                const docUrl = typeof doc === 'object' ? doc.url : doc;
+                let docUrl = typeof doc === 'object' ? doc.url : doc;
                 if (docName && docName.includes('/')) docName = docName.split('/').pop();
 
+                const absoluteUrl = getAssetUrl(docUrl);
+
                 contextDocsDiv.innerHTML += `
-                    <a href="${docUrl || '#'}" target="_blank" class="flex items-center p-3 bg-white border border-gray-100 rounded-xl hover:border-blue-200 hover:bg-blue-50/50 transition-all group shadow-sm">
+                    <a href="${absoluteUrl || '#'}" target="_blank" class="flex items-center p-3 bg-white border border-gray-100 rounded-xl hover:border-blue-200 hover:bg-blue-50/50 transition-all group shadow-sm">
                         <div class="w-10 h-10 bg-blue-50 text-blue-500 rounded-lg flex items-center justify-center group-hover:bg-blue-100 transition-colors">
                             <i class="ph ph-file-text text-xl"></i>
                         </div>

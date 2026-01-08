@@ -97,3 +97,17 @@ export function navigateToStep(stepNumber) {
 
     updateStepper(stepNumber);
 }
+
+export function getAssetUrl(path) {
+    if (!path) return '';
+    if (path.startsWith('http')) return path;
+    if (path.startsWith('/api/')) return path;
+
+    // Si es una ruta de MinIO (key), convertirla a proxy URL
+    // Ejemplo: "email@test.com/Agent_Sessions/..."
+    if (path.includes('/')) {
+        return `/api/utils/minio_agent/${path}`;
+    }
+
+    return path;
+}

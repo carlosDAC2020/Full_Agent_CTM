@@ -265,27 +265,30 @@ async def get_session_history(
                 docs = step_data["docs_paths"]
                 for key, val in docs.items():
                      if val and isinstance(val, str) and "/" in val: 
-                         docs[key] = storage_service.get_presigned_url(val)
+                         # Usar el proxy para mayor estabilidad
+                         docs[key] = f"/api/utils/minio_agent/{val}"
                 step_data["docs_paths"] = docs
             
             # 2. Call Info (Nested History and Context)
             if "call_info" in step_data and step_data["call_info"]:
                 ci = step_data["call_info"]
                 
-                # Presign Presentation History
+                # Proxy Presentation History
                 if "presentation_history" in ci and isinstance(ci["presentation_history"], list):
                     for entry in ci["presentation_history"]:
                         if "url" in entry and entry["url"] and "/" in entry["url"]:
-                            entry["url"] = storage_service.get_presigned_url(entry["url"])
+                            if not entry["url"].startswith("/api/"):
+                                entry["url"] = f"/api/utils/minio_agent/{entry['url']}"
                 
-                # Presign Context Docs
+                # Proxy Context Docs
                 if "context_docs" in ci and isinstance(ci["context_docs"], list):
                     for i, doc in enumerate(ci["context_docs"]):
                         if isinstance(doc, str) and "/" in doc:
-                            url = storage_service.get_presigned_url(doc)
+                            url = f"/api/utils/minio_agent/{doc}"
                             ci["context_docs"][i] = {"name": os.path.basename(doc), "url": url}
                         elif isinstance(doc, dict) and "url" in doc and "/" in doc["url"]:
-                            doc["url"] = storage_service.get_presigned_url(doc["url"])
+                            if not doc["url"].startswith("/api/"):
+                                doc["url"] = f"/api/utils/minio_agent/{doc['url']}"
                 
                 step_data["call_info"] = ci
             

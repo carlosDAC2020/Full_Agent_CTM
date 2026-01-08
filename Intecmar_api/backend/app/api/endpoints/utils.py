@@ -64,6 +64,43 @@ async def serve_minio_avatar(user_email: str, filename: str):
         headers={"Cache-Control": "max-age=3600"}
     )
 
+@router.get("/minio_agent/{path:path}")
+async def serve_minio_agent_asset(path: str):
+    """Sirve archivos (imágenes, PDFs, etc.) desde el bucket agent-results en MinIO."""
+    from fastapi.responses import Response
+    import mimetypes
+    from backend.app.services.tech_surveillance.storage import MinioService
+    
+    storage = MinioService()
+    # En agent-results, la estructura es: email/Agent_Sessions/session_id/.../file.ext
+    # O simplemente la key completa que guardamos en la DB.
+    
+    # download_file en MinioService toma (folder, filename)
+    # pero a veces guardamos la key completa.
+    # Vamos a extraer folder y filename del path.
+    parts = path.split('/')
+    if len(parts) < 2:
+        raise HTTPException(status_code=400, detail="Ruta de asset inválida")
+    
+    filename = parts[-1]
+    folder = "/".join(parts[:-1])
+    
+    try:
+        data = storage.s3_client.get_object(Bucket=storage.bucket_name, Key=path)['Body'].read()
+    except Exception:
+        raise HTTPException(status_code=404, detail="Asset no encontrado en MinIO")
+    
+    mime_type, _ = mimetypes.guess_type(filename)
+    if not mime_type:
+        if filename.endswith('.md'): mime_type = "text/markdown"
+        else: mime_type = "application/octet-stream"
+        
+    return Response(
+        content=data,
+        media_type=mime_type,
+        headers={"Cache-Control": "max-age=3600"}
+    )
+
 @router.post("/upload_pdf")
 async def upload_pdf(pdf_file: UploadFile = File(...)):
     """Recibe un archivo PDF y lo guarda en outputs/uploads/ devolviendo su ruta relativa."""
