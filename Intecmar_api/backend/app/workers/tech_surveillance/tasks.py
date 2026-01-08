@@ -110,25 +110,30 @@ def task_process_agent_step(self, session_id: str, input_data: dict, step_type: 
             db.rollback()
     
     # ==========================================
-    # 2. RECUPERAR Y REHIDRATAR ESTADO (REDIS O DB)
+    # 2. RECUPERAR Y REHIDRATAR ESTADO (DB PRIMERO, LUEGO REDIS)
     # ==========================================
     current_state = {}
-    stored_state = redis_client.get(f"agent_state:{session_id}")
     
-    if stored_state:
-        current_state = json.loads(stored_state)
-    else:
-        # Fallback: Intentar recuperar el último estado conocido de la base de datos
-        try:
-            last_step = db.query(AgentStep).filter(
-                AgentStep.session_id == session_id
-            ).order_by(AgentStep.created_at.desc()).first()
-            
-            if last_step and last_step.output_data:
-                print(f"🔄 Estado recuperado de DB para sesión: {session_id}")
-                current_state = last_step.output_data
-        except Exception as e:
-            print(f"⚠️ Error recuperando estado de fallback DB: {e}")
+    # CAMBIO: Primero intentamos DB (más confiable y completo)
+    try:
+        last_step = db.query(AgentStep).filter(
+            AgentStep.session_id == session_id
+        ).order_by(AgentStep.created_at.desc()).first()
+        
+        if last_step and last_step.output_data:
+            print(f"✅ Estado recuperado de DB para sesión: {session_id}")
+            current_state = last_step.output_data
+    except Exception as e:
+        print(f"⚠️ Error recuperando estado de DB: {e}")
+    
+    # Fallback a Redis solo si DB no tiene nada
+    if not current_state:
+        stored_state = redis_client.get(f"agent_state:{session_id}")
+        if stored_state:
+            print(f"🔄 Estado recuperado de Redis (fallback) para sesión: {session_id}")
+            current_state = json.loads(stored_state)
+        else:
+            print(f"⚠️ No se encontró estado previo para sesión: {session_id}")
 
     # --- REHIDRATACIÓN PYDANTIC ---
     # Convertimos diccionarios a objetos Pydantic si es necesario
@@ -163,6 +168,21 @@ def task_process_agent_step(self, session_id: str, input_data: dict, step_type: 
         if "selected_idea" in current_state and isinstance(current_state["selected_idea"], dict):
             try: current_state["selected_idea"] = ProposalIdea(**current_state["selected_idea"])
             except: pass
+        
+        # 6. RECUPERACIÓN PARA SESIONES ANTIGUAS: Si no hay selected_idea pero sí hay initial_schema
+        if "selected_idea" not in current_state or not current_state["selected_idea"]:
+            # Intentar recuperar de report_components.general_info
+            if "report_components" in current_state:
+                rc = current_state["report_components"]
+                if hasattr(rc, "general_info") and rc.general_info:
+                    gi = rc.general_info
+                    if gi.project_title or gi.project_description:
+                        print("🔧 Recuperando selected_idea de report_components.general_info")
+                        current_state["selected_idea"] = ProposalIdea(
+                            idea_title=gi.project_title,
+                            idea_description=gi.project_description,
+                            idea_objectives=[]
+                        )
 
     # Inyectar Session ID
     current_state["session_id"] = session_id
