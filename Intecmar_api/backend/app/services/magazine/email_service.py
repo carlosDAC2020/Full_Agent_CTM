@@ -120,3 +120,40 @@ def send_reset_password_email(to_email: str, token: str):
         print("Warning: Logo file not found for email embedding.")
 
     send_template_email(to_email, subject, "emails/reset_password.html", context, inline_attachments=inline)
+
+def send_notification_email(to_email: str, subject: str, title: str, body: str, cta_link: str = None, cta_text: str = None, attachments: List[str] = []):
+    """
+    Envía un correo de notificación genérico con el branding de Intecmar AI.
+    """
+    context = {
+        "project_name": settings.PROJECT_NAME,
+        "title": title,
+        "body": body,
+        "cta_link": cta_link,
+        "cta_text": cta_text
+    }
+    
+    # Locate Logo
+    root_dir = os.path.dirname(_TEMPLATE_DIR)
+    logo_path = os.path.join(root_dir, "static", "images", "CotecmarLogo_white.png")
+    
+    inline = []
+    if os.path.exists(logo_path):
+        inline = [(logo_path, "logo_cotecmar")]
+        
+    # Render template manually to include regular attachments in the final send_smtp call
+    # Or better, reuse send_template_email but we need to support regular attachments there too.
+    # Let's fix send_template_email first to support attachments.
+    
+    try:
+        template = email_env.get_template("emails/notification.html")
+        html_content = template.render(**context)
+        send_smtp_email(
+            [to_email], 
+            subject, 
+            html_content, 
+            attachments=attachments, 
+            inline_attachments=inline
+        )
+    except Exception as e:
+        print(f"Notification email error: {e}")

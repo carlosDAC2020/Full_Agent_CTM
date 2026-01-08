@@ -1,4 +1,4 @@
-# Magazine App
+# Intecmar AI
 
 Plataforma inteligente para la generación automatizada de revistas y boletines informativos sobre convocatorias de financiación, tecnología y ciencia. El sistema utiliza **Agentes de IA** (LangGraph, Gemini) para curar contenido, extraer requisitos y generar documentos PDF de alta calidad, con un backend robusto en FastAPI.
 

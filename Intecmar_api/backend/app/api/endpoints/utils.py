@@ -168,13 +168,17 @@ async def send_email(payload: SendEmailRequest):
              raise HTTPException(status_code=404, detail=f"PDF no encontrado en servidor: {pdf_path}")
     
     try:
-        send_smtp_email(
-            sender=payload.sender,
-            to_list=payload.recipients,
-            subject=payload.subject or "Revista de Convocatorias COTECMAR",
-            body="Adjuntamos la revista de convocatorias generada.",
-            attachments=[pdf_path],
-        )
+        from backend.app.services.magazine.email_service import send_notification_email
+        
+        # Send to each recipient using the branded template
+        for recipient in payload.recipients:
+            send_notification_email(
+                to_email=recipient,
+                subject=payload.subject or "Revista de Convocatorias INTECMAR AI",
+                title="Revista Generada",
+                body="Adjuntamos la revista de convocatorias que has solicitado.",
+                attachments=[pdf_path]
+            )
         return {"status": "sent"}
     except HTTPException:
         raise

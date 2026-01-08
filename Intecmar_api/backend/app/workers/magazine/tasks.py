@@ -12,7 +12,7 @@ from backend.app.core.config import settings
 from backend.app.db.session import SessionLocal
 from backend.app.db import models as db_models
 from backend.app.services.magazine.redis_service import get_redis, task_key, release_flow_lock
-from backend.app.services.magazine.email_service import send_smtp_email
+from backend.app.services.magazine.email_service import send_smtp_email, send_notification_email
 from backend.app.services.magazine.agent_service import run_magazine_generation_stream, search_web, llm_invoke, agent_app
 from backend.app.services.magazine.pdf_engine import generate_pdf
 from backend.app.services.magazine.minio_storage import minio_storage
@@ -69,7 +69,18 @@ def _release_flow_lock(flow_type: str):
 def _send_smtp(sender: str, to_list: List[str], subject: str, body: str, attachments: List[str]):
     # Wrapper to use the service
     try:
-        send_smtp_email(sender, to_list, subject, body, attachments)
+        # Use generic notification template
+        # to_list[0] because our helper takes single email currently, 
+        # but we can loop or adjust if multiple recipients are common.
+        # Usually it's just user_email.
+        for email in to_list:
+            send_notification_email(
+                to_email=email,
+                subject=subject,
+                title=subject,
+                body=body.replace("\n", "<br>"), # Basic text to HTML conversion
+                attachments=attachments
+            )
     except Exception as e:
         print(f"Email error: {e}")
 
