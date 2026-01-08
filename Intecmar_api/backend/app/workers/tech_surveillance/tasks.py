@@ -242,9 +242,28 @@ def task_process_agent_step(self, session_id: str, input_data: dict, step_type: 
         # Pasamos 'self' para que pueda actualizar el estado de la tarea
         new_state = asyncio.run(run_agent_stream(current_state, self))
     except Exception as e:
-        print(f"❌ Error ejecutando agente: {e}")
+        error_msg = str(e)
+        print(f"❌ Error ejecutando agente: {error_msg}")
+        
+        # Mapeo de errores comunes para mensajes más limpios
+        friendly_error = error_msg
+        if "429" in error_msg or "RESOURCE_EXHAUSTED" in error_msg:
+            friendly_error = "Cuota de IA excedida (Gemini). Por favor, intenta de nuevo en unos segundos."
+        
+        # ROLLBACK de estado en DB: Volver a 'active' para que el usuario pueda reintentar
+        try:
+            db_rollback = SessionLocal()
+            session_rec = db_rollback.query(AgentSession).filter(AgentSession.id == session_id).first()
+            if session_rec:
+                session_rec.status = "active"
+                session_rec.current_task_id = None
+                db_rollback.commit()
+            db_rollback.close()
+        except Exception as db_err:
+            print(f"⚠️ Error en rollback de DB: {db_err}")
+
         # Importante: devolvemos error para que el frontend lo sepa
-        return {"status": "error", "error": str(e)}
+        return {"status": "error", "error": friendly_error}
 
     # ==========================================
     # 5. GUARDAR ESTADO (REDIS)
