@@ -78,7 +78,8 @@ Extract the general information of the project from the following conceptual sch
         return {
             "messages": [AIMessage(content=f"✅ Esquema conceptual generado para: {idea_title}")],
             "initial_schema": schema_content,
-            "report_components": report_components
+            "report_components": report_components,
+            "selected_idea": selected_idea  # ← CRÍTICO: Preservar para pasos posteriores
         }
     
     except Exception as e:

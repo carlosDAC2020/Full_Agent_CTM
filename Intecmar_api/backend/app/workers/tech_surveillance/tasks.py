@@ -235,6 +235,19 @@ def task_process_agent_step(self, session_id: str, input_data: dict, step_type: 
             
     elif step_type == "generate_project":
         current_state["route_decision"] = "generate_proyect" # Typo intencional según tu grafo
+        
+        # DEBUG: Verificar qué hay en el estado
+        print(f"🔍 DEBUG (generate_project): selected_idea presente? {'selected_idea' in current_state}")
+        if 'selected_idea' in current_state:
+            print(f"🔍 DEBUG selected_idea: {current_state['selected_idea']}")
+        
+        print(f"🔍 DEBUG (generate_project): report_components presente? {'report_components' in current_state}")
+        if 'report_components' in current_state:
+            rc = current_state['report_components']
+            if hasattr(rc, 'general_info'):
+                print(f"🔍 DEBUG report_components.general_info: {rc.general_info}")
+            else:
+                print(f"🔍 DEBUG report_components (dict keys): {rc.keys() if isinstance(rc, dict) else 'Not a dict'}")
 
     # ==========================================
     # 4. EJECUTAR AGENTE (STREAMING)
