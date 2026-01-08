@@ -38,6 +38,7 @@ async def academic_research_node(state: GraphState):
     print("--- Ejecutando Nodo: Investigación Académica ---")
     
     # --- REHIDRATACIÓN DEFENSIVA ---
+    current_report = state.get("report_components") or ReportSchema()
     if isinstance(current_report, dict):
         try:
             current_report = ReportSchema(**current_report)
