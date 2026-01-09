@@ -1,7 +1,16 @@
-# **Intecmar AI Platform**
-<p align="center">
-  <img src="Intecmar_api/static/images/CotecmarLogo_white.png" alt="Intecmar Logo" width="200">
-</p>
+<div align="center">
+  <table border="0" style="border: none !important; border-collapse: collapse !important;">
+    <tr>
+      <td style="border: none !important; padding-right: 20px;">
+        <img src="Intecmar_api/static/images/CotecmarLogo_white.png" alt="Intecmar Logo" width="160">
+      </td>
+      <td style="border-left: 2px solid #333 !important; padding-left: 20px; text-align: left; border-top: none !important; border-bottom: none !important; border-right: none !important;">
+        <h1 style="border-bottom: none; margin: 0; padding: 0; font-size: 2.5em;">Intecmar AI Platform</h1>
+        <p style="margin: 0; color: #8b949e; font-size: 1.1em;">Vigilancia Tecnológica e Publicaciones I+D+i</p>
+      </td>
+    </tr>
+  </table>
+</div>
 
 <p align="center">
   <img src="https://img.shields.io/badge/Python-3.10+-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python">
