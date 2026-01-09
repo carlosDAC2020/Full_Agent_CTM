@@ -230,26 +230,26 @@ Las entidades principales están diseñadas para soportar la relación entre usu
 
 ```mermaid
 erDiagram
-    User ||--o{ Magazine : "generates"
-    User ||--o{ Flow : "tracks"
-    User ||--o{ SavedItem : "bookmarks"
-    User ||--o{ AgentSession : "owns"
+    User ||--o{ Magazine : generates
+    User ||--o{ Flow : tracks
+    User ||--o{ SavedItem : bookmarks
+    User ||--o{ AgentSession : owns
     
-    AgentSession ||--o{ AgentStep : "contains"
+    AgentSession ||--o{ AgentStep : contains
     
     User {
         int id PK
         string email UK
         string name
-        string role "admin/user"
+        string role
         string password_hash
         datetime created_at
     }
     
     AgentSession {
-        string id PK "UUID"
+        string id PK
         int user_id FK
-        string status "active/completed/failed"
+        string status
         string current_task_id
         datetime created_at
     }
@@ -257,7 +257,7 @@ erDiagram
     AgentStep {
         int id PK
         string session_id FK
-        string step_type "ingest/ideas/schema/report"
+        string step_type
         json input_data
         json output_data
         datetime created_at
@@ -275,10 +275,10 @@ erDiagram
     Flow {
         int id PK
         int user_id FK
-        string task_id "Celery ID"
-        string type "magazine/agent"
-        string status "queued/processing/completed"
-        json meta "Task Results/Config"
+        string task_id
+        string type
+        string status
+        json meta
         datetime created_at
         datetime finished_at
     }
@@ -298,7 +298,7 @@ erDiagram
     SavedItem {
         int id PK
         int user_id FK
-        string item_ref "Reference ID/URL"
+        string item_ref
         json item_metadata
     }
 
@@ -306,7 +306,7 @@ erDiagram
         int id PK
         string name
         string url UK
-        string type "Scraper/RSS"
+        string type
         boolean is_active
     }
 ```
