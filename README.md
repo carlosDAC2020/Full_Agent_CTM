@@ -89,41 +89,40 @@ La plataforma utiliza una **Arquitectura Distribuida basada en el Patrón de Orq
 ### **Diagrama de Flujo y Componentes**
 
 ```mermaid
-graph TD
-    Client[🖥️ Cliente Web]
-    API[🚀 Intecmar API Gateway]
+flowchart TD
+    Client[Cliente Web]
+    API[Intecmar API Gateway]
     
-    subgraph "Persistencia y Memoria"
-        Redis[⚡ Shared Redis - Broker de Tareas]
-        DB[(🐘 PostgreSQL - Datos Transaccionales)]
-        MinIO[(📦 MinIO S3 - Almacenamiento de Reportes/PDFs)]
-        Chroma[(🔍 ChromaDB - Base Vectorial RAG)]
+    subgraph Infrastructure [Persistencia y Memoria]
+        Redis[Shared Redis - Message Broker]
+        DB[(PostgreSQL - DB Relacional)]
+        MinIO[(MinIO S3 - Almacenamiento)]
+        Chroma[(ChromaDB - Base Vectorial)]
     end
 
-    subgraph "Unidades de Procesamiento (Workers)"
-        MagWorker[⚙️ Magazine Worker - Generador de Revistas]
-        AgentWorker[🤖 Agent Worker - Cerebro de Vigilancia]
+    subgraph Processing [Processing Units]
+        MagWorker[Magazine Worker]
+        AgentWorker[Agent Worker]
     end
 
-    subgraph "Servicios Externos"
-        Gemini[🧠 Google Gemini Pro - Inferencia LLM]
-        Web[🌐 Internet - Arxiv/Tavily Search]
+    subgraph Services [External Services]
+        Gemini[Google Gemini AI]
+        Web[Web Search - Arxiv/Wikipedia]
     end
 
-    Client -->|Solicitudes HTTP| API
-    API -->|Persistencia| DB
-    API -->|Carga de Archivos| MinIO
-    API -->|Encola Tareas| Redis
+    Client --> API
+    API --> DB
+    API --> MinIO
+    API --> Redis
     
-    Redis -->|Consumo| MagWorker
-    Redis -->|Consumo| AgentWorker
+    Redis --> MagWorker
+    Redis --> AgentWorker
     
-    MagWorker -->|Exporta PDF| MinIO
-    
-    AgentWorker -->|Contexto RAG| Chroma
-    AgentWorker -->|Razonamiento| Gemini
-    AgentWorker -->|Investigación| Web
-    AgentWorker -->|Actualiza Estado| Redis
+    MagWorker --> MinIO
+    AgentWorker --> Chroma
+    AgentWorker --> Gemini
+    AgentWorker --> Web
+    AgentWorker --> Redis
 ```
 
 ### **✅ Ventajas de esta Arquitectura**
@@ -230,23 +229,23 @@ Las entidades principales están diseñadas para soportar la relación entre usu
 
 ```mermaid
 erDiagram
-    User ||--o{ Magazine : generates
-    User ||--o{ Flow : tracks
-    User ||--o{ SavedItem : bookmarks
-    User ||--o{ AgentSession : owns
+    USER ||--o{ MAGAZINE : generates
+    USER ||--o{ FLOW : tracks
+    USER ||--o{ SAVED_ITEM : bookmarks
+    USER ||--o{ AGENT_SESSION : owns
     
-    AgentSession ||--o{ AgentStep : contains
+    AGENT_SESSION ||--o{ AGENT_STEP : contains
     
-    User {
+    USER {
         int id PK
-        string email UK
+        string email
         string name
         string role
         string password_hash
         datetime created_at
     }
     
-    AgentSession {
+    AGENT_SESSION {
         string id PK
         int user_id FK
         string status
@@ -254,7 +253,7 @@ erDiagram
         datetime created_at
     }
     
-    AgentStep {
+    AGENT_STEP {
         int id PK
         string session_id FK
         string step_type
@@ -263,7 +262,7 @@ erDiagram
         datetime created_at
     }
     
-    Magazine {
+    MAGAZINE {
         int id PK
         int user_id FK
         string title
@@ -272,7 +271,7 @@ erDiagram
         datetime created_at
     }
     
-    Flow {
+    FLOW {
         int id PK
         int user_id FK
         string task_id
@@ -283,7 +282,7 @@ erDiagram
         datetime finished_at
     }
     
-    Convocatoria {
+    CONVOCATORIA {
         int id PK
         string title
         text description
@@ -295,17 +294,17 @@ erDiagram
         json beneficios
     }
     
-    SavedItem {
+    SAVED_ITEM {
         int id PK
         int user_id FK
         string item_ref
         json item_metadata
     }
 
-    Source {
+    SOURCE {
         int id PK
         string name
-        string url UK
+        string url
         string type
         boolean is_active
     }
