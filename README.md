@@ -1,9 +1,17 @@
-<h1 align="center" style="border-bottom: none;">
-  <img src="Intecmar_api/static/images/CotecmarLogo_white.png" alt="Intecmar Logo" width="150" style="vertical-align: middle;">
-  <span style="vertical-align: middle; border-left: 5px solid #333; margin-left: 20px; padding-left: 20px; font-size: 1.5em; line-height: 1.2;">
-    Intecmar AI Platform
-  </span>
-</h1>
+<div align="center">
+  <table border="0" style="border-collapse: collapse;">
+    <tr>
+      <td align="center" valign="middle" style="padding-right: 30px;">
+        <img src="Intecmar_api/static/images/CotecmarLogo_white.png" alt="Intecmar Logo" width="180">
+      </td>
+      <td style="border-left: 6px solid #333; padding-left: 30px; text-align: left;" valign="middle">
+        <h1 style="border-bottom: none; margin: 0; padding: 0; font-size: 4em; line-height: 1; font-weight: 800;">
+          Intecmar AI<br><span style="font-size: 0.5em; color: #8b949e; font-weight: 400; letter-spacing: 4px; text-transform: uppercase;">Platform</span>
+        </h1>
+      </td>
+    </tr>
+  </table>
+</div>
 
 <p align="center">
   <img src="https://img.shields.io/badge/Python-3.10+-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python">
@@ -12,7 +20,6 @@
   <img src="https://img.shields.io/badge/PostgreSQL-15-4169E1?style=for-the-badge&logo=postgresql&logoColor=white" alt="PostgreSQL">
   <img src="https://img.shields.io/badge/Celery-Async-37814A?style=for-the-badge&logo=celery&logoColor=white" alt="Celery">
   <img src="https://img.shields.io/badge/LangChain-AI-1C1C1C?style=for-the-badge&logo=chainlink&logoColor=white" alt="LangChain">
-  <img src="https://img.shields.io/badge/License-MIT-green?style=for-the-badge" alt="License">
 </p>
 
 ## **📖 Descripción General**
