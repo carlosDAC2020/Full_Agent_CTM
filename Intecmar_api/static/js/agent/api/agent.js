@@ -82,9 +82,9 @@ export async function selectIdea(sessionId, idea) {
             body: JSON.stringify({
                 session_id: sessionId,
                 selected_idea: {
-                    idea_title: idea.title,
-                    idea_description: idea.desc,
-                    idea_objectives: idea.objectives
+                    idea_title: idea.idea_title || idea.title,
+                    idea_description: idea.idea_description || idea.desc,
+                    idea_objectives: idea.idea_objectives || idea.objectives
                 }
             })
         });

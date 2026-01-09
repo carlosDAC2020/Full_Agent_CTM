@@ -31,13 +31,23 @@ def initial_schema_node(state: GraphState):
 
     # Si es un objeto, intentamos obtener atributos. Si es un dict, usamos get.
     if isinstance(selected_idea, dict):
-        idea_title = selected_idea.get("idea_title") or selected_idea.get("title") or "Título no definido"
-        idea_description = selected_idea.get("idea_description") or selected_idea.get("desc") or "Descripción no disponible"
+        idea_title = selected_idea.get("idea_title") or selected_idea.get("title")
+        idea_description = selected_idea.get("idea_description") or selected_idea.get("desc")
         idea_objectives = selected_idea.get("idea_objectives") or selected_idea.get("objectives") or []
     else:
-        idea_title = getattr(selected_idea, "idea_title", None) or "Título no definido"
-        idea_description = getattr(selected_idea, "idea_description", None) or "Descripción no disponible"
-        idea_objectives = getattr(selected_idea, "idea_objectives", []) or []
+        idea_title = getattr(selected_idea, "idea_title", None) or getattr(selected_idea, "title", None)
+        idea_description = getattr(selected_idea, "idea_description", None) or getattr(selected_idea, "desc", None)
+        idea_objectives = getattr(selected_idea, "idea_objectives", []) or getattr(selected_idea, "objectives", []) or []
+
+    # Final Fallback: Si sigue vacío, buscar en report_components (que acabamos de reforzar en tasks.py)
+    if not idea_title or idea_title == "Título no definido":
+        rc = state.get("report_components")
+        if rc and hasattr(rc, "general_info") and rc.general_info:
+            idea_title = rc.general_info.project_title or idea_title
+            idea_description = rc.general_info.project_description or idea_description
+
+    if not idea_title: idea_title = "Título no definido"
+    if not idea_description: idea_description = "Descripción no disponible"
 
     print(f"📌 [NODE] Procesando Idea: {idea_title}")
     

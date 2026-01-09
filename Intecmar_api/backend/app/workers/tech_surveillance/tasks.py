@@ -266,6 +266,28 @@ def task_process_agent_step(self, session_id: str, input_data: dict, step_type: 
             if "desc" in si and not si.get("idea_description"): si["idea_description"] = si["desc"]
             if "objectives" in si and not si.get("idea_objectives"): si["idea_objectives"] = si["objectives"]
             current_state["selected_idea"] = ProposalIdea(**si)
+            
+            # --- NUEVO: Inicializar GeneralInfo con la idea seleccionada inmediatamente ---
+            # Esto asegura que si el siguiente nodo necesita esta info, ya esté ahí.
+            if "report_components" not in current_state or not current_state["report_components"]:
+                current_state["report_components"] = ReportSchema(
+                    general_info=GeneralInfo(
+                        project_title=si.get("idea_title"),
+                        project_description=si.get("idea_description"),
+                        keywords=current_state.get("call_info").keywords if "call_info" in current_state else []
+                    )
+                )
+            else:
+                rc = current_state["report_components"]
+                if not rc.general_info:
+                    rc.general_info = GeneralInfo()
+                
+                rc.general_info.project_title = si.get("idea_title")
+                rc.general_info.project_description = si.get("idea_description")
+                # Intentar heredar palabras clave de la convocatoria si no hay
+                if not rc.general_info.keywords and "call_info" in current_state:
+                    rc.general_info.keywords = current_state["call_info"].keywords
+            # -------------------------------------------------------------------------
 
             
     elif step_type == "generate_project":
