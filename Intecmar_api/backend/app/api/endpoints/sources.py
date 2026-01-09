@@ -13,7 +13,7 @@ from backend.app.db.session import get_db
 from backend.app.db import models
 from sqlalchemy.orm import Session
 
-router = APIRouter(prefix="/sources", tags=["sources"])
+router = APIRouter(prefix="/sources", tags=["Fuentes de Información"])
 
 
 def _source_to_dict(src: models.Source) -> Dict[str, Any]:
@@ -27,7 +27,7 @@ def _source_to_dict(src: models.Source) -> Dict[str, Any]:
     }
 
 
-@router.get("")
+@router.get("", summary="Listar fuentes", description="Devuelve todas las fuentes de información configuradas en el sistema.")
 async def get_sources(
     is_active: Optional[bool] = Query(None, description="Filtrar por estado activo/inactivo"),
     db: Session = Depends(get_db),
@@ -113,7 +113,7 @@ async def delete_source(source_id: int = Path(...), db: Session = Depends(get_db
     db.commit()
     return {"status": "success", "message": "Source eliminada"}
 
-@router.post("/search")
+@router.post("/search", summary="Búsqueda manual", description="Realiza una búsqueda de convocatorias en las fuentes configuradas.")
 async def search_sources(payload: SourcesSearchRequest, db: Session = Depends(get_db)):
     q = (payload.query or '').strip()
     if not q:
@@ -150,7 +150,7 @@ async def search_sources(payload: SourcesSearchRequest, db: Session = Depends(ge
     results.sort(key=lambda x: (x.get('exists', False), (x.get('title') or '').lower()))
     return {"results": results}
 
-@router.post("/ai_search")
+@router.post("/ai_search", summary="Búsqueda con IA", description="Genera consultas inteligentes y busca fuentes relevantes de forma automatizada.")
 async def ai_search_sources(payload: SourcesAISearchRequest | None = None, db: Session = Depends(get_db)):
     fixed_topics = ["inteligencia artificial", "ciencia", "tecnología", "naval"]
     

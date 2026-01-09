@@ -16,10 +16,10 @@ from backend.app.schemas.task import TaskCreate, FlowStatusUpdate
 from backend.app.services.magazine.redis_service import get_redis, task_key, acquire_flow_lock, release_flow_lock
 from backend.app.workers.magazine.celery_app import celery_app
 
-router = APIRouter() # Mounted at /tasks usually, but main_api had mixed /tasks and /flows
+router = APIRouter(tags=["Tareas en Segundo Plano"])
 
 # /tasks endpoints
-@router.get("/tasks")
+@router.get("/tasks", summary="Listar tareas activas", description="Obtiene todas las tareas en ejecución o encoladas en Redis.")
 async def list_active_tasks(status: Optional[str] = None):
     if status and status != "active":
         return {"tasks": []}
@@ -45,7 +45,7 @@ async def list_active_tasks(status: Optional[str] = None):
     except Exception:
         return {"tasks": []}
 
-@router.get("/tasks/id/{task_id}")
+@router.get("/tasks/id/{task_id}", summary="Detalles de tarea", description="Obtiene la información detallada de una tarea específica en Redis.")
 async def get_task(task_id: str):
     r = get_redis()
     if not r: raise HTTPException(status_code=404, detail="Redis unavailable")
@@ -67,7 +67,7 @@ def _resolve_task_name(flow_type: str) -> str:
     elif flow_type == "fuentes": return "tasks.run_fuentes"
     else: raise HTTPException(status_code=400, detail="type inválido")
 
-@router.post("/tasks", status_code=201)
+@router.post("/tasks", status_code=201, summary="Crear tarea", description="Encola una nueva tarea (magazine, requisitos o fuentes) en Celery.")
 async def create_task(body: TaskCreate, current_user: models.User = Depends(get_current_user)):
     flow_type = (body.type or "").strip().lower()
     if flow_type not in ("magazine", "requisitos", "fuentes"):
@@ -127,7 +127,7 @@ async def create_task(body: TaskCreate, current_user: models.User = Depends(get_
         if r: release_flow_lock(r, f"{flow_type}:{current_user.id}")
         raise HTTPException(status_code=500, detail=f"No se pudo encolar la tarea: {e}")
 
-@router.get("/tasks/stream")
+@router.get("/tasks/stream", summary="Eventos en tiempo real", description="Canal Server-Sent Events (SSE) para recibir actualizaciones de estado de tareas.")
 async def tasks_stream():
     r = get_redis()
     if not r:
@@ -194,7 +194,7 @@ def update_flow_status(
     db.commit()
     return {"ok": True, "id": flow.id, "task_id": flow.task_id, "status": flow.status}
 
-@router.get("/flows/history")
+@router.get("/flows/history", summary="Historial de flujos", description="Obtiene el historial de flujos de trabajo realizados por el usuario.")
 def flows_history(
     current_user: models.User = Depends(get_current_user),
     db: Session = Depends(get_db),

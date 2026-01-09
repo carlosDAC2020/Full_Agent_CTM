@@ -11,13 +11,13 @@ from backend.app.core.config import settings
 from backend.app.utils.files import ensure_outputs
 from backend.app.schemas import user as schemas
 
-router = APIRouter(prefix="/users", tags=["users"])
+router = APIRouter(prefix="/users", tags=["Usuarios"])
 
-@router.get("/me", response_model=schemas.User)
+@router.get("/me", response_model=schemas.User, summary="Obtener mi perfil", description="Devuelve los datos detallados del usuario autenticado.")
 def read_user_me(current_user: models.User = Depends(get_current_user)):
     return current_user
 
-@router.put("/me", response_model=schemas.User)
+@router.put("/me", response_model=schemas.User, summary="Actualizar perfil", description="Permite modificar el nombre, teléfono y biografía del usuario.")
 def update_user_me(
     user_in: schemas.UserUpdate, 
     current_user: models.User = Depends(get_current_user),
@@ -34,7 +34,7 @@ def update_user_me(
     db.refresh(current_user)
     return current_user
 
-@router.put("/me/password", status_code=200)
+@router.put("/me/password", status_code=200, summary="Cambiar contraseña", description="Verifica la contraseña actual y establece una nueva.")
 def change_password(
     password_in: schemas.PasswordChange,
     current_user: models.User = Depends(get_current_user),
@@ -52,7 +52,7 @@ def change_password(
 
 from backend.app.services.core.storage import storage_service
 
-@router.post("/me/profile-picture", response_model=schemas.User)
+@router.post("/me/profile-picture", response_model=schemas.User, summary="Subir foto de perfil", description="Sube una imagen a MinIO y actualiza la URL en el perfil del usuario.")
 async def upload_profile_picture(
     file: UploadFile = File(...),
     current_user: models.User = Depends(get_current_user),

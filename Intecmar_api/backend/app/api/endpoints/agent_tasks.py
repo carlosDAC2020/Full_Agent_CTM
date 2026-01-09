@@ -3,10 +3,10 @@ from fastapi import APIRouter
 from celery.result import AsyncResult
 from backend.app.services.tech_surveillance.storage import MinioService
 
-router = APIRouter(prefix="/agent_tasks", tags=["Tasks"])
+router = APIRouter(prefix="/agent_tasks", tags=["Monitoreo de Tareas"])
 storage_service = MinioService()
 
-@router.get("/{task_id}")
+@router.get("/{task_id}", summary="Estado de tarea", description="Consulta el progreso y resultado de una tarea técnica asíncrona mediante su ID de Celery.")
 async def get_task_status(task_id: str):
     task_result = AsyncResult(task_id)
     

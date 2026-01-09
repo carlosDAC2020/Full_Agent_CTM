@@ -11,10 +11,10 @@ from backend.app.db.history import AgentSession, AgentStep
 from backend.app.db.models import User
 from backend.app.core.security import get_current_user  
 
-router = APIRouter(prefix="/agent_sessions", tags=["Sessions"])
+router = APIRouter(prefix="/agent_sessions", tags=["Gestión de Sesiones"])
 
 
-@router.get("")
+@router.get("", summary="Listar sesiones", description="Devuelve todas las sesiones de trabajo del agente iniciadas por el usuario.")
 async def list_sessions(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
@@ -66,7 +66,7 @@ async def list_sessions(
     return result
 
 
-@router.delete("/{session_id}")
+@router.delete("/{session_id}", status_code=204, summary="Eliminar sesión", description="Borra permanentemente una sesión y todo su historial de pasos.")
 async def delete_session(session_id: str, db: Session = Depends(get_db)):
     """
     Elimina una sesión y todos sus pasos asociados.
@@ -89,7 +89,7 @@ async def delete_session(session_id: str, db: Session = Depends(get_db)):
 
 
 
-@router.get("/{session_id}/steps")
+@router.get("/{session_id}/steps", summary="Pasos de sesión", description="Lista detallada de todos los pasos (ingest, research, etc.) ejecutados en una sesión.")
 async def get_session_steps(session_id: str, db: Session = Depends(get_db)):
     """
     Obtiene los pasos ejecutados de una sesión con sus datos de salida.

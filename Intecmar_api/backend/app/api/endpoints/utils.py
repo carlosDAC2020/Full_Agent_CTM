@@ -14,18 +14,18 @@ from backend.app.db import models
 
 from backend.app.services.core.storage import storage_service
 
-router = APIRouter()
+router = APIRouter(tags=["Utilidades del Sistema"])
 
 # Initialize templates
 _root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 templates = Jinja2Templates(directory=os.path.join(_root, "templates"))
 
-@router.get("/viewer")
+@router.get("/viewer", summary="Visor de PDF", description="Sirve la página del visor de PDF tipo flipbook.")
 async def viewer_page(request: Request):
     """Sirve el visor de PDF tipo flipbook básico."""
     return templates.TemplateResponse("magazine/viewer.html", {"request": request})
 
-@router.get("/minio/{bucket_type}/{path:path}")
+@router.get("/minio/{bucket_type}/{path:path}", summary="Proxy MinIO", description="Proxy universal para descargar o visualizar archivos almacenados en MinIO.")
 async def serve_minio_unified(bucket_type: str, path: str):
     """
     Proxy universal para MinIO.
@@ -69,7 +69,7 @@ async def serve_minio_agent_asset(path: str):
     return await serve_minio_unified("agent", path)
 
 
-@router.post("/upload_pdf")
+@router.post("/upload_pdf", summary="Subir PDF temporal", description="Sube un archivo PDF al servidor para ser usado en el envío de correos.")
 async def upload_pdf(pdf_file: UploadFile = File(...)):
     """Recibe un archivo PDF y lo guarda en outputs/uploads/ devolviendo su ruta relativa."""
     if not pdf_file.filename.lower().endswith('.pdf'):
@@ -96,7 +96,7 @@ async def upload_pdf(pdf_file: UploadFile = File(...)):
     return {"status": "success", "pdf_path": rel_path}
 
 # Email Settings
-@router.get("/email_settings")
+@router.get("/email_settings", summary="Obtener ajustes de email", description="Devuelve la configuración de correo (remitente y favoritos) del sistema.")
 async def get_email_settings(db: Session = Depends(get_db)):
     # Leer configuración desde BD; si no existe, usar DEFAULT_SENDER_EMAIL y lista vacía
     cfg = db.query(models.EmailConfig).first()
@@ -139,7 +139,7 @@ async def save_email_settings(payload: EmailSettings, db: Session = Depends(get_
 
     return {"status": "ok"}
 
-@router.post("/send_email")
+@router.post("/send_email", summary="Enviar email", description="Envía la revista digital mediante SMTP a una lista de destinatarios.")
 async def send_email(payload: SendEmailRequest):
     import re
     if not payload.recipients:

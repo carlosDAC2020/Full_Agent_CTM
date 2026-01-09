@@ -16,10 +16,10 @@ from backend.app.services.magazine.pdf_engine import generate_pdf
 from backend.app.services.core.storage import storage_service
 from backend.app.utils.files import load_json_list, save_json_dict
 
-router = APIRouter()
+router = APIRouter(tags=["Revista Digital"])
 
 # --- Saved Items ---
-@router.get("/saved")
+@router.get("/saved", summary="Listar mis favoritos", description="Obtiene la lista de convocatorias guardadas por el usuario actual.")
 async def list_my_saved(current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
     rows = db.query(models.SavedItem).filter(models.SavedItem.user_id == current_user.id).order_by(models.SavedItem.created_at.desc()).all()
     return [
@@ -33,7 +33,7 @@ async def list_my_saved(current_user: models.User = Depends(get_current_user), d
     ]
 
 
-@router.get("/convocatorias", response_model=List[ConvocatoriaOut])
+@router.get("/convocatorias", response_model=List[ConvocatoriaOut], summary="Listar todas las convocatorias", description="Devuelve todas las convocatorias detectadas y guardadas en la base de datos global.")
 async def list_convocatorias(db: Session = Depends(get_db)):
     """Lista todas las convocatorias guardadas en la tabla 'convocatorias'."""
     rows = (
@@ -46,7 +46,7 @@ async def list_convocatorias(db: Session = Depends(get_db)):
     )
     return rows
 
-@router.post("/saved", status_code=201)
+@router.post("/saved", status_code=201, summary="Guardar favorito", description="Añade una convocatoria a la lista de favoritos del usuario.")
 async def create_saved(payload: SavedCreate, current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
     if not (payload.item_ref or "").strip():
         raise HTTPException(status_code=400, detail="item_ref requerido")
@@ -57,7 +57,7 @@ async def create_saved(payload: SavedCreate, current_user: models.User = Depends
     db.refresh(row)
     return {"id": row.id}
 
-@router.delete("/saved/{saved_id}", status_code=204)
+@router.delete("/saved/{saved_id}", status_code=204, summary="Eliminar favorito", description="Quita una convocatoria de la lista de favoritos del usuario.")
 async def delete_saved(saved_id: int, current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
     row = db.query(models.SavedItem).filter(models.SavedItem.id == saved_id, models.SavedItem.user_id == current_user.id).first()
     if not row:
@@ -67,7 +67,7 @@ async def delete_saved(saved_id: int, current_user: models.User = Depends(get_cu
     return
 
 # --- Magazines ---
-@router.get("/magazines")
+@router.get("/magazines", summary="Listar mis revistas", description="Devuelve la lista de PDFs de revistas generadas por el usuario.")
 async def list_my_magazines(current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
     rows = db.query(models.Magazine).filter(models.Magazine.user_id == current_user.id).order_by(models.Magazine.created_at.desc()).all()
     return [
@@ -82,7 +82,7 @@ async def list_my_magazines(current_user: models.User = Depends(get_current_user
         for r in rows
     ]
 
-@router.post("/generate")
+@router.post("/generate", summary="Generar revista automática", description="Inicia un proceso asíncrono para buscar noticias/convocatorias y generar una revista basada en un tema.")
 async def generate_magazine(req: GenerateRequest | None = None):
     """
     Endpoint para generar un magazine basado en un tema.
@@ -132,7 +132,7 @@ async def generate_magazine(req: GenerateRequest | None = None):
         print(f"❌ Error: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error al generar el magazine: {str(e)}")
 
-@router.post("/generate_pdf_from_ids")
+@router.post("/generate_pdf_from_ids", summary="Generar PDF desde selección", description="Crea un archivo PDF a partir de una lista específica de IDs de convocatorias.")
 async def generate_pdf_from_ids(
     payload: IdsRequest,
     background_tasks: BackgroundTasks,
@@ -234,7 +234,7 @@ async def generate_pdf_from_ids(
         raise HTTPException(status_code=500, detail=f"Error generando PDF: {e}")
 
 # --- History ---
-@router.get("/history")
+@router.get("/history", summary="Mi historial", description="Obtiene un historial unificado de revistas generadas y flujos de trabajo realizados.")
 async def user_history(current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
     """Devuelve historial del usuario autenticado."""
     items: list[dict] = []

@@ -14,9 +14,9 @@ from backend.app.core.security import (
 from backend.app.schemas import user as schemas
 from backend.app.services.magazine.email_service import send_reset_password_email
 
-router = APIRouter(prefix="/auth", tags=["auth"])
+router = APIRouter(prefix="/auth", tags=["Autenticación"])
 
-@router.post("/register", response_model=schemas.User, status_code=201)
+@router.post("/register", response_model=schemas.User, status_code=201, summary="Registrar usuario", description="Crea un nuevo usuario administrador en el sistema.")
 def register(user_in: schemas.UserCreate, db: Session = Depends(get_db)):
     existing = db.query(models.User).filter(models.User.email == user_in.email).first()
     if existing:
@@ -32,7 +32,7 @@ def register(user_in: schemas.UserCreate, db: Session = Depends(get_db)):
     db.refresh(user)
     return user
 
-@router.post("/login", response_model=schemas.Token)
+@router.post("/login", response_model=schemas.Token, summary="Iniciar sesión", description="Autentica al usuario y devuelve un token JWT (Bearer).")
 def login(data: schemas.LoginRequest, db: Session = Depends(get_db)):
     user = db.query(models.User).filter(models.User.email == data.email).first()
     if not user or not verify_password(data.password, user.password_hash):
@@ -40,11 +40,11 @@ def login(data: schemas.LoginRequest, db: Session = Depends(get_db)):
     token = create_access_token(user.email)
     return schemas.Token(access_token=token)
 
-@router.get("/me", response_model=schemas.User)
+@router.get("/me", response_model=schemas.User, summary="Mi perfil", description="Obtiene la información del usuario autenticado actualmente.")
 def me(current_user: models.User = Depends(get_current_user)):
     return current_user
 
-@router.post("/forgot-password", status_code=200)
+@router.post("/forgot-password", status_code=200, summary="Recuperar contraseña", description="Envía un correo con un token de recuperación si el email existe.")
 def forgot_password(payload: schemas.PasswordResetRequest, db: Session = Depends(get_db)):
     """
     Genera un token de recuperación y envía un correo al usuario.
@@ -67,7 +67,7 @@ def forgot_password(payload: schemas.PasswordResetRequest, db: Session = Depends
     
     return {"message": "Si el correo existe, recibirás instrucciones para restablecer tu contraseña."}
 
-@router.post("/reset-password", status_code=200)
+@router.post("/reset-password", status_code=200, summary="Restablecer contraseña", description="Valida el token de recuperación y actualiza la contraseña del usuario.")
 def reset_password(payload: schemas.PasswordResetConfirm, db: Session = Depends(get_db)):
     """
     Verifica el token y actualiza la contraseña.

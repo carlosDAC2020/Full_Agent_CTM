@@ -21,15 +21,15 @@ from backend.app.services.core.storage import storage_service
 from backend.app.db.models import Convocatoria
 from backend.app.schemas.requests import IngestRequest, SelectionRequest, NextStepRequest, ConvocatoriaOut
 
-router = APIRouter(prefix="/agent", tags=["Agent Actions"])
+router = APIRouter(prefix="/agent", tags=["Agente I+D+i (Wizard)"])
 
-@router.get("/convocatorias", response_model=List[ConvocatoriaOut])
+@router.get("/convocatorias", response_model=List[ConvocatoriaOut], summary="Listar convocatorias", description="Obtiene todas las convocatorias guardadas en el sistema para ser usadas como base en una sesión del agente.")
 async def list_convocatorias(db: Session = Depends(get_db)):
     """Lista todas las convocatorias guardadas en la base de datos."""
     rows = db.query(Convocatoria).order_by(Convocatoria.created_db_at.desc()).all()
     return rows
 
-@router.post("/ingest")
+@router.post("/ingest", summary="Paso 1: Ingesta", description="Inicia una sesión del agente cargando un texto descriptivo o archivos (RAG). Devuelve el session_id y el primer task_id.")
 async def start_ingest(
     text: str = Form(...),
     files: List[UploadFile] = File(None),
@@ -86,7 +86,7 @@ async def start_ingest(
 
     return {"task_id": task.id, "session_id": session_id}
 
-@router.post("/generate-ideas")
+@router.post("/generate-ideas", summary="Paso 2: Generar Ideas", description="Basado en la ingesta inicial, dispara el proceso de brainstorming para proponer ideas de proyectos técnicos.")
 async def generate_ideas(
     request: NextStepRequest,
     current_user: User = Depends(get_current_user),
@@ -107,7 +107,7 @@ async def generate_ideas(
     )
     return {"task_id": task.id, "session_id": request.session_id}
 
-@router.post("/select-idea")
+@router.post("/select-idea", summary="Paso 3: Seleccionar Idea", description="Confirma qué idea de las propuestas se desarrollará en el reporte técnico final.")
 async def select_idea(
     request: SelectionRequest,
     current_user: User = Depends(get_current_user),
@@ -128,7 +128,7 @@ async def select_idea(
     )
     return {"task_id": task.id, "session_id": request.session_id}
 
-@router.post("/finalize")
+@router.post("/finalize", summary="Paso 5: Finalizar Proyecto", description="Genera el esquema final del proyecto, consolidando toda la investigación y visuales.")
 async def finalize_project(
     request: NextStepRequest,
     current_user: User = Depends(get_current_user),
@@ -151,7 +151,7 @@ async def finalize_project(
 
 
 
-@router.post("/research")
+@router.post("/research", summary="Paso 4: Investigación Profunda", description="Inicia la fase de investigación técnica utilizando herramientas externas como Arxiv y Semantic Scholar.")
 async def start_research(
     request: NextStepRequest,
     current_user: User = Depends(get_current_user),
@@ -180,7 +180,7 @@ async def start_research(
     return {"task_id": task.id, "session_id": request.session_id}
 
 
-@router.post("/append-docs")
+@router.post("/append-docs", summary="Añadir documentos", description="Permite subir archivos adicionales a una sesión ya iniciada para ser procesados por el motor de RAG.")
 async def append_documents(
     session_id: str = Form(...),
     files: List[UploadFile] = File(...),
@@ -230,7 +230,7 @@ async def append_documents(
     return {"task_id": task.id, "session_id": session_id, "added_docs": len(new_docs_paths)}
 
 
-@router.get("/history/{session_id}")
+@router.get("/history/{session_id}", summary="Recuperar sesión", description="Obtiene el estado completo y los datos de todos los pasos de una sesión específica para restaurar el wizard.")
 async def get_session_history(
     session_id: str,
     current_user: User = Depends(get_current_user),

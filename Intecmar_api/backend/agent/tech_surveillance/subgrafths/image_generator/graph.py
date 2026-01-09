@@ -120,7 +120,7 @@ def generator_image_node(state: GraphState):
     try:
         # 2. LLAMADA A LA API 
         response = genai_client.models.generate_content(
-            model="gemini-3-pro-image-preview", 
+            model="gemini-2.5-flash-image", 
             contents=[image_prompt],
             config=types.GenerateContentConfig(
                 response_modalities=["Image"], 
