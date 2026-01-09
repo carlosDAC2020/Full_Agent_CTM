@@ -166,8 +166,15 @@ def task_process_agent_step(self, session_id: str, input_data: dict, step_type: 
 
         # 5. selected_idea
         if "selected_idea" in current_state and isinstance(current_state["selected_idea"], dict):
-            try: current_state["selected_idea"] = ProposalIdea(**current_state["selected_idea"])
-            except: pass
+            si = current_state["selected_idea"]
+            # Robust mapping for frontend compatibility
+            if "title" in si and not si.get("idea_title"): si["idea_title"] = si.get("title")
+            if "desc" in si and not si.get("idea_description"): si["idea_description"] = si.get("desc")
+            if "objectives" in si and not si.get("idea_objectives"): si["idea_objectives"] = si.get("objectives")
+            try: 
+                current_state["selected_idea"] = ProposalIdea(**si)
+            except Exception as e:
+                print(f"⚠️ Error rehydrating selected_idea: {e}")
         
         # 6. RECUPERACIÓN PARA SESIONES ANTIGUAS: Si no hay selected_idea pero sí hay initial_schema
         if "selected_idea" not in current_state or not current_state["selected_idea"]:
@@ -190,7 +197,9 @@ def task_process_agent_step(self, session_id: str, input_data: dict, step_type: 
     # DEBUG
     print(f"🔍 DEBUG STATE ({step_type}): CallInfo Presente? {'call_info' in current_state}")
     if 'call_info' in current_state:
-        print(f"🔍 DEBUG CallInfo: {current_state['call_info']}")
+        # Avoid printing huge objects if they have history
+        ci_summary = f"Title: {getattr(current_state['call_info'], 'title', 'N/A')}"
+        print(f"🔍 DEBUG CallInfo Summary: {ci_summary}")
 
     # ==========================================
     # 3. PREPARAR INPUT
@@ -251,7 +260,13 @@ def task_process_agent_step(self, session_id: str, input_data: dict, step_type: 
     elif step_type == "project_idea":
         current_state["route_decision"] = "project_idea"
         if "selected_idea" in input_data:
-            current_state["selected_idea"] = ProposalIdea(**input_data["selected_idea"])
+            si = input_data["selected_idea"]
+            # Robust mapping for input
+            if "title" in si and not si.get("idea_title"): si["idea_title"] = si["title"]
+            if "desc" in si and not si.get("idea_description"): si["idea_description"] = si["desc"]
+            if "objectives" in si and not si.get("idea_objectives"): si["idea_objectives"] = si["objectives"]
+            current_state["selected_idea"] = ProposalIdea(**si)
+
             
     elif step_type == "generate_project":
         current_state["route_decision"] = "generate_proyect" # Typo intencional según tu grafo

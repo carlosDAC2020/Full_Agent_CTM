@@ -22,9 +22,9 @@ export async function confirmIdea() {
     }
 
     const selectedIdea = {
-        title: editedTitle,
-        desc: editedDesc,
-        objectives: editedObjs
+        idea_title: editedTitle,
+        idea_description: editedDesc,
+        idea_objectives: editedObjs
     };
 
     // Update store (optional/fallback)

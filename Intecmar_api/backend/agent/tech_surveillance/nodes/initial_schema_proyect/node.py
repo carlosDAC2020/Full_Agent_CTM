@@ -20,19 +20,30 @@ def initial_schema_node(state: GraphState):
 
     # 1. Extracción de datos del estado
     call_info_summary = state.get("presentation_summary", "Información de convocatoria no disponible.")
-    selected_idea: ProposalIdea = state.get("selected_idea")
+    selected_idea = state.get("selected_idea")
     
-    # Validaciones de seguridad
+    # Validaciones de seguridad y rehidratación de emergencia
     if not selected_idea:
+        print("⚠️ [NODE] Error: selected_idea no encontrado en el estado.")
         return {
             "messages": [AIMessage(content="⚠️ Error: No hay una idea seleccionada para generar el esquema.")]
         }
 
-    # Datos de la idea
-    idea_title = selected_idea.idea_title or "Título no definido"
-    idea_description = selected_idea.idea_description or "Descripción no disponible"
+    # Si es un objeto, intentamos obtener atributos. Si es un dict, usamos get.
+    if isinstance(selected_idea, dict):
+        idea_title = selected_idea.get("idea_title") or selected_idea.get("title") or "Título no definido"
+        idea_description = selected_idea.get("idea_description") or selected_idea.get("desc") or "Descripción no disponible"
+        idea_objectives = selected_idea.get("idea_objectives") or selected_idea.get("objectives") or []
+    else:
+        idea_title = getattr(selected_idea, "idea_title", None) or "Título no definido"
+        idea_description = getattr(selected_idea, "idea_description", None) or "Descripción no disponible"
+        idea_objectives = getattr(selected_idea, "idea_objectives", []) or []
+
+    print(f"📌 [NODE] Procesando Idea: {idea_title}")
+    
     # Convertimos la lista de objetivos a un string con viñetas
-    idea_objectives_str = "\n".join([f"- {obj}" for obj in (selected_idea.idea_objectives or [])])
+    idea_objectives_str = "\n".join([f"- {obj}" for obj in idea_objectives])
+
 
     # 2. Formatear el prompt
     formatted_prompt = INITIAL_SCHEMA_PROMPTS.format(
