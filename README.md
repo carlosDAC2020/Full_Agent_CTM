@@ -1,6 +1,8 @@
-<h1 align="center">
-  <img src="Intecmar_api/static/images/CotecmarLogo_white.png" alt="Intecmar Logo" width="100" style="vertical-align: middle;">
-  <span style="vertical-align: middle; border-left: 2px solid #333; margin-left: 15px; padding-left: 15px;">Intecmar AI Platform</span>
+<h1 align="center" style="border-bottom: none;">
+  <img src="Intecmar_api/static/images/CotecmarLogo_white.png" alt="Intecmar Logo" width="150" style="vertical-align: middle;">
+  <span style="vertical-align: middle; border-left: 5px solid #333; margin-left: 20px; padding-left: 20px; font-size: 1.5em; line-height: 1.2;">
+    Intecmar AI Platform
+  </span>
 </h1>
 
 <p align="center">
