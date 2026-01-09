@@ -1,17 +1,10 @@
-<div align="center">
-  <table border="0" style="border-collapse: collapse;">
-    <tr>
-      <td align="center" valign="middle" style="padding-right: 30px;">
-        <img src="Intecmar_api/static/images/CotecmarLogo_white.png" alt="Intecmar Logo" width="180">
-      </td>
-      <td style="border-left: 6px solid #333; padding-left: 30px; text-align: left;" valign="middle">
-        <h1 style="border-bottom: none; margin: 0; padding: 0; font-size: 4em; line-height: 1; font-weight: 800;">
-          Intecmar AI<br><span style="font-size: 0.5em; color: #8b949e; font-weight: 400; letter-spacing: 4px; text-transform: uppercase;">Platform</span>
-        </h1>
-      </td>
-    </tr>
-  </table>
-</div>
+<p align="center">
+  <img src="Intecmar_api/static/images/CotecmarLogo_white.png" alt="Intecmar Logo" width="180" style="vertical-align: middle;">
+  <span style="display: inline-block; vertical-align: middle; border-left: 6px solid #333; margin-left: 20px; padding-left: 20px; text-align: left;">
+    <span style="font-size: 3.5em; font-weight: 800; line-height: 1; display: block;">Intecmar AI</span>
+    <span style="font-size: 1.5em; color: #8b949e; letter-spacing: 4px; text-transform: uppercase; display: block;">Platform</span>
+  </span>
+</p>
 
 <p align="center">
   <img src="https://img.shields.io/badge/Python-3.10+-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python">
