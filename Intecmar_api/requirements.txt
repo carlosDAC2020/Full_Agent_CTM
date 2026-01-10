@@ -71,3 +71,4 @@ Flask-MySQLdb
 mysqlclient
 blinker
 Werkzeug
+aiofiles
