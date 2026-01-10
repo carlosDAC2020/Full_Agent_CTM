@@ -145,112 +145,94 @@
 .pinterest-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 25px;
+    gap: 30px;
     padding: 20px 0;
     opacity: 0;
+    max-width: 1300px;
+    margin: 0 auto;
 }
 
 .pin-item {
     position: relative;
-    border-radius: 16px;
+    border-radius: 20px;
     overflow: hidden;
     border: 1px solid var(--border);
     background: #000;
-    /* Dark background for contained images */
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    height: 400px;
-    /* Fixed height for consistency */
+    transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+    aspect-ratio: 16 / 10;
+    /* Match screenshot proportions */
     display: flex;
-    flex-direction: column;
     justify-content: center;
     align-items: center;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
 }
 
 /* Feature the last item (Entrega) */
 .pin-item:nth-child(5) {
     grid-column: span 2;
+    aspect-ratio: auto;
+    height: 100%;
 }
 
 .pin-item img {
-    max-width: 100%;
-    max-height: 100%;
-    width: auto;
-    height: auto;
-    object-fit: contain;
-    /* Maintain natural proportions */
-    filter: grayscale(10%);
-    transition: all 0.5s ease;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    /* Fill the container to avoid bars */
+    filter: grayscale(10%) contrast(1.1);
+    transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.pin-item:hover {
+    transform: scale(1.05);
+    z-index: 100;
+    box-shadow: 0 30px 60px rgba(14, 165, 233, 0.3);
+    border-color: var(--primary);
 }
 
 .pin-item:hover img {
     transform: scale(1.1);
-    filter: blur(4px) grayscale(0%);
+    filter: blur(5px) grayscale(0%) brightness(0.4);
 }
 
 /* Hover Overlay Styles */
 .pin-info {
     position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    padding: 30px;
-    background: rgba(2, 4, 10, 0.85);
-    backdrop-filter: blur(8px);
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -40%);
+    width: 90%;
     text-align: center;
     opacity: 0;
     transition: all 0.4s ease;
     z-index: 10;
+    pointer-events: none;
 }
 
 .pin-item:hover .pin-info {
     opacity: 1;
+    transform: translate(-50%, -50%);
 }
 
 .pin-info h4 {
-    font-size: 1.5rem;
-    color: var(--primary);
-    margin-bottom: 15px;
-    font-weight: 800;
-    transform: translateY(-20px);
-    transition: transform 0.4s ease;
-}
-
-.pin-item:hover .pin-info h4 {
-    transform: translateY(0);
+    font-size: 1.8rem;
+    color: white;
+    margin-bottom: 20px;
+    font-weight: 900;
+    text-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+    letter-spacing: -0.5px;
 }
 
 .pin-info p {
-    font-size: 1rem;
-    color: white;
+    font-size: 1.05rem;
+    color: #cbd5e1;
     line-height: 1.6;
-    max-width: 90%;
-    transform: translateY(20px);
-    transition: transform 0.4s ease;
+    font-weight: 500;
 }
 
-.pin-item:hover .pin-info p {
-    transform: translateY(0);
-}
-
-/* Step Badge Styles */
+/* Remove Step Badge styles entirely */
 .step-badge {
-    position: absolute;
-    top: 15px;
-    left: 15px;
-    background: var(--primary);
-    color: white;
-    padding: 4px 12px;
-    border-radius: 4px;
-    font-size: 0.7rem;
-    font-weight: 900;
-    font-family: 'JetBrains Mono', monospace;
-    z-index: 20;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    display: none !important;
 }
 
 /* Lightbox - Minimal needed for DOM clean cleanup */
@@ -262,7 +244,7 @@
     display: none !important;
 }
 
-/* --- LIGHTBOX MODAL ENHANCEMENTS --- */
+/* --- LIGHTBOX MODAL ENHANCEMENTS (KEEP AS PLACEHOLDER) --- */
 .lightbox-modal {
     position: fixed;
     top: 0;
