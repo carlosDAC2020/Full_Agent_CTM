@@ -43,7 +43,7 @@ La plataforma ofrece una experiencia fluida dividida en dos módulos principales
 | **01. Discovery** | ![Captura del Buscador de Convocatorias](/docs/images/agent_home.png) | El usuario filtra y selecciona una convocatoria oficial entre cientos de opciones nacionales e internacionales. |
 | **02. Ingesta** | ![Captura de Ficha de Evaluación AI](/docs/images/agent_ingest.png) | El agente analiza el PDF de la convocatoria y extrae: objetivos, financiamiento y fechas clave automáticamente. |
 | **03. Ideación** | ![Captura de Grid de Ideas Generadas](/docs/images/agent_ideas.png) | El LLM propone 3-4 ideas de proyectos únicos alineados con la convocatoria. El usuario puede co-crear editando títulos y objetivos. |
-| **04. Estructura** | ![Captura del Visualizador de Esquema Técnico](/docs/images/agent_home.png) | Se genera el esquema base (Markdown/PDF) del proyecto, listo para ser expandido con investigación académica. |
+| **04. Estructura** | ![Captura del Visualizador de Esquema Técnico](/docs/images/agent_initial_squema.png) | Se genera el esquema base (Markdown/PDF) del proyecto, listo para ser expandido con investigación académica. |
 | **05. Entrega** | ![Captura de Reporte Final con Imágenes](/docs/images/agent_home.png) | El agente entrega un reporte técnico completo, justificado científicamente y con apoyo visual generado por IA. |
 
 ---

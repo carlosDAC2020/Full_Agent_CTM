@@ -48,43 +48,53 @@ async def academic_research_node(state: GraphState):
 
     general_info = current_report.general_info
     
-    # --- LÓGICA DE FALLBACK ROBUSTA ---
-    # Intentamos obtener la información del reporte, si no, de la idea seleccionada, si no, de la convocatoria
+    # --- LÓGICA DE PRIORIDAD: Usar información del reporte (GeneralInfo) ---
+    # Se supone que en el paso previo (esquema inicial) ya se consolidó esta info.
     project_title = "Unknown Topic"
     project_desc = ""
     keywords = []
 
-    if general_info and (general_info.project_title or general_info.project_description):
-        print("✅ Usando información de general_info (ReportSchema)")
-        project_title = general_info.project_title or "Unknown Topic"
+    if general_info and general_info.project_title and "definido" not in general_info.project_title.lower():
+        print("✅ Usando información consolidada de general_info (Prioridad)")
+        project_title = general_info.project_title
         project_desc = general_info.project_description or ""
         keywords = general_info.keywords or []
-    else:
-        # Fallback 1: selected_idea
-        selected_idea = state.get("selected_idea")
-        if selected_idea:
-            print("🔍 Fallback 1: Usando información de selected_idea")
-            project_title = selected_idea.idea_title or "Unknown Topic"
-            project_desc = selected_idea.idea_description or ""
-            # Si es un objeto Pydantic o dict
-            if hasattr(selected_idea, "idea_objectives"):
-                 # añadir objetivos a la descripción para más contexto
-                 project_desc += "\n\nObjetivos:\n" + "\n".join(selected_idea.idea_objectives or [])
+    elif selected_idea:
+        # Fallback 1: selected_idea (si por alguna razón general_info está vacío)
+        print("🔍 Fallback 1: Usando información de selected_idea")
+        if isinstance(selected_idea, dict):
+            project_title = selected_idea.get("idea_title") or selected_idea.get("title") or "Unknown Topic"
+            project_desc = selected_idea.get("idea_description") or selected_idea.get("desc") or ""
+            keywords = selected_idea.get("idea_keywords") or selected_idea.get("keywords") or []
         else:
-            # Fallback 2: call_info
-            call_info = state.get("call_info")
-            if call_info:
-                print("🔍 Fallback 2: Usando información de call_info")
-                project_title = getattr(call_info, "title", "Unknown Topic")
-                project_desc = getattr(call_info, "objective", "")
-                keywords = getattr(call_info, "keywords", [])
+            project_title = getattr(selected_idea, "idea_title", None) or getattr(selected_idea, "title", "Unknown Topic")
+            project_desc = getattr(selected_idea, "idea_description", None) or getattr(selected_idea, "desc", "")
+            keywords = getattr(selected_idea, "idea_keywords", []) or getattr(selected_idea, "keywords", [])
+    else:
+        # Fallback 2: call_info
+        call_info = state.get("call_info")
+        if call_info:
+            print("🔍 Fallback 2: Usando información de call_info")
+            project_title = getattr(call_info, "title", "Unknown Topic")
+            project_desc = getattr(call_info, "objective", "")
+            keywords = getattr(call_info, "keywords", [])
+
+    # Asegurar que incluimos objetivos para la investigación si están disponibles
+    if not project_desc and selected_idea:
+        objs = []
+        if isinstance(selected_idea, dict):
+            objs = selected_idea.get("idea_objectives") or selected_idea.get("objectives") or []
+        else:
+            objs = getattr(selected_idea, "idea_objectives", []) or getattr(selected_idea, "objectives", [])
+        if objs:
+            project_desc = "\n\nObjetivos del Proyecto:\n" + "\n".join([f"- {o}" for o in objs])
 
     print(f"DEBUG: Título proyecto para investigación: {project_title}")
 
     system_content = RESEARCH_PROMPT_TEMPLATE.format(
         project_title=project_title,
         project_desc=project_desc,
-        keywords=', '.join(keywords) if isinstance(keywords, list) else keywords
+        keywords=', '.join(keywords) if isinstance(keywords, list) else (keywords or "")
     )
     
     try:

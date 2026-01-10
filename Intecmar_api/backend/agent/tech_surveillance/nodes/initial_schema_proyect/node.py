@@ -72,12 +72,34 @@ def initial_schema_node(state: GraphState):
         # segun el esquema obtenido sacamos la informacion general del proyetco 
         message_by_get_general_info = HumanMessage(
             content=f"""
-Extract the general information of the project from the following conceptual schema:\n\n
-            {schema_content}"""
+Extract the general information of the project from the following conceptual schema.
+The project MUST be titled and focused on the user's selected idea: "{idea_title}".
+
+Conceptual Schema:
+{schema_content}
+
+Strictly retrieve the following fields based on the schema and the project's identity:
+- Title (should match or be a refined version of "{idea_title}")
+- Description
+- Duration
+- Keywords
+- Main Entity
+- Collaborating Entities
+"""
             )
         # Fix: Ensure input is a list of messages
         general_info : GeneralInfo = ll_estructured.invoke([message_by_get_general_info])
 
+        # --- LÓGICA DE ENRIQUECIMIENTO HÍBRIDO ---
+        # 1. Conservamos la identidad exacta de la idea seleccionada (Manual)
+        general_info.project_title = idea_title
+        general_info.project_description = idea_description
+        
+        # 2. El resto de campos (keywords, duration, entities, etc.) vienen enriquecidos por el LLM 
+        # desde el esquema generado.
+        print(f"✅ GeneralInfo enriquecido. Título forzado: {general_info.project_title}")
+        print(f"   Keywords detectadas: {general_info.keywords}")
+            
         # actualizamos en el estado 
         current_components = state.get("report_components")
         
