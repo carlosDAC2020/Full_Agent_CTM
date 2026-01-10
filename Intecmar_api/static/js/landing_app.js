@@ -60,62 +60,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     /**
-     * 2. INTERACTIVE MASONRY / PINTEREST LOGIC
+     * 2. INTERACTIVE HOVER LOGIC
+     * Descriptions now appear as overlays on hover via CSS.
+     * Click interaction removed as requested.
      */
     const pinItems = document.querySelectorAll('.pin-item');
-    const lightbox = document.getElementById('lightbox');
-    const lightboxImg = document.getElementById('lightbox-img');
-    const lightboxTitle = document.getElementById('lightbox-title');
-    const lightboxDesc = document.getElementById('lightbox-desc');
-    const overlay = document.createElement('div');
-    overlay.className = 'gallery-focus-overlay';
-    document.body.appendChild(overlay);
-
-    pinItems.forEach((pin, index) => {
-        pin.addEventListener('click', () => {
-            const rect = pin.getBoundingClientRect();
-
-            // Show overlay
-            overlay.classList.add('active');
-
-            // Update Lightbox Content
-            lightboxImg.src = pin.getAttribute('data-img');
-            lightboxTitle.textContent = pin.getAttribute('data-title');
-            lightboxDesc.textContent = pin.getAttribute('data-desc');
-
-            // Animate Lightbox Opening (Scale from original position)
-            gsap.fromTo('.lightbox-content',
-                { scale: 0.5, opacity: 0, y: 50 },
-                { scale: 1, opacity: 1, y: 0, duration: 0.5, ease: "power3.out" }
-            );
-
-            lightbox.classList.add('active');
-            document.body.style.overflow = 'hidden';
-        });
-    });
-
-    // Close Lightbox
-    const closeLightbox = () => {
-        gsap.to('.lightbox-content', {
-            scale: 0.8,
-            opacity: 0,
-            duration: 0.3,
-            ease: "power2.in",
-            onComplete: () => {
-                lightbox.classList.remove('active');
-                overlay.classList.remove('active');
-                document.body.style.overflow = '';
-                lightboxImg.src = ''; // Clean up
-            }
-        });
-    };
-
-    document.querySelector('.lightbox-close').addEventListener('click', closeLightbox);
-    overlay.addEventListener('click', closeLightbox);
-
-    // Close on Escape
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && lightbox.classList.contains('active')) closeLightbox();
+    pinItems.forEach(pin => {
+        pin.style.cursor = 'default';
+        // No click event needed
     });
 
     /**
@@ -127,7 +79,7 @@ document.addEventListener('DOMContentLoaded', () => {
         gsap.to('body', {
             '--mouse-x': clientX + 'px',
             '--mouse-y': clientY + 'px',
-            duration: 0.3,
+            duration: 0.4,
             ease: "power2.out"
         });
     });
