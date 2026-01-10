@@ -160,7 +160,8 @@
     background: #000;
     transition: all 0.7s cubic-bezier(0.23, 1, 0.32, 1);
     flex: 1 1 calc(33.333% - 20px);
-    height: 400px;
+    height: 420px;
+    /* Fixed height for symmetry */
     display: flex;
     justify-content: center;
     align-items: center;
@@ -171,9 +172,9 @@
 /* Base state for all items when someone is hovered */
 .pinterest-grid:has(.pin-item:hover) .pin-item:not(:hover) {
     flex: 1 1 calc(25% - 20px);
-    opacity: 0.6;
-    filter: grayscale(80%) blur(2px);
-    transform: scale(0.95);
+    opacity: 0.5;
+    filter: grayscale(100%) blur(4px);
+    transform: scale(0.96);
 }
 
 /* Expansion state for the hovered item */
@@ -191,14 +192,14 @@
     width: 100%;
     height: 100%;
     object-fit: cover;
-    /* Fill to ensure no black bars */
+    object-position: top center;
     filter: contrast(1.1);
     transition: all 0.8s cubic-bezier(0.23, 1, 0.32, 1);
 }
 
 .pin-item:hover img {
-    transform: scale(1.15);
-    filter: blur(10px) brightness(0.35);
+    transform: scale(1.1) translateY(-10%);
+    /* Shift up to show content */
 }
 
 /* Feature last item to fill potential gaps */
@@ -206,15 +207,20 @@
     flex-grow: 2;
 }
 
-/* Hover Overlay Styles */
+/* Re-designed Bottom-Anchored Description */
 .pin-info {
     position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -40%);
-    width: 85%;
-    text-align: center;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    padding: 30px;
+    background: linear-gradient(to top,
+            rgba(2, 4, 10, 0.95) 0%,
+            rgba(2, 4, 10, 0.8) 50%,
+            transparent 100%);
+    text-align: left;
     opacity: 0;
+    transform: translateY(100%);
     transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
     z-index: 10;
     pointer-events: none;
@@ -222,15 +228,14 @@
 
 .pin-item:hover .pin-info {
     opacity: 1;
-    transform: translate(-50%, -50%);
+    transform: translateY(0);
 }
 
 .pin-info h4 {
-    font-size: 2.2rem;
+    font-size: 1.6rem;
     color: white;
-    margin-bottom: 25px;
-    font-weight: 900;
-    text-shadow: 0 5px 20px rgba(0, 0, 0, 0.8);
+    margin-bottom: 12px;
+    font-weight: 800;
     background: linear-gradient(to right, #fff, var(--primary));
     -webkit-background-clip: text;
     background-clip: text;
@@ -238,11 +243,11 @@
 }
 
 .pin-info p {
-    font-size: 1.15rem;
-    color: #e2e8f0;
-    line-height: 1.8;
+    font-size: 0.95rem;
+    color: #cbd5e1;
+    line-height: 1.6;
     font-weight: 400;
-    text-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+    max-width: 95%;
 }
 
 /* Cleaning up old Lightbox artifacts */
@@ -252,10 +257,11 @@
     display: none !important;
 }
 
-/* Responsive adjustments for Flex */
+/* Responsive adjustments */
 @media (max-width: 1024px) {
     .pin-item {
         flex: 1 1 calc(50% - 20px);
+        height: 350px;
     }
 }
 
@@ -263,14 +269,6 @@
     .pin-item {
         flex: 1 1 100%;
         height: 300px;
-    }
-
-    .pin-item:hover {
-        flex: 1 1 100%;
-    }
-
-    .pin-info h4 {
-        font-size: 1.5rem;
     }
 }
 
