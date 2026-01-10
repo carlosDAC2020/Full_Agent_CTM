@@ -143,15 +143,14 @@
 }
 
 .pinterest-grid {
-    column-count: 3;
-    column-gap: 25px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 25px;
     padding: 20px 0;
     opacity: 0;
 }
 
 .pin-item {
-    break-inside: avoid;
-    margin-bottom: 25px;
     position: relative;
     border-radius: 16px;
     overflow: hidden;
@@ -159,24 +158,46 @@
     background: var(--bg-card);
     transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     cursor: zoom-in;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
 }
 
-/* Simulated Varying Heights for Pinterest feel */
-.pin-item:nth-child(even) img {
-    aspect-ratio: 16 / 10;
-    object-fit: cover;
+/* Feature the last item (Entrega) to fill the 3rd column gap */
+.pin-item:nth-child(5) {
+    grid-column: span 2;
 }
 
-.pin-item:nth-child(odd) img {
-    aspect-ratio: 3 / 4;
-    object-fit: cover;
+/* Standard height for first 4 items, let the last one be taller/wider */
+.pin-item:not(:nth-child(5)) {
+    min-height: 380px;
 }
 
 .pin-item img {
     width: 100%;
-    display: block;
+    height: 100%;
+    object-fit: cover;
     filter: grayscale(20%);
     transition: filter 0.4s ease, transform 0.6s ease;
+}
+
+/* Step Badge Styles */
+.step-badge {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    background: rgba(14, 165, 233, 0.9);
+    color: white;
+    padding: 6px 14px;
+    border-radius: 30px;
+    font-size: 0.75rem;
+    font-weight: 800;
+    font-family: 'JetBrains Mono', monospace;
+    z-index: 5;
+    box-shadow: 0 4px 15px rgba(14, 165, 233, 0.4);
+    backdrop-filter: blur(4px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    letter-spacing: 1px;
 }
 
 .pin-item:hover {
