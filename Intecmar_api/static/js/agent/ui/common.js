@@ -99,15 +99,30 @@ export function navigateToStep(stepNumber) {
 }
 
 export function getAssetUrl(path) {
-    if (!path) return '';
-    if (path.startsWith('http')) return path;
-    if (path.startsWith('/api/')) return path;
+    if (!path) {
+        console.log('[getAssetUrl] Path is empty or null.');
+        return '';
+    }
+
+    console.log(`[getAssetUrl] Input path: "${path}"`);
+
+    if (path.startsWith('http')) {
+        console.log(`[getAssetUrl] Path is absolute URL, returning as-is.`);
+        return path;
+    }
+    if (path.startsWith('/api/')) {
+        console.log(`[getAssetUrl] Path already proxied, returning as-is.`);
+        return path;
+    }
 
     // Si es una ruta de MinIO (key), convertirla a proxy URL
     // Ejemplo: "email@test.com/Agent_Sessions/..."
     if (path.includes('/')) {
-        return `/api/minio_agent/${path}`;
+        const proxyUrl = `/api/minio_agent/${path}`;
+        console.log(`[getAssetUrl] Converted to proxy URL: "${proxyUrl}"`);
+        return proxyUrl;
     }
 
+    console.log(`[getAssetUrl] Path does not match any rule, returning as-is: "${path}"`);
     return path;
 }

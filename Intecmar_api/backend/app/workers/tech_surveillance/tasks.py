@@ -151,6 +151,12 @@ def task_process_agent_step(self, session_id: str, input_data: dict, step_type: 
         if "report_components" in current_state and isinstance(current_state["report_components"], dict):
             try: 
                 current_state["report_components"] = ReportSchema(**current_state["report_components"])
+                # DEBUG: Log general_info status
+                rc = current_state["report_components"]
+                if rc.general_info:
+                    print(f"✅ REHYDRATE report_components.general_info: title='{rc.general_info.project_title}', desc='{str(rc.general_info.project_description)[:50]}...'")
+                else:
+                    print("⚠️ REHYDRATE report_components: general_info is None")
             except Exception as e:
                 print(f"⚠️ Error rehydrating report_components: {e}")
 

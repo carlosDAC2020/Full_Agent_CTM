@@ -329,11 +329,19 @@ def report_node(state: GraphState):
         pdf_key = storage_service.upload_file(pdf_filepath, f"{minio_folder}/{pdf_filename}")
         md_key = storage_service.upload_file(md_filepath, f"{minio_folder}/{md_filename}")
         
-        # Nota: La imagen de portada ya debería haber sido subida en su propio nodo,
-        # pero si no, podrías subirla aquí también si quisieras tener el link directo.
-        img_key = None
-        if final_img_path:
-             img_key = storage_service.upload_file(final_img_path, f"{minio_folder}/{os.path.basename(final_img_path)}")
+        # --- LÓGICA PARA EVITAR DOBLE SUBIDA DEL POSTER ---
+        # La imagen de portada ya debería haber sido subida por el nodo 'images_generator'.
+        # Verificamos si ya existe una key en docs_paths antes de intentar subir de nuevo.
+        existing_docs_paths: DocsPaths = state.get("docs_paths") or DocsPaths()
+        img_key = existing_docs_paths.poster_image_path
+        
+        if img_key and "/" in img_key and not img_key.startswith("/app"):
+            # Ya existe una key de MinIO válida (no es una ruta local), la reutilizamos.
+            print(f"   ℹ️ Poster ya subido por images_generator: {img_key}. No se re-sube.")
+        elif final_img_path:
+            # No hay key previa, o la key es una ruta local. Subimos la imagen.
+            print(f"   ☁️ Subiendo poster desde report_node (fallback)...")
+            img_key = storage_service.upload_file(final_img_path, f"{minio_folder}/{os.path.basename(final_img_path)}")
 
         # ========================================
         # ACTUALIZACIÓN DE ESTADO
