@@ -143,56 +143,67 @@
 }
 
 .pinterest-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 30px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
     padding: 20px 0;
     opacity: 0;
-    max-width: 1300px;
+    max-width: 1400px;
     margin: 0 auto;
 }
 
 .pin-item {
     position: relative;
-    border-radius: 20px;
+    border-radius: 24px;
     overflow: hidden;
     border: 1px solid var(--border);
     background: #000;
-    transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
-    aspect-ratio: 16 / 10;
-    /* Match screenshot proportions */
+    transition: all 0.7s cubic-bezier(0.23, 1, 0.32, 1);
+    flex: 1 1 calc(33.333% - 20px);
+    height: 400px;
     display: flex;
     justify-content: center;
     align-items: center;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+    cursor: default;
 }
 
-/* Feature the last item (Entrega) */
-.pin-item:nth-child(5) {
-    grid-column: span 2;
-    aspect-ratio: auto;
-    height: 100%;
+/* Base state for all items when someone is hovered */
+.pinterest-grid:has(.pin-item:hover) .pin-item:not(:hover) {
+    flex: 1 1 calc(25% - 20px);
+    opacity: 0.6;
+    filter: grayscale(80%) blur(2px);
+    transform: scale(0.95);
+}
+
+/* Expansion state for the hovered item */
+.pin-item:hover {
+    flex: 1 1 calc(50% - 20px);
+    transform: scale(1.02);
+    z-index: 100;
+    box-shadow: 0 40px 80px rgba(14, 165, 233, 0.4);
+    border-color: var(--primary);
+    opacity: 1 !important;
+    filter: none !important;
 }
 
 .pin-item img {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    /* Fill the container to avoid bars */
-    filter: grayscale(10%) contrast(1.1);
-    transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
-}
-
-.pin-item:hover {
-    transform: scale(1.05);
-    z-index: 100;
-    box-shadow: 0 30px 60px rgba(14, 165, 233, 0.3);
-    border-color: var(--primary);
+    /* Fill to ensure no black bars */
+    filter: contrast(1.1);
+    transition: all 0.8s cubic-bezier(0.23, 1, 0.32, 1);
 }
 
 .pin-item:hover img {
-    transform: scale(1.1);
-    filter: blur(5px) grayscale(0%) brightness(0.4);
+    transform: scale(1.15);
+    filter: blur(10px) brightness(0.35);
+}
+
+/* Feature last item to fill potential gaps */
+.pin-item:last-child {
+    flex-grow: 2;
 }
 
 /* Hover Overlay Styles */
@@ -201,10 +212,10 @@
     top: 50%;
     left: 50%;
     transform: translate(-50%, -40%);
-    width: 90%;
+    width: 85%;
     text-align: center;
     opacity: 0;
-    transition: all 0.4s ease;
+    transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
     z-index: 10;
     pointer-events: none;
 }
@@ -215,33 +226,52 @@
 }
 
 .pin-info h4 {
-    font-size: 1.8rem;
+    font-size: 2.2rem;
     color: white;
-    margin-bottom: 20px;
+    margin-bottom: 25px;
     font-weight: 900;
-    text-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
-    letter-spacing: -0.5px;
+    text-shadow: 0 5px 20px rgba(0, 0, 0, 0.8);
+    background: linear-gradient(to right, #fff, var(--primary));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
 }
 
 .pin-info p {
-    font-size: 1.05rem;
-    color: #cbd5e1;
-    line-height: 1.6;
-    font-weight: 500;
+    font-size: 1.15rem;
+    color: #e2e8f0;
+    line-height: 1.8;
+    font-weight: 400;
+    text-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
 }
 
-/* Remove Step Badge styles entirely */
-.step-badge {
-    display: none !important;
-}
-
-/* Lightbox - Minimal needed for DOM clean cleanup */
-.lightbox-modal {
-    display: none !important;
-}
-
+/* Cleaning up old Lightbox artifacts */
+.step-badge,
+.lightbox-modal,
 .gallery-focus-overlay {
     display: none !important;
+}
+
+/* Responsive adjustments for Flex */
+@media (max-width: 1024px) {
+    .pin-item {
+        flex: 1 1 calc(50% - 20px);
+    }
+}
+
+@media (max-width: 640px) {
+    .pin-item {
+        flex: 1 1 100%;
+        height: 300px;
+    }
+
+    .pin-item:hover {
+        flex: 1 1 100%;
+    }
+
+    .pin-info h4 {
+        font-size: 1.5rem;
+    }
 }
 
 /* --- LIGHTBOX MODAL ENHANCEMENTS (KEEP AS PLACEHOLDER) --- */
