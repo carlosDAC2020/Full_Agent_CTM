@@ -17,6 +17,11 @@
   <!-- Iconos -->
   <script src="https://unpkg.com/@phosphor-icons/web"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  
+  <!-- GSAP & Custom Styles -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+  <link rel="stylesheet" href="{{ url_for('static', path='css/landing_custom.css') }}">
 
   <style>
     :root {
@@ -610,6 +615,160 @@
     </div>
   </section>
 
+  <!-- === MAGAZINE SECTION === -->
+  <section id="magazine-showcase" class="landing-section dark-alt">
+    <div class="section-title reveal">
+      <h2>Gestión de Magazines</h2>
+      <p>De la investigación a la publicación en segundos.</p>
+    </div>
+
+    <!-- Intro Animation (Process Flow) -->
+    <div class="intro-anim-container">
+      <div class="anim-step">
+        <div class="anim-icon"><i class="ph-bold ph-tray"></i></div>
+        <div class="anim-label">Input</div>
+      </div>
+      <div class="anim-connector"></div>
+      <div class="anim-step">
+        <div class="anim-icon"><i class="ph-bold ph-gear-six"></i></div>
+        <div class="anim-label">Engine</div>
+      </div>
+      <div class="anim-connector"></div>
+      <div class="anim-step">
+        <div class="anim-icon"><i class="ph-bold ph-file-pdf"></i></div>
+        <div class="anim-label">Magazine</div>
+      </div>
+    </div>
+
+    <!-- Single Hero Image Showcase -->
+    <div class="mag-showcase">
+      <div class="mag-image-container">
+        <img src="{{ url_for('static', path='images/landing_demo/magazine/mag_home.png') }}" 
+             alt="Magazine Dashboard">
+      </div>
+      <div class="mag-content">
+        <h3>Curaduría al instante</h3>
+        <p>
+          Gestiona múltiples convocatorias en un "carrito" inteligente. 
+          Consolida la información, personaliza el diseño y genera un 
+          <strong>PDF maquetado profesionalmente</strong> o un visor flipbook 
+          listo para compartir con gerencia.
+        </p>
+        <ul style="list-style: none; padding: 0;">
+            <li style="margin-bottom: 15px; display: flex; align-items: center; gap: 10px; color: var(--text-light);">
+                <i class="ph-fill ph-check-circle" style="color: var(--primary);"></i> Diseño Automatizado
+            </li>
+            <li style="margin-bottom: 15px; display: flex; align-items: center; gap: 10px; color: var(--text-light);">
+                <i class="ph-fill ph-check-circle" style="color: var(--primary);"></i> Distribución por Email
+            </li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- === AGENT SECTION === -->
+  <section id="agent-process" class="landing-section">
+    <div class="section-title reveal">
+      <h2>Agentic Intelligence</h2>
+      <p>Tu analista I+D+i autónomo disponible 24/7.</p>
+    </div>
+
+    <!-- Intro Animation (Agent Flow) -->
+    <div class="intro-anim-container">
+      <div class="anim-step">
+        <div class="anim-icon"><i class="ph-bold ph-magnifying-glass"></i></div>
+        <div class="anim-label">Search</div>
+      </div>
+      <div class="anim-connector"></div>
+      <div class="anim-step">
+        <div class="anim-icon"><i class="ph-bold ph-brain"></i></div>
+        <div class="anim-label">Reason</div>
+      </div>
+      <div class="anim-connector"></div>
+      <div class="anim-step">
+        <div class="anim-icon"><i class="ph-bold ph-presentation-chart"></i></div>
+        <div class="anim-label">Output</div>
+      </div>
+    </div>
+
+    <!-- Pinterest Grid Gallery -->
+    <div class="pinterest-grid">
+      <!-- Item 1: Discovery -->
+      <div class="pin-item" 
+           data-img="{{ url_for('static', path='images/landing_demo/agent/agent_home.png') }}" 
+           data-title="Discovery" 
+           data-desc="El usuario filtra y selecciona una convocatoria oficial entre cientos de opciones nacionales e internacionales.">
+        <img src="{{ url_for('static', path='images/landing_demo/agent/agent_home.png') }}" alt="Discovery">
+        <div class="pin-info">
+          <h4>Discovery</h4>
+          <p>Selección de convocatorias.</p>
+        </div>
+      </div>
+
+      <!-- Item 2: Ingesta -->
+      <div class="pin-item" 
+           data-img="{{ url_for('static', path='images/landing_demo/agent/agent_ingest.png') }}" 
+           data-title="Ingesta Automática" 
+           data-desc="El agente analiza el PDF de la convocatoria y extrae: objetivos, financiamiento y fechas clave automáticamente.">
+        <img src="{{ url_for('static', path='images/landing_demo/agent/agent_ingest.png') }}" alt="Ingesta">
+        <div class="pin-info">
+          <h4>Ingesta</h4>
+          <p>Análisis de PDF y fechas.</p>
+        </div>
+      </div>
+
+      <!-- Item 3: Ideación -->
+      <div class="pin-item" 
+           data-img="{{ url_for('static', path='images/landing_demo/agent/agent_ideas.png') }}" 
+           data-title="Ideación Generativa" 
+           data-desc="El LLM propone 3-4 ideas de proyectos únicos alineados con la convocatoria.">
+        <img src="{{ url_for('static', path='images/landing_demo/agent/agent_ideas.png') }}" alt="Ideación">
+        <div class="pin-info">
+          <h4>Ideación</h4>
+          <p>Propuesta de proyectos.</p>
+        </div>
+      </div>
+
+      <!-- Item 4: Estructura -->
+      <div class="pin-item" 
+           data-img="{{ url_for('static', path='images/landing_demo/agent/agent_initial_squema.png') }}" 
+           data-title="Estructura Técnica" 
+           data-desc="Se genera el esquema base (Markdown/PDF) del proyecto, listo para ser expandido con investigación académica.">
+        <img src="{{ url_for('static', path='images/landing_demo/agent/agent_initial_squema.png') }}" alt="Estructura">
+        <div class="pin-info">
+          <h4>Estructura</h4>
+          <p>Esquema base del proyecto.</p>
+        </div>
+      </div>
+
+      <!-- Item 5: Entrega -->
+      <div class="pin-item" 
+           data-img="{{ url_for('static', path='images/landing_demo/agent/agent_final.png') }}" 
+           data-title="Entrega Final" 
+           data-desc="El agente entrega un reporte técnico completo, justificado científicamente y con apoyo visual generado por IA.">
+        <img src="{{ url_for('static', path='images/landing_demo/agent/agent_final.png') }}" alt="Entrega">
+        <div class="pin-info">
+          <h4>Entrega</h4>
+          <p>Reporte técnico completo.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- LIGHTBOX MODAL -->
+  <div id="lightbox" class="lightbox-modal">
+    <div class="lightbox-content">
+        <button class="lightbox-close">&times;</button>
+        <div class="lightbox-img-wrapper">
+            <img id="lightbox-img" src="" alt="Detail View">
+        </div>
+        <div class="lightbox-details">
+            <h3 id="lightbox-title">Titulo</h3>
+            <p id="lightbox-desc">Descripción...</p>
+        </div>
+    </div>
+  </div>
+
   <!-- API SECTION -->
   <section id="api" style="padding: 100px 5%; background: rgba(0,0,0,0.3);">
     <div class="section-title reveal">
@@ -691,6 +850,7 @@
     });
   </script>
 
+  <script src="{{ url_for('static', path='js/landing_app.js') }}"></script>
 </body>
 
 </html>

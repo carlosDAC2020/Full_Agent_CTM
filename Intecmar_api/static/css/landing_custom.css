@@ -1,0 +1,312 @@
+/* Landing Page Custom Styles */
+
+/* --- GENERAL SECTIONS --- */
+.landing-section {
+    padding: 100px 5%;
+    position: relative;
+    overflow: hidden;
+}
+
+.landing-section.dark-alt {
+    background: rgba(2, 6, 23, 0.5); /* Slightly different dark shade */
+}
+
+.intro-anim-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 40px;
+    margin-bottom: 60px;
+    min-height: 120px;
+}
+
+.anim-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+    opacity: 0; /* Hidden initially for GSAP */
+    transform: translateY(20px);
+}
+
+.anim-icon {
+    font-size: 3rem;
+    color: var(--primary);
+    background: rgba(14, 165, 233, 0.1);
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--border);
+    transition: 0.3s;
+}
+
+.anim-connector {
+    width: 60px;
+    height: 2px;
+    background: var(--border);
+    position: relative;
+    opacity: 0;
+}
+
+.anim-connector::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0;
+    width: 0%;
+    height: 2px;
+    background: var(--primary);
+    transform: translateY(-50%);
+    transition: width 0.5s ease;
+}
+
+.anim-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.9rem;
+    color: var(--text-light);
+}
+
+/* --- MAGAZINE SECTION (Single Hero Image) --- */
+.mag-showcase {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 50px;
+    align-items: center;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.mag-image-container {
+    position: relative;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+    opacity: 0;
+    transform: translateX(-50px);
+}
+
+.mag-image-container img {
+    width: 100%;
+    height: auto;
+    display: block;
+    transition: transform 0.5s ease;
+}
+
+.mag-image-container:hover img {
+    transform: scale(1.02);
+}
+
+.mag-content {
+    opacity: 0;
+    transform: translateX(50px);
+}
+
+.mag-content h3 {
+    font-size: 2rem;
+    margin-bottom: 20px;
+    color: white;
+}
+
+.mag-content p {
+    color: var(--text-light);
+    font-size: 1.1rem;
+    line-height: 1.6;
+    margin-bottom: 30px;
+}
+
+/* --- AGENT SECTION (Pinterest/Masonry Grid) --- */
+.pinterest-grid {
+    column-count: 3;
+    column-gap: 20px;
+    padding: 20px 0;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.pin-item {
+    break-inside: avoid;
+    margin-bottom: 20px;
+    position: relative;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    background: var(--bg-card);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    cursor: pointer;
+    opacity: 0; /* Controlled by GSAP stagger */
+}
+
+.pin-item:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(14, 165, 233, 0.15);
+    border-color: var(--primary);
+    z-index: 2;
+}
+
+.pin-item img {
+    width: 100%;
+    display: block;
+    border-bottom: 1px solid var(--border);
+}
+
+.pin-info {
+    padding: 15px;
+    background: rgba(15, 23, 42, 0.9);
+}
+
+.pin-info h4 {
+    font-size: 1rem;
+    color: white;
+    margin-bottom: 5px;
+}
+
+.pin-info p {
+    font-size: 0.85rem;
+    color: var(--text-light);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* --- LIGHTBOX MODAL --- */
+.lightbox-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.9);
+    backdrop-filter: blur(10px);
+    z-index: 10000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+}
+
+.lightbox-modal.active {
+    opacity: 1;
+    pointer-events: auto;
+    cursor: zoom-out;
+}
+
+.lightbox-content {
+    max-width: 90%;
+    max-height: 90vh;
+    display: flex;
+    gap: 30px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 10px;
+    cursor: default;
+    transform: scale(0.9);
+    transition: transform 0.3s ease;
+}
+
+.lightbox-modal.active .lightbox-content {
+    transform: scale(1);
+}
+
+.lightbox-img-wrapper {
+    flex: 2;
+    overflow: hidden;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    background: #000;
+}
+
+.lightbox-img-wrapper img {
+    width: 100%;
+    height: auto;
+    max-height: 80vh;
+    object-fit: contain;
+}
+
+.lightbox-details {
+    flex: 1;
+    padding: 20px;
+    min-width: 300px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.lightbox-details h3 {
+    font-size: 1.8rem;
+    color: var(--primary);
+    margin-bottom: 15px;
+}
+
+.lightbox-details p {
+    color: #e2e8f0;
+    line-height: 1.6;
+    font-size: 1.05rem;
+}
+
+.lightbox-close {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    font-size: 2rem;
+    color: white;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.lightbox-close:hover {
+    color: var(--primary);
+    transform: rotate(90deg);
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+    .mag-showcase {
+        grid-template-columns: 1fr;
+    }
+    .pinterest-grid {
+        column-count: 2;
+    }
+    .lightbox-content {
+        flex-direction: column;
+        overflow-y: auto;
+    }
+    .lightbox-img-wrapper {
+        flex: auto;
+    }
+    .lightbox-details {
+        min-width: unset;
+    }
+}
+
+@media (max-width: 600px) {
+    .pinterest-grid {
+        column-count: 1;
+    }
+    .intro-anim-container {
+        flex-direction: column;
+        gap: 20px;
+    }
+    .anim-connector {
+        width: 2px;
+        height: 40px;
+    }
+    .anim-connector::after {
+        width: 2px;
+        height: 0%;
+        top: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        transition: height 0.5s ease;
+    }
+}

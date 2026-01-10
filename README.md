@@ -50,7 +50,7 @@ La plataforma ofrece una experiencia fluida dividida en dos módulos principales
 
 ### **2. Centro de Gestión de Magazines 📚**
 
-> 💡 **Nota:** Inserta aquí un GIF/Video corto mostrando la selección de artículos y la generación instantánea del PDF de la revista.
+![ Inserta aquí un GIF/Video corto mostrando la selección de artículos y la generación instantánea del PDF de la revista](/docs/images/agent_final.png)
 
 *   **Curaduría Inteligente**: Selecciona múltiples convocatorias en un "carrito" para consolidarlas.
 *   **Diseño Automatizado**: Genera un PDF maquetado profesionalmente con un solo clic.
@@ -346,6 +346,7 @@ BASE_URL=http://localhost:8000
 # --- Inteligencia Artificial ---
 GEMINI_API_KEY=tu_clave_de_google_ai
 NANO_BANANA_API_KEY=tu_clave_para_generacion_de_imagenes
+NANO_BANANA_MODEL=gemini-2.5-flash-image
 
 # --- Motores de Búsqueda ---
 TAVILY_API_KEY=tu_clave_de_tavily
