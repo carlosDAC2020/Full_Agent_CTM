@@ -78,12 +78,18 @@ def create_activity_schedule(state: GraphState) -> dict:
     if generated_output.activity_schedule:
         report_components.execution_plan.activity_schedule = generated_output.activity_schedule
         
-    # Actualizamos la duración en GeneralInfo
+    # Actualizamos la duración en GeneralInfo SOLO si no existe previamente
+    # Esto preserva el valor definido en el Paso 3 (esquema inicial)
     if generated_output.duration_months:
         if not report_components.general_info:
             report_components.general_info = GeneralInfo()
-        report_components.general_info.duration_months = generated_output.duration_months
-        print(f"--- Duración del proyecto actualizada: {generated_output.duration_months} meses ---")
+        
+        # Solo actualizar si no hay un valor previo
+        if not report_components.general_info.duration_months:
+            report_components.general_info.duration_months = generated_output.duration_months
+            print(f"--- Duración del proyecto establecida: {generated_output.duration_months} meses ---")
+        else:
+            print(f"--- Duración del proyecto preservada: {report_components.general_info.duration_months} meses (ignorando {generated_output.duration_months}) ---")
     
     # 6. Mensaje de confirmación
     message = AIMessage(content=f"Cronograma generado (Duración: {generated_output.duration_months} meses). Procediendo a matriz de riesgos.")
