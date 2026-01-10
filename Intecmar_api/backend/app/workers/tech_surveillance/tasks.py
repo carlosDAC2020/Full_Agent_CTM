@@ -14,7 +14,8 @@ from backend.agent.tech_surveillance.state import (
     ReportSchema, 
     DocsPaths, 
     proposalIdeaResponse, 
-    ProposalIdea
+    ProposalIdea,
+    GeneralInfo
 )
 
 # --- IMPORTACIONES DE BASE DE DATOS ---
