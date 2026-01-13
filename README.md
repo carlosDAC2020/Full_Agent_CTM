@@ -53,8 +53,22 @@ La plataforma ofrece una experiencia fluida dividida en dos módulos principales
 ![ Inserta aquí un GIF/Video corto mostrando la selección de artículos y la generación instantánea del PDF de la revista](/docs/images/mag_home.png)
 
 *   **Curaduría Inteligente**: Selecciona múltiples convocatorias en un "carrito" para consolidarlas.
+![ seleccion de convocatirias para generacion de revistas](/docs/images/mag_curaduria_intelogente.png)
+
 *   **Diseño Automatizado**: Genera un PDF maquetado profesionalmente con un solo clic.
+<table border="0">
+ <tr>
+    <td><img src="/docs/images/mag_pdf_1.png" width="300" height="200"></td>
+    <td><img src="/docs/images/mag_pdf_2.png" width="300" height="200"></td>
+ </tr>
+ <tr>
+    <td><img src="/docs/images/mag_pdf_3.png" width="300" height="200"></td>
+    <td><img src="/docs/images/mag_pdf_4.png" width="300" height="200"></td>
+ </tr>
+</table>
+
 *   **Distribución**: Envío directo por correo electrónico a listas de suscriptores desde la misma interfaz.
+![ Envio de emails ](/docs/images/mag_email_send.png)
 
 ---
 
@@ -500,17 +514,3 @@ Para obtener el detalle técnico exacto de cada endpoint (esquemas JSON de entra
 > [!TIP]
 > Todos los endpoints están enriquecidos con descripciones y metadatos directamente en el código fuente para garantizar que la documentación esté siempre sincronizada con la lógica del servidor.
 
----
-
-## **🚀 Roadmap**
-
-*   [ ] **Dashboard de Analítica**: Métricas de uso de los agentes y temas más buscados.
-*   [ ] **Soporte Multi-LLM**: Alternar entre GPT-4, Gemini y Claude.
-*   [ ] **App Móvil**: Versión React Native para consumir revistas y alertas.
-*   [ ] **Colaboración en Tiempo Real**: Edición colaborativa de reportes generados.
-
----
-
-<p align="center">
-  <sub>Desarrollado con ❤️ para Intecmar</sub>
-</p>
