@@ -50,25 +50,36 @@ La plataforma ofrece una experiencia fluida dividida en dos módulos principales
 
 ### **2. Centro de Gestión de Magazines 📚**
 
-![ Inserta aquí un GIF/Video corto mostrando la selección de artículos y la generación instantánea del PDF de la revista](/docs/images/mag_home.png)
+<div align="center">
+  <img src="/docs/images/mag_home.png" alt="Panel Principal de Magazines" width="850">
+  <p><i>Interfaz central para la gestión, curaduría y generación de revistas digitales interactivas.</i></p>
+</div>
 
-*   **Curaduría Inteligente**: Selecciona múltiples convocatorias en un "carrito" para consolidarlas.
-![ seleccion de convocatirias para generacion de revistas](/docs/images/mag_curaduria_intelogente.png)
+*   **Curaduría Inteligente** 🛒: Selecciona múltiples convocatorias en un "carrito" para consolidarlas en una única publicación.
+    <div align="center">
+      <img src="/docs/images/mag_curaduria_intelogente.png" alt="Selección de convocatorias" width="750" style="border-radius: 8px; border: 1px solid #333;">
+    </div>
 
-*   **Diseño Automatizado**: Genera un PDF maquetado profesionalmente con un solo clic.
-<table border="0">
- <tr>
-    <td><img src="/docs/images/mag_pdf_1.png" width="300" height="200"></td>
-    <td><img src="/docs/images/mag_pdf_2.png" width="300" height="200"></td>
- </tr>
- <tr>
-    <td><img src="/docs/images/mag_pdf_3.png" width="300" height="200"></td>
-    <td><img src="/docs/images/mag_pdf_4.png" width="300" height="200"></td>
- </tr>
-</table>
+*   **Diseño Automatizado** 🎨: Genera un PDF maquetado profesionalmente con un solo clic, respetando la identidad corporativa.
+    <div align="center">
+      <table style="border: none; background: transparent;">
+        <tr style="border: none; background: transparent;">
+          <td style="border: none; padding: 5px;"><img src="/docs/images/mag_pdf_1.png" width="380" alt="Vista PDF 1" style="border-radius: 4px;"></td>
+          <td style="border: none; padding: 5px;"><img src="/docs/images/mag_pdf_2.png" width="380" alt="Vista PDF 2" style="border-radius: 4px;"></td>
+        </tr>
+        <tr style="border: none; background: transparent;">
+          <td style="border: none; padding: 5px;"><img src="/docs/images/mag_pdf_3.png" width="380" alt="Vista PDF 3" style="border-radius: 4px;"></td>
+          <td style="border: none; padding: 5px;"><img src="/docs/images/mag_pdf_4.png" width="380" alt="Vista PDF 4" style="border-radius: 4px;"></td>
+        </tr>
+      </table>
+      <p><i>Ejemplo de maquetación automática: Portada, contenido interno y cierre institucional.</i></p>
+    </div>
 
-*   **Distribución**: Envío directo por correo electrónico a listas de suscriptores desde la misma interfaz.
-![ Envio de emails ](/docs/images/mag_email_send.png)
+*   **Distribución Eficiente** 📧: Envío directo por correo electrónico a listas de suscriptores desde la misma interfaz.
+    <div align="center">
+      <img src="/docs/images/mag_email_send.png" alt="Envío de emails" width="750" style="border-radius: 8px; border: 1px solid #333;">
+    </div>
+
 
 ---
 
