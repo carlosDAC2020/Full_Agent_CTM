@@ -50,7 +50,7 @@ La plataforma ofrece una experiencia fluida dividida en dos módulos principales
 
 ### **2. Centro de Gestión de Magazines 📚**
 
-![ Inserta aquí un GIF/Video corto mostrando la selección de artículos y la generación instantánea del PDF de la revista](/docs/images/agent_final.png)
+![ Inserta aquí un GIF/Video corto mostrando la selección de artículos y la generación instantánea del PDF de la revista](/docs/images/mag_home.png)
 
 *   **Curaduría Inteligente**: Selecciona múltiples convocatorias en un "carrito" para consolidarlas.
 *   **Diseño Automatizado**: Genera un PDF maquetado profesionalmente con un solo clic.
