@@ -17,7 +17,12 @@ from backend.app.services.core.storage import storage_service
 router = APIRouter(tags=["Utilidades del Sistema"])
 
 # Initialize templates
-_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
+# Estructura del proyecto:
+#   Intecmar_api/
+#     backend/
+#       app/api/endpoints/utils.py  (este archivo)
+#     templates/                    (carpeta real de templates)
+_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..', '..'))
 templates = Jinja2Templates(directory=os.path.join(_root, "templates"))
 
 @router.get("/viewer", summary="Visor de PDF", description="Sirve la página del visor de PDF tipo flipbook.")
