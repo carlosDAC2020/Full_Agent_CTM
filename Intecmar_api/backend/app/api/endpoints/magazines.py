@@ -194,8 +194,9 @@ async def generate_pdf_from_ids(
         
         user_folder = f"{current_user.email}/Magazines"
         object_key = f"{user_folder}/{pdf_name}"
+        pdf_stream_path = f"/api/stream_pdf?key={object_key}"
 
-        # Persist DB
+        # Persist DB (incluyendo metadatos que antes iban al sidecar JSON)
         try:
             size_bytes = os.path.getsize(pdf_path) if pdf_path and os.path.exists(pdf_path) else None
             title = (payload.title or '').strip() or f"Magazine personalizado ({len(selected)} ítems)"
@@ -204,27 +205,15 @@ async def generate_pdf_from_ids(
                 filename=pdf_name,
                 title=title,
                 size_bytes=size_bytes,
+                selected_ids=[int(i) for i in (payload.ids or [])],
+                meta={
+                    "pdf_stream_path": pdf_stream_path,
+                },
             )
             db.add(row)
             db.commit()
         except Exception as e:
             print(f"No se pudo guardar Magazine en DB: {e}")
-            
-        # Sidecar JSON
-        try:
-            sidecar_name = pdf_name[:-4] + 'json' if pdf_name.endswith('.pdf') else pdf_name + '.json'
-            sidecar_path = os.path.join(settings.OUTPUTS_DIR, sidecar_name)
-            meta = {
-                "selected_ids": [int(i) for i in (payload.ids or [])],
-                "title": title,
-                "user_id": current_user.id,
-                "created_at": datetime.utcnow().isoformat(),
-                # URL absoluta de API para el PDF en streaming
-                "pdf": f"/api/stream_pdf?key={object_key}",
-            }
-            save_json_dict(sidecar_path, meta)
-        except Exception as e:
-            print(f"No se pudo guardar sidecar JSON: {e}")
 
         # Upload to MinIO en background (no bloquea la respuesta al usuario)
         try:
@@ -247,7 +236,7 @@ async def generate_pdf_from_ids(
             print(f"No se pudo subir el PDF a MinIO: {e}")
             
         # Rutas reales expuestas por la API (api_v1 se monta en /api)
-        pdf_stream_url = f"/api/stream_pdf?key={object_key}"
+        pdf_stream_url = pdf_stream_path
         viewer_url = f"/api/viewer?file={pdf_stream_url}"
 
         return {
@@ -269,28 +258,22 @@ async def user_history(current_user: models.User = Depends(get_current_user), db
     try:
         rows = db.query(models.Magazine).filter(models.Magazine.user_id == current_user.id).order_by(models.Magazine.created_at.desc()).limit(20).all()
         for r in rows:
-            meta_url = None
-            try:
-                if r.filename and r.filename.lower().endswith('.pdf'):
-                    sidecar = r.filename[:-4] + 'json'
-                    if os.path.exists(os.path.join(settings.OUTPUTS_DIR, sidecar)):
-                        meta_url = f"/outputs/{sidecar}"
-            except Exception: pass
-            
-            # Generate URL for viewer - try MinIO first, fallback to local
+            # Construir URLs solo desde la BD (meta) y MinIO, sin tocar disco
             pdf_url = None
             viewer_url = None
-            if r.filename:
-                # Try local first
-                local_path = os.path.join(settings.OUTPUTS_DIR, r.filename)
-                if os.path.exists(local_path):
-                    pdf_url = f"/outputs/{r.filename}"
-                    viewer_url = f"/viewer?file=/outputs/{r.filename}"
-                else:
-                    # Use MinIO URL
-                    minio_url = f"/api/minio_pdf/{current_user.email}/{r.filename}"
-                    pdf_url = minio_url
-                    viewer_url = f"/viewer?file={minio_url}"
+
+            meta = r.meta or {}
+            if isinstance(meta, dict):
+                stream_path = meta.get("pdf_stream_path")
+                if stream_path:
+                    pdf_url = stream_path
+                    viewer_url = f"/api/viewer?file={stream_path}"
+
+            # Fallback para revistas antiguas sin meta
+            if not pdf_url and r.filename:
+                minio_url = f"/api/minio_pdf/{current_user.email}/{r.filename}"
+                pdf_url = minio_url
+                viewer_url = f"/api/viewer?file={minio_url}"
             
             items.append({
                 "id": r.id,
@@ -299,8 +282,10 @@ async def user_history(current_user: models.User = Depends(get_current_user), db
                 "status": "completed",
                 "url": pdf_url,
                 "viewer_url": viewer_url,
-                "meta_url": meta_url,
+                "meta_url": None,
                 "kind": "magazine",
+                "selected_ids": r.selected_ids or [],
+                "meta": meta,
             })
     except Exception: pass
 

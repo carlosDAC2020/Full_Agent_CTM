@@ -36,6 +36,10 @@ class Magazine(Base):
     size_bytes = Column(Integer, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
 
+    # Nuevos metadatos para sustituir el sidecar JSON en disco
+    selected_ids = Column(JSON, nullable=True)
+    meta = Column(JSON, nullable=True)
+
     user = relationship("User", back_populates="magazines")
 
 
