@@ -1,7 +1,9 @@
 import os
+import io
 from typing import List, Optional, Dict, Any
 from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
+from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 
 from backend.app.core.config import settings
@@ -17,6 +19,18 @@ from backend.app.services.core.storage import storage_service
 from backend.app.utils.files import load_json_list, save_json_dict
 
 router = APIRouter(tags=["Revista Digital"])
+
+
+@router.get("/stream_pdf", summary="Stream de PDF desde MinIO", description="Lee un PDF desde MinIO y lo transmite al navegador.")
+async def stream_pdf(key: str):
+    if not key:
+        raise HTTPException(status_code=400, detail="Parámetro 'key' requerido")
+
+    data = storage_service.download_file(key)
+    if not data:
+        raise HTTPException(status_code=404, detail="Archivo no encontrado en almacenamiento")
+
+    return StreamingResponse(io.BytesIO(data), media_type="application/pdf")
 
 # --- Saved Items ---
 @router.get("/saved", summary="Listar mis favoritos", description="Obtiene la lista de convocatorias guardadas por el usuario actual.")
@@ -178,9 +192,12 @@ async def generate_pdf_from_ids(
         # Use Service
         pdf_path, pdf_name = generate_pdf(selected)
         
+        user_folder = f"{current_user.email}/Magazines"
+        object_key = f"{user_folder}/{pdf_name}"
+
         # Persist DB
         try:
-            size_bytes = os.path.getsize(pdf_path)
+            size_bytes = os.path.getsize(pdf_path) if pdf_path and os.path.exists(pdf_path) else None
             title = (payload.title or '').strip() or f"Magazine personalizado ({len(selected)} ítems)"
             row = models.Magazine(
                 user_id=current_user.id,
@@ -202,32 +219,39 @@ async def generate_pdf_from_ids(
                 "title": title,
                 "user_id": current_user.id,
                 "created_at": datetime.utcnow().isoformat(),
-                "pdf": f"/outputs/{pdf_name}",
+                "pdf": f"/api/magazines/stream_pdf?key={object_key}",
             }
             save_json_dict(sidecar_path, meta)
         except Exception as e:
             print(f"No se pudo guardar sidecar JSON: {e}")
 
-        # Upload to MinIO in background (non-blocking for the user)
+        # Upload to MinIO en background (no bloquea la respuesta al usuario)
         try:
             if pdf_path and os.path.exists(pdf_path):
                 with open(pdf_path, "rb") as f:
                     pdf_bytes = f.read()
 
-                user_folder = f"{current_user.email}/Magazines"
                 background_tasks.add_task(
                     storage_service.upload_file,
                     file_path_or_data=pdf_bytes,
-                    object_key=f"{user_folder}/{pdf_name}",
+                    object_key=object_key,
                 )
+
+                try:
+                    os.remove(pdf_path)
+                except Exception as cleanup_err:
+                    print(f"No se pudo eliminar archivo temporal PDF: {cleanup_err}")
         except Exception as e:
             # No interrumpe la respuesta al usuario si falla el upload
             print(f"No se pudo subir el PDF a MinIO: {e}")
             
+        pdf_stream_url = f"/api/magazines/stream_pdf?key={object_key}"
+        viewer_url = f"/viewer?file={pdf_stream_url}"
+
         return {
             "status": "success", 
-            "pdf_url": f"/outputs/{pdf_name}", 
-            "viewer_url": f"/viewer?file=/outputs/{pdf_name}"
+            "pdf_url": pdf_stream_url,
+            "viewer_url": viewer_url,
         }
     except HTTPException: raise
     except Exception as e:
@@ -322,10 +346,10 @@ async def user_history(current_user: models.User = Depends(get_current_user), db
                     "fuentes": "Descubrimiento de Fuentes",
                 }
                 items.insert(0, {
-                     "id": tid,
-                     "name": name_map.get(flow_type, flow_type.title()),
-                     "date": kv.get("created"),
-                     "status": "process" if st in ("queued", "running") else st or "process",
+                    "id": tid,
+                    "name": name_map.get(flow_type, flow_type.title()),
+                    "date": kv.get("created"),
+                    "status": "process" if st in ("queued", "running") else st or "process",
                 })
         except Exception: pass
         
