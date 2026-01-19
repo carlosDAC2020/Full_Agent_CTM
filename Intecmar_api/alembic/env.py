@@ -1,7 +1,14 @@
 import os
+import sys
 from logging.config import fileConfig
 from sqlalchemy import engine_from_config, pool
 from alembic import context
+
+# Asegurar que el directorio raíz del proyecto esté en sys.path
+current_dir = os.path.dirname(os.path.abspath(__file__))
+project_root = os.path.abspath(os.path.join(current_dir, ".."))
+if project_root not in sys.path:
+    sys.path.append(project_root)
 
 # this is the Alembic Config object, which provides access to the values within
 config = context.config
@@ -11,8 +18,8 @@ if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
 # Ensure models are imported so metadata is populated
-from backend.db.session import Base
-from backend.db import models  # noqa: F401
+from backend.app.db.session import Base
+from backend.app.db import models  # noqa: F401
 
 target_metadata = Base.metadata
 
