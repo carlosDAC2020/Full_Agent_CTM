@@ -219,7 +219,8 @@ async def generate_pdf_from_ids(
                 "title": title,
                 "user_id": current_user.id,
                 "created_at": datetime.utcnow().isoformat(),
-                "pdf": f"/api/magazines/stream_pdf?key={object_key}",
+                # URL absoluta de API para el PDF en streaming
+                "pdf": f"/api/stream_pdf?key={object_key}",
             }
             save_json_dict(sidecar_path, meta)
         except Exception as e:
@@ -245,8 +246,9 @@ async def generate_pdf_from_ids(
             # No interrumpe la respuesta al usuario si falla el upload
             print(f"No se pudo subir el PDF a MinIO: {e}")
             
-        pdf_stream_url = f"/api/magazines/stream_pdf?key={object_key}"
-        viewer_url = f"/viewer?file={pdf_stream_url}"
+        # Rutas reales expuestas por la API (api_v1 se monta en /api)
+        pdf_stream_url = f"/api/stream_pdf?key={object_key}"
+        viewer_url = f"/api/viewer?file={pdf_stream_url}"
 
         return {
             "status": "success", 
