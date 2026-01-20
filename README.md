@@ -27,7 +27,7 @@
 **Intecmar AI Platform** es una solución integral diseñada para modernizar y automatizar los procesos de vigilancia tecnológica y gestión de publicaciones digitales. La plataforma combina una arquitectura robusta de microservicios con capacidades avanzadas de Inteligencia Artificial Generativa.
 
 Su propuesta de valor reside en dos pilares fundamentales:
-1.  **Vigilancia Tecnológica Autónoma**: Un agente inteligente capaz de ingerir convocatorias, generar ideas de proyectos, investigar en fuentes académicas (Arxiv, Wikipedia) y redactar informes técnicos completos con diagramas y esquemas.
+1.  **Vigilancia Tecnológica Autónoma**: Un agente inteligente capaz de ingerir convocatorias, generar ideas de proyectos, investigar en fuentes académicas (Arxiv, Semantic Scholar) y redactar informes técnicos completos con diagramas y esquemas.
 2.  **Gestión de Revista Digital**: Un sistema fluido para la maquetación, generación y visualización de revistas digitales interactivas, facilitando la difusión del conocimiento.
 
 ---
