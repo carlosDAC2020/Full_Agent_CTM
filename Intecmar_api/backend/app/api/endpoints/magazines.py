@@ -25,7 +25,7 @@ class ConvocatoriaOut(BaseModel):
     id: int
     title: str
     description: Optional[str] = None
-    keywords: Optional[List[str]] = []
+    keywords: Optional[list] = []
     source: Optional[str] = None
     type: Optional[str] = None
     url: Optional[str] = None
@@ -35,8 +35,8 @@ class ConvocatoriaOut(BaseModel):
     fecha_cierre: Optional[datetime] = None
     type_financy: Optional[str] = None
     monto: Optional[str] = None
-    requisitos: Optional[List[str]] = []
-    beneficios: Optional[List[str]] = []
+    requisitos: Optional[list] = []
+    beneficios: Optional[list] = []
     lugar: Optional[str] = None
 
     class Config:
@@ -79,7 +79,6 @@ async def list_convocatorias(db: Session = Depends(get_db)):
         )
         .all()
     )
-    print(f"DEBUG TYPE: {ConvocatoriaOut.model_fields['keywords'].annotation}")
     return rows
 
 @router.post("/saved", status_code=201, summary="Guardar favorito", description="Añade una convocatoria a la lista de favoritos del usuario.")
