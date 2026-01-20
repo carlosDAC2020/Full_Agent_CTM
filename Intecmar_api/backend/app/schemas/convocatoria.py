@@ -18,8 +18,8 @@ class ConvocatoriaOut(BaseModel):
     fecha_cierre: Optional[date] = None
     type_financy: Optional[str] = None
     monto: Optional[str] = None
-    requisitos: Optional[list] = None
-    beneficios: Optional[list] = None
+    requisitos: Optional[List[str]] = None
+    beneficios: Optional[List[str]] = None
     lugar: Optional[str] = None
 
     class Config:
