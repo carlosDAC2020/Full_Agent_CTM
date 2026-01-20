@@ -731,7 +731,9 @@
                             li.style.cursor = 'pointer';
                             li.addEventListener('click', () => {
                                 const pdfUrl = String(item.url);
-                                const viewerUrl = `/viewer?file=${encodeURIComponent(pdfUrl)}`;
+                                // Usar viewer_url del backend si viene definido; si no, construir con /api/viewer
+                                const backendViewerUrl = item.viewer_url ? String(item.viewer_url) : null;
+                                const viewerUrl = backendViewerUrl || `/api/viewer?file=${encodeURIComponent(pdfUrl)}`;
                                 // Abrir visor
                                 window.open(viewerUrl, '_blank', 'noopener');
                                 // Abrir PDF directo (ligero retraso para evitar bloqueos de popups en algunos navegadores)
