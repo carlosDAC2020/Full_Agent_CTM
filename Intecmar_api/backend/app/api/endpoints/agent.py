@@ -16,12 +16,34 @@ from backend.app.core.security import get_current_user
 from backend.app.db.models import User
 
 import json
-from typing import List
+from typing import List, Optional
+from pydantic import BaseModel
 from backend.app.services.core.storage import storage_service
 from backend.app.db.models import Convocatoria
-from backend.app.schemas.requests import IngestRequest, SelectionRequest, NextStepRequest, ConvocatoriaOut
 
 router = APIRouter(prefix="/agent", tags=["Agente I+D+i (Wizard)"])
+
+
+class ConvocatoriaOut(BaseModel):
+    id: int
+    title: str
+    description: Optional[str] = None
+    keywords: Optional[list] = []
+    source: Optional[str] = None
+    type: Optional[str] = None
+    url: Optional[str] = None
+    created_at: Optional[str] = None  # se serializa como ISO
+    fecha_inicio: Optional[str] = None
+    deadline: Optional[str] = None
+    fecha_cierre: Optional[str] = None
+    type_financy: Optional[str] = None
+    monto: Optional[str] = None
+    requisitos: Optional[list] = []
+    beneficios: Optional[list] = []
+    lugar: Optional[str] = None
+
+    class Config:
+        from_attributes = True
 
 @router.get("/convocatorias", response_model=List[ConvocatoriaOut], summary="Listar convocatorias", description="Obtiene todas las convocatorias guardadas en el sistema para ser usadas como base en una sesión del agente.")
 async def list_convocatorias(db: Session = Depends(get_db)):
