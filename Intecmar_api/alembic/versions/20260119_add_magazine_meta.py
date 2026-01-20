@@ -11,7 +11,8 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision = "20260119_add_magazine_meta"
-down_revision = "54be63374743_add_flows_table"
+# La migración previa es 54be63374743_add_flows_table.py, cuyo revision ID es "54be63374743"
+down_revision = "54be63374743"
 branch_labels = None
 depends_on = None
 
