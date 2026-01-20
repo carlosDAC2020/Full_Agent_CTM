@@ -8,7 +8,7 @@ class ConvocatoriaOut(BaseModel):
     id: int
     title: str
     description: Optional[str] = None
-    keywords: Optional[List[str]] = None
+    keywords: Optional[List[str]] = []
     source: Optional[str] = None
     type: Optional[str] = None
     url: Optional[str] = None
@@ -18,8 +18,8 @@ class ConvocatoriaOut(BaseModel):
     fecha_cierre: Optional[date] = None
     type_financy: Optional[str] = None
     monto: Optional[str] = None
-    requisitos: Optional[List[str]] = None
-    beneficios: Optional[List[str]] = None
+    requisitos: Optional[List[str]] = []
+    beneficios: Optional[List[str]] = []
     lugar: Optional[str] = None
 
     class Config:
