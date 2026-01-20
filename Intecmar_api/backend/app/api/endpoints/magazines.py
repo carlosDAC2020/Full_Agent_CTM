@@ -58,6 +58,7 @@ async def list_convocatorias(db: Session = Depends(get_db)):
         )
         .all()
     )
+    print(f"DEBUG TYPE: {ConvocatoriaOut.model_fields['keywords'].annotation}")
     return rows
 
 @router.post("/saved", status_code=201, summary="Guardar favorito", description="Añade una convocatoria a la lista de favoritos del usuario.")
