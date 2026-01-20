@@ -5,13 +5,13 @@ from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
+from pydantic import BaseModel
 
 from backend.app.core.config import settings
 from backend.app.db.session import get_db
 from backend.app.db import models
 from backend.app.core.security import get_current_user
 from backend.app.schemas.magazine import GenerateRequest, IdsRequest, SavedCreate
-from backend.app.schemas.convocatoria import ConvocatoriaOut
 from backend.app.services.magazine.redis_service import get_redis, task_key
 from backend.app.services.magazine.agent_service import run_magazine_generation_stream
 from backend.app.services.magazine.pdf_engine import generate_pdf
@@ -20,6 +20,27 @@ from backend.app.utils.files import load_json_list, save_json_dict
 
 router = APIRouter(tags=["Revista Digital"])
 
+
+class ConvocatoriaOut(BaseModel):
+    id: int
+    title: str
+    description: Optional[str] = None
+    keywords: Optional[List[str]] = []
+    source: Optional[str] = None
+    type: Optional[str] = None
+    url: Optional[str] = None
+    created_at: Optional[datetime] = None
+    fecha_inicio: Optional[datetime] = None
+    deadline: Optional[datetime] = None
+    fecha_cierre: Optional[datetime] = None
+    type_financy: Optional[str] = None
+    monto: Optional[str] = None
+    requisitos: Optional[List[str]] = []
+    beneficios: Optional[List[str]] = []
+    lugar: Optional[str] = None
+
+    class Config:
+        from_attributes = True
 
 @router.get("/stream_pdf", summary="Stream de PDF desde MinIO", description="Lee un PDF desde MinIO y lo transmite al navegador.")
 async def stream_pdf(key: str):
