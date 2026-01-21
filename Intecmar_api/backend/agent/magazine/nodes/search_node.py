@@ -17,17 +17,29 @@ class LegacySSLAdapter(HTTPAdapter):
 
     def init_poolmanager(self, connections, maxsize, block=False):
         ctx = create_urllib3_context()
-        # Alinear el contexto con verify=False: no verificar hostname ni certificado
         try:
+            # Desactivar verificación de hostname y certificados
             ctx.check_hostname = False
             ctx.verify_mode = ssl.CERT_NONE
-        except Exception:
-            pass
-        try:
-            # Bajar el nivel de seguridad para aceptar ciphers viejos
-            ctx.set_ciphers("DEFAULT@SECLEVEL=1")
-        except Exception:
-            pass
+
+            # Permitir TLS versiones antiguas (1.0+)
+            try:
+                ctx.minimum_version = ssl.TLSVersion.TLSv1
+            except Exception:
+                # En versiones antiguas de Python esta propiedad puede no existir
+                pass
+
+            # OpenSSL 3: Habilitar modo legado (OP_LEGACY_SERVER_CONNECT = 0x4)
+            try:
+                ctx.options |= 0x4
+            except Exception:
+                pass
+
+            # Configurar Ciphers al nivel de seguridad 0 (el más bajo posible)
+            ctx.set_ciphers('DEFAULT@SECLEVEL=0')
+        except Exception as e:
+            print(f"Advertencia configurando SSL Legacy: {e}")
+
         self.poolmanager = poolmanager.PoolManager(
             num_pools=connections,
             maxsize=maxsize,
