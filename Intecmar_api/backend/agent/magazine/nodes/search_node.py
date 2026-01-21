@@ -1,22 +1,35 @@
 from ..state import AgentState
-from .common import _load_institutional_sources_db, INSTITUTIONAL_SOURCES
-from ..tools import search_all
+import requests
+from bs4 import BeautifulSoup
 
 
 def nodo_busqueda(state: AgentState) -> AgentState:
-    print("--- 🔍 BUSCANDO EN LA WEB ---")
+    print("--- 🔍 BUSCANDO EN FUENTES INSTITUCIONALES ---")
     resultados = []
-    for query in state['consultas_busqueda']:
-        print(f"Buscando: {query}")
-        # Combinar Tavily + Brave, deduplicado
-        combinados = search_all(query, tavily_max=1, brave_max=1)
-        resultados.extend(combinados)
-    # Añadir fuentes institucionales como semillas (dinámicas desde BD)
-    dynamic_sources = _load_institutional_sources_db() or INSTITUTIONAL_SOURCES
-    for src in dynamic_sources:
-        resultados.append({
-            "url": src["url"],
-            "title": src["name"],
-            "content": ""
-        })
+
+    urls = state.get("consultas_busqueda", []) or []
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+        "(KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+    }
+
+    for i, url in enumerate(urls):
+        print(f"Visitando fuente institucional ({i+1}/{len(urls)}): {url}")
+        try:
+            resp = requests.get(url, timeout=20, headers=headers)
+            resp.raise_for_status()
+            soup = BeautifulSoup(resp.content, "html.parser")
+
+            body = soup.body or soup
+            texto = body.get_text(separator=" ") if body else soup.get_text(separator=" ")
+            texto_limpio = " ".join(texto.split())
+
+            resultados.append({
+                "url": url,
+                "title": soup.title.string.strip() if soup.title and soup.title.string else url,
+                "content": texto_limpio,
+            })
+        except Exception as e:
+            print(f"  -> Error accediendo a {url}: {e}")
+
     return {"resultados_busqueda": resultados}

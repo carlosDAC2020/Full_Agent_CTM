@@ -1,11 +1,12 @@
 from ..state import AgentState
-from .common import llm
-from ..prompts.planner_prompts import build_planner_prompt
+from .common import _load_institutional_sources_db
 
 
 def nodo_planificador(state: AgentState) -> AgentState:
-    print("--- 🧠 PLANIFICANDO ---")
-    prompt = build_planner_prompt(state["tema"])
-    response = llm.invoke(prompt)
-    consultas = response.content.strip().split('\n')
-    return {"plan": "Plan generado con éxito.", "consultas_busqueda": consultas}
+    print("--- 🧠 PLANIFICANDO (FUENTES INSTITUCIONALES) ---")
+    fuentes = _load_institutional_sources_db() or []
+    urls = [str(f["url"]) for f in fuentes if f.get("url")]
+    return {
+        "plan": f"Búsqueda dirigida en {len(urls)} fuentes institucionales.",
+        "consultas_busqueda": urls,
+    }
