@@ -2,10 +2,32 @@ from ..state import AgentState
 import requests
 from bs4 import BeautifulSoup
 import urllib3
+import ssl
+from requests.adapters import HTTPAdapter
+from urllib3.util.ssl_ import create_urllib3_context
+from urllib3 import poolmanager
 
 
 # Deshabilitar warnings de certificados inseguros (sitios gubernamentales con SSL viejo)
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
+
+class LegacySSLAdapter(HTTPAdapter):
+    """Adaptador para permitir cifrados antiguos (SECLEVEL=1)"""
+
+    def init_poolmanager(self, connections, maxsize, block=False):
+        ctx = create_urllib3_context()
+        try:
+            # Bajar el nivel de seguridad para aceptar ciphers viejos
+            ctx.set_ciphers("DEFAULT@SECLEVEL=1")
+        except Exception:
+            pass
+        self.poolmanager = poolmanager.PoolManager(
+            num_pools=connections,
+            maxsize=maxsize,
+            block=block,
+            ssl_context=ctx,
+        )
 
 
 def nodo_busqueda(state: AgentState) -> AgentState:
@@ -25,10 +47,13 @@ def nodo_busqueda(state: AgentState) -> AgentState:
         "Upgrade-Insecure-Requests": "1",
     }
 
+    session = requests.Session()
+    session.mount("https://", LegacySSLAdapter())
+
     for i, url in enumerate(urls):
         print(f"Visitando fuente institucional ({i+1}/{len(urls)}): {url}")
         try:
-            resp = requests.get(url, timeout=20, headers=headers, verify=False)
+            resp = session.get(url, timeout=20, headers=headers, verify=False)
             resp.raise_for_status()
             soup = BeautifulSoup(resp.content, "html.parser")
 
