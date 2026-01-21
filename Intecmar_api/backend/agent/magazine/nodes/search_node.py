@@ -17,6 +17,12 @@ class LegacySSLAdapter(HTTPAdapter):
 
     def init_poolmanager(self, connections, maxsize, block=False):
         ctx = create_urllib3_context()
+        # Alinear el contexto con verify=False: no verificar hostname ni certificado
+        try:
+            ctx.check_hostname = False
+            ctx.verify_mode = ssl.CERT_NONE
+        except Exception:
+            pass
         try:
             # Bajar el nivel de seguridad para aceptar ciphers viejos
             ctx.set_ciphers("DEFAULT@SECLEVEL=1")
