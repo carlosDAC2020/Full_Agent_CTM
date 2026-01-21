@@ -15,8 +15,18 @@ def nodo_extraccion(state: AgentState) -> AgentState:
     resultados = state.get("resultados_busqueda", []) or []
     datos_extraidos = []
 
-    # Añadimos un User-Agent para parecer un navegador real y evitar bloqueos
-    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'}
+    # Añadimos headers para parecer un navegador real y evitar bloqueos
+    headers = {
+        "User-Agent": (
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+            "AppleWebKit/537.36 (KHTML, like Gecko) "
+            "Chrome/121.0.0.0 Safari/537.36"
+        ),
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+        "Accept-Language": "es-ES,es;q=0.9,en;q=0.8",
+        "Connection": "keep-alive",
+        "Upgrade-Insecure-Requests": "1",
+    }
     for i, item in enumerate(resultados):
         url = item.get('url')
         print(f"Procesando resultado ({i+1}/{len(resultados)}): {url}")
@@ -29,7 +39,7 @@ def nodo_extraccion(state: AgentState) -> AgentState:
         else:
             # Fallback: si no hay contenido, hacemos una petición HTTP
             try:
-                resp = requests.get(url, timeout=15, headers=headers)
+                resp = requests.get(url, timeout=15, headers=headers, verify=False)
                 resp.raise_for_status()
                 soup = BeautifulSoup(resp.content, 'html.parser')
                 texto_web = soup.get_text(separator=' ')
