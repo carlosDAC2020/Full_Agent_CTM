@@ -29,30 +29,55 @@ def nodo_extraccion(state: AgentState) -> AgentState:
 
         # Llamar al LLM y obtener la respuesta de texto
         respuesta_llm = llm.invoke(prompt).content
+        print(f"DEBUG LLM RAW: {respuesta_llm[:200]}...")
 
         # --- PARSEO DE JSON MÁS ROBUSTO ---
-        # Esperamos una LISTA JSON de objetos. Intentamos extraerla.
-        match = re.search(r'\[.*\]', respuesta_llm, re.DOTALL)
+        # Limpieza de fences Markdown (```json ... ```)
+        clean_resp = respuesta_llm.replace('```json', '').replace('```', '').strip()
+
+        # Intentar primero extraer una LISTA JSON de objetos
+        match = re.search(r'\[.*\]', clean_resp, re.DOTALL)
+        parsed_list = []
+
         if match:
             json_str = match.group(0)
             try:
                 parsed = json.loads(json_str)
-                # Aceptar tanto lista como objeto único por robustez
                 if isinstance(parsed, dict):
                     parsed_list = [parsed]
                 elif isinstance(parsed, list):
                     parsed_list = parsed
-                else:
-                    parsed_list = []
-
-                for info_json in parsed_list:
-                    if isinstance(info_json, dict) and "error" not in info_json:
-                        info_json['url_original'] = url
-                        datos_extraidos.append(info_json)
-                        print(f"  -> Éxito: '{info_json.get('titulo', 'Sin título')}'")
             except json.JSONDecodeError:
                 print(f"  -> Error: Se encontró una lista JSON, pero es inválida.")
         else:
-            print(f"  -> Error: No se encontró ninguna LISTA JSON en la respuesta del LLM.")
+            # Fallback: buscar un objeto único { ... }
+            obj_match = re.search(r'\{.*\}', clean_resp, re.DOTALL)
+            if obj_match:
+                json_str = obj_match.group(0)
+                try:
+                    parsed = json.loads(json_str)
+                    if isinstance(parsed, dict):
+                        # Si el dict contiene alguna lista de convocatorias, intentar extraerla
+                        # Primero, si parece ya una convocatoria individual
+                        if any(k in parsed for k in ["titulo", "tipo", "fecha_cierre", "deadline"]):
+                            parsed_list = [parsed]
+                        else:
+                            for v in parsed.values():
+                                if isinstance(v, list):
+                                    parsed_list = v
+                                    break
+                    elif isinstance(parsed, list):
+                        parsed_list = parsed
+                except json.JSONDecodeError:
+                    print(f"  -> Error: Se encontró un objeto JSON, pero es inválido.")
+
+        if parsed_list:
+            for info_json in parsed_list:
+                if isinstance(info_json, dict) and "error" not in info_json:
+                    info_json['url_original'] = url
+                    datos_extraidos.append(info_json)
+                    print(f"  -> Éxito: '{info_json.get('titulo', 'Sin título')}'")
+        else:
+            print(f"  -> Error: No se pudo extraer ninguna convocatoria en formato JSON válido.")
 
     return {"datos_extraidos": datos_extraidos}
