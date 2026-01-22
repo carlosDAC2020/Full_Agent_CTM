@@ -42,6 +42,9 @@ class Settings:
     # Por defecto, el remitente es el usuario SMTP si está definido
     DEFAULT_SENDER_EMAIL = os.getenv("DEFAULT_SENDER_EMAIL", SMTP_USER or "noreply@cotecmar.com")
 
+    # Jina Reader
+    JINA_API_KEY = os.getenv("JINA_API_KEY")
+
 # Crear directorios necesarios al importar el módulo
 for directory in [Settings.OUTPUTS_DIR, Settings.UPLOADS_DIR]:
     Path(directory).mkdir(parents=True, exist_ok=True)
