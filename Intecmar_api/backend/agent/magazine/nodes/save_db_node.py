@@ -135,13 +135,13 @@ def nodo_guardado_db(state: AgentState) -> AgentState:
 
             url = url_original or None
 
-            # Evitar duplicados por URL o por título si no hay URL
-            q = db.query(models.Convocatoria)
-            if url:
-                q = q.filter(models.Convocatoria.url == url)
-            else:
-                q = q.filter(models.Convocatoria.title == titulo)
-            if q.first():
+            # Evitar duplicados por URL o por título
+            existe = db.query(models.Convocatoria).filter(
+                (models.Convocatoria.url == url) |
+                (models.Convocatoria.title == titulo)
+            ).first()
+            if existe:
+                print(f"⚠️  Duplicado omitido: {titulo} ({url})")
                 continue
 
             # Normalize type_financy to string (convert array to comma-separated string)

@@ -1,6 +1,6 @@
 def build_extraction_prompt(texto_limpio: str) -> str:
     return f"""
-            Tu tarea es analizar el texto de una página web y clasificar su contenido. Luego, extrae la información relevante en un formato JSON estricto.
+            Tu tarea es analizar el texto de una página web y clasificar su contenido. Luego, extrae TODAS las convocatorias y eventos vigentes en una LISTA JSON estricta.
             
             1. Clasifica el contenido en uno de tres tipos: "convocatoria_nacional", "convocatoria_internacional", o "evento".
                - Considera "convocatoria_nacional" como convocatorias de COLOMBIA.
@@ -28,10 +28,10 @@ def build_extraction_prompt(texto_limpio: str) -> str:
                - "beneficios": Beneficios de asistir
             
             Reglas importantes:
-            - Si la fecha de cierre o el evento ya pasaron, devuelve: {{"error": "Fecha pasada"}}
-            - Si falta información, usa "No especificado"
-            - Si el contenido no es relevante, devuelve: {{"error": "Contenido no relevante"}}
-            - Tu respuesta DEBE SER ÚNICAMENTE un objeto JSON válido, sin texto adicional
+            - Si la fecha de cierre o el evento ya pasaron, omite esa convocatoria/evento de la lista.
+            - Si falta información, usa "No especificado".
+            - Si el contenido no es relevante, devuelve una lista vacía: []
+            - Tu respuesta DEBE SER EXCLUSIVAMENTE una LISTA JSON válida (ejemplo: [{{"titulo": "..."}}, {{"titulo": "..."}}]), sin texto adicional.
 
             Texto a analizar:
             {texto_limpio}

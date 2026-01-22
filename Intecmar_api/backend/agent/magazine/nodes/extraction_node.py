@@ -31,19 +31,28 @@ def nodo_extraccion(state: AgentState) -> AgentState:
         respuesta_llm = llm.invoke(prompt).content
 
         # --- PARSEO DE JSON MÁS ROBUSTO ---
-        # A veces el LLM envuelve el JSON con texto. Intentamos extraerlo.
-        match = re.search(r'\{.*\}', respuesta_llm, re.DOTALL)
+        # Esperamos una LISTA JSON de objetos. Intentamos extraerla.
+        match = re.search(r'\[.*\]', respuesta_llm, re.DOTALL)
         if match:
             json_str = match.group(0)
             try:
-                info_json = json.loads(json_str)
-                if isinstance(info_json, dict) and "error" not in info_json:
-                    info_json['url_original'] = url
-                    datos_extraidos.append(info_json)
-                    print(f"  -> Éxito: '{info_json.get('titulo', 'Sin título')}'")
+                parsed = json.loads(json_str)
+                # Aceptar tanto lista como objeto único por robustez
+                if isinstance(parsed, dict):
+                    parsed_list = [parsed]
+                elif isinstance(parsed, list):
+                    parsed_list = parsed
+                else:
+                    parsed_list = []
+
+                for info_json in parsed_list:
+                    if isinstance(info_json, dict) and "error" not in info_json:
+                        info_json['url_original'] = url
+                        datos_extraidos.append(info_json)
+                        print(f"  -> Éxito: '{info_json.get('titulo', 'Sin título')}'")
             except json.JSONDecodeError:
-                print(f"  -> Error: Se encontró un JSON, pero es inválido.")
+                print(f"  -> Error: Se encontró una lista JSON, pero es inválida.")
         else:
-            print(f"  -> Error: No se encontró ningún objeto JSON en la respuesta del LLM.")
+            print(f"  -> Error: No se encontró ninguna LISTA JSON en la respuesta del LLM.")
 
     return {"datos_extraidos": datos_extraidos}

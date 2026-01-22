@@ -19,6 +19,7 @@ def nodo_busqueda(state: AgentState) -> AgentState:
             headers = {
                 "Authorization": f"Bearer {settings.JINA_API_KEY}",
                 "X-Retain-Images": "none",
+                "Accept": "text/plain",
             }
             resp = requests.get(jina_url, timeout=30, headers=headers)
             resp.raise_for_status()
