@@ -1,6 +1,6 @@
 import os
 import io
-from typing import List, Optional, Dict, Any
+from typing import List, Optional, Dict, Any, Union
 from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
 from fastapi.responses import StreamingResponse
@@ -35,8 +35,8 @@ class ConvocatoriaOut(BaseModel):
     fecha_cierre: Optional[datetime] = None
     type_financy: Optional[str] = None
     monto: Optional[str] = None
-    requisitos: Optional[list] = []
-    beneficios: Optional[list] = []
+    requisitos: Optional[Union[list, str]] = []
+    beneficios: Optional[Union[list, str]] = []
     lugar: Optional[str] = None
 
     class Config:

@@ -39,8 +39,8 @@ class ConvocatoriaOut(BaseModel):
     fecha_cierre: Optional[Union[datetime, date, str]] = None
     type_financy: Optional[str] = None
     monto: Optional[str] = None
-    requisitos: Optional[list] = []
-    beneficios: Optional[list] = []
+    requisitos: Optional[Union[list, str]] = []
+    beneficios: Optional[Union[list, str]] = []
     lugar: Optional[str] = None
 
     class Config:
