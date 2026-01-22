@@ -1,30 +1,31 @@
-template = """You are an expert consultant in research project formulation and grant writing. Your task is to analyze the user's message and extract information related to a "Convocatoria" (Call for Proposals).
+template = """Analyze the following text from a "Convocatoria" (Grant Call) and extract its key details into JSON.
 
-**User's Message:**
+**Input Text:**
 {last_message}
 
-**CRITICAL INSTRUCTIONS - READ CAREFULLY:**
+**EVALUATION CRITERIA:**
+1. **Objective & Description:** These are mandatory. 
+   - Fill "description" with a summary of the call.
+   - Fill "objective" with the main goal. 
+   - If only one descriptive block is found, USE IT FOR BOTH FIELDS. Do not leave "objective" null if there is any text available.
+2. **Title:** Use the value after "TÍTULO:".
+3. **Funding:** Extract any financial information. Use "No especificado" if missing.
+4. **Important Dates:** Extract opening/closing dates. Use "Fechas no detectadas" if missing.
+5. **Keywords:** Extract or generate 3-5 keywords.
+6. **Benefits:** List any advantages or support offered.
 
-1. **Extract Information from the Message:**
-   - Identify if there's a call/convocatoria mentioned (name, link, objectives, dates, funding, benefits).
-   - **IGNORE** any project description provided by the user.
-   - **DO NOT** generate any project information.
-
-2. **Output Format (JSON) - MUST match IngestionResult schema:**
-```json
+**JSON Schema:**
 {{
-    "title": "Exact name of the call or null",
-    "objective": "Main objective or null",
-    "funding": "Funding info (amounts, currency) or null",
-    "keywords": ["key1", "key2"] or null,
-    "important_dates": "Opening and closing dates (e.g., 'Abre: [Fecha] | Cierra: [Fecha]') or null",
-    "benefits": ["benefit1"] or null,
-    "url": "URL or null"
-  }}
-```
+    "title": "str or null",
+    "objective": "str (MANDATORY)",
+    "description": "str (MANDATORY)",
+    "funding": "str or null",
+    "keywords": ["str"],
+    "important_dates": "str or null",
+    "benefits": ["str"],
+    "url": "str or null"
+}}
 
-
-Output ONLY the JSON matching the IngestionResult schema. No additional text or markdown code blocks.
-"""
+Output ONLY the raw JSON."""
 
 

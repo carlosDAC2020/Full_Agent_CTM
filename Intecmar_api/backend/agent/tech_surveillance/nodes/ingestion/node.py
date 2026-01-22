@@ -32,24 +32,36 @@ def ingestion_node(state: GraphState) -> dict:
     try:
         # 1. Llama al LLM para extraer la información (Call Info Only)
         ingestion_result: CallInfo = extraction_llm.invoke(prompt)
+        print(f"DEBUG: Ingestion Result: {ingestion_result}")
         
         # 2. Prepara el mensaje de confirmación
-        confirmation_text = ""
-        
         if ingestion_result:
-            # Llenamos ambos campos para evitar problemas de compatibilidad
+            # --- LOGICA DE FALLBACK ROBUSTA ---
+            # Si el objetivo está vacío pero la descripción tiene texto, usamos la descripción
+            if (not ingestion_result.objective or ingestion_result.objective.strip() == "") and ingestion_result.description:
+                ingestion_result.objective = ingestion_result.description
+            
+            # Si la descripción está vacía pero el objetivo tiene texto, usamos el objetivo
+            if (not ingestion_result.description or ingestion_result.description.strip() == "") and ingestion_result.objective:
+                ingestion_result.description = ingestion_result.objective
+
+            # Asegurar compatibilidad de fechas
             if ingestion_result.important_dates:
                 ingestion_result.dates = ingestion_result.important_dates
             elif ingestion_result.dates:
                 ingestion_result.important_dates = ingestion_result.dates
 
-            confirmation_text += f"✅ **Convocatoria Detectada:** {ingestion_result.title}\n"
-            if ingestion_result.url:
-                confirmation_text += f"🔗 **URL:** {ingestion_result.url}\n"
-            confirmation_text += "\n"
-            confirmation_text += "He identificado la información de la convocatoria. ¿Deseas proceder con alguna acción específica?"
+            # 2. Prepara el mensaje de confirmación detallado
+            confirmation_text = f"TÍTULO: {ingestion_result.title}\n" \
+                                f"        DESCRIPCIÓN: {ingestion_result.description}\n" \
+                                f"        OBJETIVO: {ingestion_result.objective}\n" \
+                                f"        FINANCIACIÓN: {ingestion_result.funding}\n" \
+                                f"        FECHAS: {ingestion_result.important_dates}\n" \
+                                f"        FUENTE: {ingestion_result.url}\n" \
+                                f"        KEYWORDS: {ingestion_result.keywords}\n\n" \
+                                f"✅ **Convocatoria Detectada.** He cargado los detalles. ¿Qué deseas hacer a continuación?"
         else:
-            confirmation_text = "No he detectado información clara sobre una convocatoria en tu mensaje. Por favor, proporciona más detalles."
+            confirmation_text = "No he detectado información clara sobre una convocatoria. Por favor, proporciona más detalles."
 
         # 3. Preservar documentos de contexto e historial si ya existen en el estado
         old_call_info = state.get("call_info")

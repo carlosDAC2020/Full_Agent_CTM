@@ -53,11 +53,16 @@ def create_activity_schedule(state: GraphState) -> dict:
     header_prompt = SHARED_CONTEXT_HEADER.format(
         initial_schema=initial_schema
     )
+    duration = "No especificada"
+    if report_components.general_info:
+        duration = f"{report_components.general_info.duration_months} meses" if report_components.general_info.duration_months else "No especificada"
+
     # 2. Formatear el prompt
     prompt = ACTIVITY_SCHEDULE_PROMPT.format(
         project_title=project_title,
         methodology=methodology,
-        specific_objectives_smart=specific_objectives
+        specific_objectives_smart=specific_objectives,
+        duration=duration
     )
 
     # 3. Configurar el LLM para salida estructurada

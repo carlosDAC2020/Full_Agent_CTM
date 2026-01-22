@@ -7,6 +7,7 @@ ACTIVITY_SCHEDULE_PROMPT = """\
 
 ## CONTEXT FOR YOUR TASK
 - **Project Title:** {project_title}
+- **Planned Total Duration:** {duration}
 - **Proposed Methodology (High-Level Phases):**
 {methodology}
 - **Specific Project Objectives (which this schedule must achieve):**

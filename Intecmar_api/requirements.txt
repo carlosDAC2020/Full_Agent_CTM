@@ -42,6 +42,8 @@ matplotlib
 seaborn
 scikit-learn
 scipy
+networkx
+msoffcrypto-tool
 
 # --- Database & Authentication ---
 SQLAlchemy

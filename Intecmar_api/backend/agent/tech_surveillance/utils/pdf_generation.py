@@ -126,9 +126,33 @@ def get_custom_styles():
     return styles
 
 def clean_text(text):
-    """Escapa caracteres XML y convierte Markdown básico a etiquetas ReportLab."""
+    """Escapa caracteres XML y convierte Markdown básico a etiquetas ReportLab.
+    También normaliza caracteres Unicode que causan anomalías en ReportLab.
+    """
     if not text:
         return ""
+    
+    # 1. Normalización de caracteres Unicode problemáticos
+    unicode_map = {
+        '\u2010': '-',  # Hyphen
+        '\u2011': '-',  # Non-breaking hyphen
+        '\u2012': '-',  # Figure dash
+        '\u2013': '-',  # En dash
+        '\u2014': '-',  # Em dash
+        '\u2015': '-',  # Horizontal bar
+        '\u2018': "'",  # Left single quotation mark
+        '\u2019': "'",  # Right single quotation mark
+        '\u201c': '"',  # Left double quotation mark
+        '\u201d': '"',  # Right double quotation mark
+        '\u2026': '...', # Ellipsis
+        '\u00a0': ' ',   # Non-breaking space
+        '\u200b': '',    # Zero width space
+    }
+    
+    for char, replacement in unicode_map.items():
+        text = text.replace(char, replacement)
+
+    # 2. Escapado HTML y conversión de Markdown
     text = html.escape(text, quote=False)
     text = re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', text)
     text = re.sub(r'\*(.*?)\*', r'<i>\1</i>', text)

@@ -146,6 +146,7 @@ class CallInfo(BaseModel):
     """Información extraída de la convocatoria."""
     title: Optional[str] = Field(default=None, description="Título de la convocatoria")
     objective: Optional[str] = Field(default=None, description="Objetivo principal de la convocatoria")
+    description: Optional[str] = Field(default=None, description="Descripción detallada o resumen de la convocatoria")
     funding: Optional[str] = Field(default=None, description="Información sobre financiamiento")
     keywords: Optional[List[str]] = Field(default=None, description="Palabras clave de la convocatoria")
     important_dates: Optional[str] = Field(default=None, description="Opening and closing dates of the call (e.g., 'Apertura: [Fecha] | Cierre: [Fecha]')")

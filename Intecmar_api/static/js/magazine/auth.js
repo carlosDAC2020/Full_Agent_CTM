@@ -4,7 +4,7 @@
   function setToken(t) { try { if (t) localStorage.setItem(TOKEN_KEY, t); else localStorage.removeItem(TOKEN_KEY); } catch { } }
   function isAuthed() { return !!getToken(); }
 
-  // Override global fetch to inject Authorization when token exists
+  // Override global fetch to inject Authorization and handle 401s
   const _fetch = window.fetch.bind(window);
   window.fetch = async function (input, init) {
     const token = getToken();
@@ -17,7 +17,22 @@
     } catch {
       if (token && !init.headers['Authorization']) init.headers['Authorization'] = `Bearer ${token}`;
     }
-    return _fetch(input, init);
+
+    const response = await _fetch(input, init);
+
+    // Global session expiry handler
+    if (response.status === 401) {
+      const isLoginRequest = typeof input === 'string' && input.includes('/api/auth/login');
+      if (!isLoginRequest) {
+        setToken('');
+        // Avoid infinite loop if we're already on /login
+        if (!window.location.pathname.includes('/login')) {
+          window.location.href = '/login?reason=expired';
+        }
+      }
+    }
+
+    return response;
   };
 
   async function apiLogin(baseUrl, email, password) {

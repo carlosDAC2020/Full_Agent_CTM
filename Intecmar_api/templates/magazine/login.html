@@ -433,6 +433,12 @@
 
     (async function () {
       try {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('reason') === 'expired') {
+          errorDiv.textContent = 'Tu sesión ha expirado. Por favor, inicia sesión de nuevo.';
+          errorDiv.style.display = 'block';
+        }
+
         const API_URL = window.location.origin;
         const token = localStorage.getItem('auth_token');
         if (token) {

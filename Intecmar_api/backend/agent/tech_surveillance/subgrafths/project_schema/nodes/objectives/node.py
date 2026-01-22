@@ -36,6 +36,10 @@ def generate_objectives(state: GraphState) -> dict:
     
     # La entrada clave: la justificación del nodo anterior
     justification = report_components.problem_statement_justification or "No hay justificación disponible."
+    
+    duration = "No especificada"
+    if report_components.general_info:
+        duration = f"{report_components.general_info.duration_months} meses" if report_components.general_info.duration_months else "No especificada"
 
     # 2. Formatear el prompt
     initial_schema = state.get("initial_schema") or "No se encontró el esquema inicial."
@@ -44,7 +48,8 @@ def generate_objectives(state: GraphState) -> dict:
     )
     prompt = SMART_OBJECTIVES_PROMPT.format(
         project_title=project_title,
-        problem_statement_justification=justification
+        problem_statement_justification=justification,
+        duration=duration
     )
 
     # 3. Configurar el LLM para salida estructurada

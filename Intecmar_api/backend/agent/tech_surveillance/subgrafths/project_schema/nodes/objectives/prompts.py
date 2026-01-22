@@ -7,6 +7,7 @@ SMART_OBJECTIVES_PROMPT = """\
 
 ## CONTEXT FOR YOUR TASK
 - **Project Title:** {project_title}
+- **Project Duration:** {duration} (Total planned time)
 - **Problem Statement & Justification:** {problem_statement_justification}
 
 ## INSTRUCTIONS

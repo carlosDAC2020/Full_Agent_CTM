@@ -111,6 +111,7 @@ def report_node(state: GraphState):
 
 **Título:** {title}
 **Convocatoria:** {call_info.title if call_info else 'N/A'}
+**Duración:** {duration} meses
 **Entidad/Persona:** COTECMAR
 **Línea Temática:** {', '.join(call_info.keywords) if call_info and call_info.keywords else 'N/A'}
 

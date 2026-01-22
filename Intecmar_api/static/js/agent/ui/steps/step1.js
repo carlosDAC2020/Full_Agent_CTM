@@ -158,6 +158,8 @@ export function renderStep1Result(dataJson) {
     const historyList = document.getElementById('res-history-list');
 
     // 1. Botón Principal (Ver Presentación AND Iniciar/Regenerar Investigación)
+    const generateIdeasBtn = document.getElementById('btn-generate-ideas');
+
     if (presBtn) {
         if (docs.presentation_oath_pdf) {
             presBtn.href = getAssetUrl(docs.presentation_oath_pdf);
@@ -172,8 +174,12 @@ export function renderStep1Result(dataJson) {
                     <div class="text-sm font-bold text-red-700">Ver Presentación</div>
                 </div>
             `;
+            // Si hay presentación, mostramos el botón de generar ideas
+            if (generateIdeasBtn) generateIdeasBtn.classList.remove('hidden');
         } else {
             presBtn.classList.add('hidden');
+            // Si NO hay presentación, ocultamos el botón de generar ideas
+            if (generateIdeasBtn) generateIdeasBtn.classList.add('hidden');
         }
     }
 
