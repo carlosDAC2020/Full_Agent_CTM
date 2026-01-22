@@ -22,7 +22,9 @@ def nodo_extraccion(state: AgentState) -> AgentState:
             continue
 
         # El contenido ya viene en texto/Markdown desde Jina; solo normalizamos tamaño
-        texto_limpio = ' '.join(raw_content.split())[:10000]
+        texto_limpio = ' '.join(raw_content.split())[:50000]
+        print(f"DEBUG INPUT TEXT (First 500 chars): {texto_limpio[:500]}...")
+        print(f"DEBUG INPUT LENGTH: {len(texto_limpio)} chars")
 
         # --- PROMPT MEJORADO Y CLASIFICACIÓN ---
         prompt = build_extraction_prompt(texto_limpio)

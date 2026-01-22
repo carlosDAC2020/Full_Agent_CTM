@@ -28,7 +28,8 @@ def build_extraction_prompt(texto_limpio: str) -> str:
                - "beneficios": Beneficios de asistir
             
             Reglas importantes:
-            - Si la fecha de cierre o el evento ya pasaron, omite esa convocatoria/evento de la lista.
+            - Si la fecha de cierre o el evento ya pasaron con claridad, omite esa convocatoria/evento de la lista.
+            - Si no estás seguro de la fecha de cierre o de si el evento sigue vigente, ASUME que sigue vigente y extráela.
             - Si falta información, usa "No especificado".
             - Si el contenido no es relevante, devuelve una lista vacía: []
             - Tu respuesta DEBE SER EXCLUSIVAMENTE una LISTA JSON válida (ejemplo: [{{"titulo": "..."}}, {{"titulo": "..."}}]), sin texto adicional.
