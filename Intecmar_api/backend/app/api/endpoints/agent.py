@@ -84,7 +84,8 @@ async def start_ingest(
             
             try:
                 # Upload to MinIO in 'context' subfolder
-                object_key = storage_service.upload_file(tmp_path, session_base_path, subfolder="context")
+                full_key = f"{session_base_path}/context/{file.filename}"
+                object_key = storage_service.upload_file(tmp_path, full_key)
                 if object_key:
                     context_docs_paths.append(object_key)
             finally:
@@ -231,7 +232,8 @@ async def append_documents(
             
             try:
                 # Upload to MinIO
-                object_key = storage_service.upload_file(tmp_path, session_base_path, subfolder="context")
+                full_key = f"{session_base_path}/context/{file.filename}"
+                object_key = storage_service.upload_file(tmp_path, full_key)
                 if object_key:
                     new_docs_paths.append(object_key)
             finally:

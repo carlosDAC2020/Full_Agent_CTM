@@ -35,7 +35,7 @@ app = FastAPI(title=settings.PROJECT_NAME, version=settings.VERSION)
 async def startup_event():
     print("Iniciando migración de datos...")
     try:
-        migrate_convocatorias()
+        #migrate_convocatorias()
         migrate_sources()
         migrate_minio_buckets()
         print("Migración de datos completada exitosamente.")
