@@ -55,9 +55,9 @@ def presentation_generation_docs_node(state: GraphState):
     
     # Subir y obtener las KEYS (ej: "email/Agent_Sessions/uuid/presentation/archivo.pdf")
     # Subir y obtener las KEYS (ej: "email/Agent_Sessions/uuid/presentation/archivo.pdf")
-    md_key = storage_service.upload_file(filename, f"{minio_folder}/{os.path.basename(filename)}")
-    pdf_key = storage_service.upload_file(pdf_path, f"{minio_folder}/{os.path.basename(pdf_path)}")
-    pptx_key = storage_service.upload_file(pptx_path, f"{minio_folder}/{os.path.basename(pptx_path)}")
+    md_key = storage_service.upload_file(filename, f"{minio_folder}/{os.path.basename(filename)}", remove_after_upload=True)
+    pdf_key = storage_service.upload_file(pdf_path, f"{minio_folder}/{os.path.basename(pdf_path)}", remove_after_upload=True)
+    pptx_key = storage_service.upload_file(pptx_path, f"{minio_folder}/{os.path.basename(pptx_path)}", remove_after_upload=True)
     
     # Actualizamos el estado con las KEYS de MinIO, no las rutas locales
     docs_paths: DocsPaths = state.get("docs_paths") or DocsPaths()

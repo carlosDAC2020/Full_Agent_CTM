@@ -176,8 +176,8 @@ def initial_schema_proyect_doc_node(state: GraphState) -> dict:
     # upload_file maneja internamente la estructura session_id/nombre_archivo
     minio_folder = f"{user_email}/Agent_Sessions/{session_id}/initial_schema"
     
-    md_key = storage_service.upload_file(md_filepath, f"{minio_folder}/{md_filename}")
-    pdf_key = storage_service.upload_file(pdf_filepath, f"{minio_folder}/{pdf_filename}")
+    md_key = storage_service.upload_file(md_filepath, f"{minio_folder}/{md_filename}", remove_after_upload=True)
+    pdf_key = storage_service.upload_file(pdf_filepath, f"{minio_folder}/{pdf_filename}", remove_after_upload=True)
 
     # ========================================
     # ACTUALIZAR RUTAS EN EL ESTADO

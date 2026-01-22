@@ -327,8 +327,8 @@ def report_node(state: GraphState):
         # ========================================
         print("☁️ Subiendo reporte final a MinIO...")
         minio_folder = f"{user_email}/Agent_Sessions/{session_id}/final_project_proposal"
-        pdf_key = storage_service.upload_file(pdf_filepath, f"{minio_folder}/{pdf_filename}")
-        md_key = storage_service.upload_file(md_filepath, f"{minio_folder}/{md_filename}")
+        pdf_key = storage_service.upload_file(pdf_filepath, f"{minio_folder}/{pdf_filename}", remove_after_upload=True)
+        md_key = storage_service.upload_file(md_filepath, f"{minio_folder}/{md_filename}", remove_after_upload=True)
         
         # --- LÓGICA PARA EVITAR DOBLE SUBIDA DEL POSTER ---
         # La imagen de portada ya debería haber sido subida por el nodo 'images_generator'.
@@ -342,7 +342,15 @@ def report_node(state: GraphState):
         elif final_img_path:
             # No hay key previa, o la key es una ruta local. Subimos la imagen.
             print(f"   ☁️ Subiendo poster desde report_node (fallback)...")
-            img_key = storage_service.upload_file(final_img_path, f"{minio_folder}/{os.path.basename(final_img_path)}")
+            img_key = storage_service.upload_file(final_img_path, f"{minio_folder}/{os.path.basename(final_img_path)}", remove_after_upload=True)
+
+        # Cleanup poster if it still exists locally (even if not uploaded in this node)
+        if final_img_path and os.path.exists(final_img_path):
+            try:
+                os.remove(final_img_path)
+                print(f"🗑️ Poster local eliminado después de generar PDF: {final_img_path}")
+            except Exception as e:
+                print(f"⚠️ No se pudo eliminar el poster local {final_img_path}: {e}")
 
         # ========================================
         # ACTUALIZACIÓN DE ESTADO

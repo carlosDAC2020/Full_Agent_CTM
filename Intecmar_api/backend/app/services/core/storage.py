@@ -35,7 +35,7 @@ class UnifiedStorageService:
             except Exception as e:
                 print(f"❌ Error creando bucket: {e}")
 
-    def upload_file(self, file_path_or_data, object_key: str, content_type: str = None) -> str:
+    def upload_file(self, file_path_or_data, object_key: str, content_type: str = None, remove_after_upload: bool = False) -> str:
         """
         Sube un archivo (ruta local o bytes) a MinIO.
         Retorna la object_key si tiene éxito.
@@ -44,6 +44,7 @@ class UnifiedStorageService:
             mime_type, _ = mimetypes.guess_type(object_key)
             content_type = mime_type or "application/octet-stream"
 
+        success = False
         try:
             if isinstance(file_path_or_data, (bytes, io.BytesIO)):
                 # Subir desde bytes
@@ -54,6 +55,7 @@ class UnifiedStorageService:
                     Body=data,
                     ContentType=content_type
                 )
+                success = True
             else:
                 # Subir desde ruta local
                 if not os.path.exists(file_path_or_data):
@@ -65,9 +67,20 @@ class UnifiedStorageService:
                     object_key,
                     ExtraArgs={'ContentType': content_type}
                 )
+                success = True
             
-            print(f"✅ Archivo subido: {self.bucket_name}/{object_key}")
-            return object_key
+            if success:
+                print(f"✅ Archivo subido: {self.bucket_name}/{object_key}")
+                
+                # Cleanup if requested
+                if remove_after_upload and not isinstance(file_path_or_data, (bytes, io.BytesIO)):
+                    try:
+                        os.remove(file_path_or_data)
+                        print(f"🗑️ Archivo local eliminado: {file_path_or_data}")
+                    except Exception as e:
+                        print(f"⚠️ No se pudo eliminar el archivo local {file_path_or_data}: {e}")
+                
+                return object_key
         except Exception as e:
             print(f"❌ Error subiendo a MinIO: {e}")
             return None
