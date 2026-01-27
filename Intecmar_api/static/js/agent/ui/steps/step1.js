@@ -4,6 +4,7 @@ import { ingestCall, researchCall, appendDocsCall } from '../../api/agent.js';
 import { pollTask } from '../../api/tasks.js';
 import { getElements, updateStepper, getAssetUrl } from '../common.js';
 import { loadHistory } from '../sidebar.js';
+import { goToStep2 } from './step2.js';
 
 // Paso 1: Iniciar Análisis (Ingesta)
 export async function startAnalysis() {
@@ -132,6 +133,9 @@ export function renderStep1Result(dataJson) {
     const callInfo = data.call_info || {};
     const docs = data.docs_paths || {};
 
+    // Save for later (e.g. idea config modal)
+    store.callInfo = callInfo;
+
     loader.classList.add('hidden');
 
     // Basic Info
@@ -151,6 +155,50 @@ export function renderStep1Result(dataJson) {
         `);
     }
 
+    // --- Metodología y Líneas Temáticas ---
+    const extraMetadataContainer = document.getElementById('res-metadata-extra');
+    const thematicLinesDiv = document.getElementById('res-thematic-lines');
+    const methodologyDiv = document.getElementById('res-methodology');
+
+    if (extraMetadataContainer && docs.presentation_oath_pdf) {
+        extraMetadataContainer.classList.remove('hidden');
+
+        // Methodology
+        if (methodologyDiv) {
+            methodologyDiv.innerText = callInfo.methodology || "Pendiente por definir según el reporte técnico detallado.";
+        }
+
+        // Thematic Lines
+        if (thematicLinesDiv) {
+            thematicLinesDiv.innerHTML = '';
+            let lines = callInfo.thematic_lines;
+
+            // Robustness: handle if it's a string instead of array
+            if (typeof lines === 'string') {
+                lines = lines.split(',').map(s => s.trim());
+            }
+
+            if (lines && Array.isArray(lines) && lines.length > 0) {
+                lines.forEach(line => {
+                    thematicLinesDiv.innerHTML += `
+                        <span class="bg-indigo-100 text-indigo-700 border border-indigo-200 px-3 py-1 rounded-lg text-xs font-bold animate-fade-in shadow-sm">
+                            <i class="ph ph-check-circle"></i> ${line}
+                        </span>
+                    `;
+                });
+            } else {
+                thematicLinesDiv.innerHTML = `
+                    <div class="flex flex-col gap-1">
+                        <span class="text-xs text-slate-400 italic">No se detectaron líneas específicas en el informe.</span>
+                        <span class="text-[10px] text-indigo-400">Consejo: Verifique que el bloque [LINEAS] esté en el PDF/MD.</span>
+                    </div>
+                `;
+            }
+        }
+    } else if (extraMetadataContainer) {
+        extraMetadataContainer.classList.add('hidden');
+    }
+
     // --- LOGICA DE ESTADO: ¿Investigación hecha? ---
     const presBtn = document.getElementById('btn-presentation-link');
     const researchContainer = document.getElementById('research-action-container');
@@ -165,6 +213,7 @@ export function renderStep1Result(dataJson) {
             presBtn.href = getAssetUrl(docs.presentation_oath_pdf);
             presBtn.target = "_blank";
             presBtn.classList.remove('hidden', 'opacity-50', 'pointer-events-none');
+
             presBtn.innerHTML = `
                 <div class="w-8 h-8 rounded-full bg-red-500 text-white flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
                     <i class="ph ph-presentation text-lg"></i>
@@ -209,27 +258,44 @@ export function renderStep1Result(dataJson) {
         const currentPdf = docs.presentation_oath_pdf;
 
         callInfo.presentation_history.forEach(ver => {
-            const isLatest = ver.url === currentPdf;
-            const absoluteUrl = getAssetUrl(ver.url);
+            const isLatest = ver.pdf === currentPdf || ver.url === currentPdf;
             historyList.innerHTML += `
-                <a href="${absoluteUrl}" target="_blank" 
-                   class="flex items-center justify-between p-3 rounded-xl transition-all group mb-2
-                          ${isLatest ? 'bg-blue-50 border-2 border-blue-200 shadow-sm' : 'bg-gray-50 hover:bg-white border border-transparent hover:border-gray-200'}"
-                >
+                <div class="flex items-center justify-between p-3 rounded-xl transition-all group mb-2
+                           ${isLatest ? 'bg-blue-50 border-2 border-blue-200 shadow-sm' : 'bg-gray-50 hover:bg-white border border-transparent hover:border-gray-200'}">
                     <div class="flex items-center gap-3">
                         <div class="w-8 h-8 rounded-lg flex items-center justify-center ${isLatest ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-500'} group-hover:scale-110 transition-transform">
                             <i class="ph-fill ph-presentation"></i>
                         </div>
                         <div class="flex flex-col">
                             <span class="text-xs font-bold ${isLatest ? 'text-blue-900' : 'text-gray-700'}">${ver.name || 'Versión Anterior'}</span>
-                            <span class="text-[9px] text-gray-400 font-medium">${ver.date || 'S/F'}</span>
+                            <span class="text-[9px] text-gray-400 font-medium">${ver.date ? new Date(ver.date).toLocaleString() : 'S/F'}</span>
                         </div>
                     </div>
-                    <div class="flex items-center gap-2">
+                    <div class="flex items-center gap-3">
                         ${isLatest ? '<span class="text-[9px] font-black text-blue-500 bg-blue-100 px-2 py-0.5 rounded-md tracking-tighter">ACTUAL</span>' : ''}
-                        <i class="ph-bold ph-download-simple ${isLatest ? 'text-blue-500' : 'text-gray-300 group-hover:text-blue-400'}"></i>
+                        
+                        <!-- Mini buttons for formats -->
+                        <div class="flex gap-2">
+                            ${(ver.pdf || ver.url) ? `
+                            <a href="${getAssetUrl(ver.pdf || ver.url)}" target="_blank" title="Descargar PDF" 
+                               class="w-8 h-8 flex items-center justify-center bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-all shadow-sm border border-red-200">
+                                <i class="ph-bold ph-file-pdf"></i>
+                            </a>` : ''}
+                            
+                            ${ver.pptx ? `
+                            <a href="${getAssetUrl(ver.pptx)}" target="_blank" title="Descargar PPTX" 
+                               class="w-8 h-8 flex items-center justify-center bg-orange-100 text-orange-600 rounded-lg hover:bg-orange-200 transition-all shadow-sm border border-orange-200">
+                                <i class="ph-bold ph-file-ppt"></i>
+                            </a>` : ''}
+
+                            ${ver.md ? `
+                            <a href="${getAssetUrl(ver.md)}" target="_blank" title="Descargar Markdown" 
+                               class="w-8 h-8 flex items-center justify-center bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-all shadow-sm border border-gray-300">
+                                <i class="ph-bold ph-markdown-logo"></i>
+                            </a>` : ''}
+                        </div>
                     </div>
-                </a>
+                </div>
              `;
         });
     } else {
@@ -273,3 +339,87 @@ export function renderStep1Result(dataJson) {
         }
     }
 }
+/**
+ * Abre el modal de configuración de ideas poblándolo con los datos de callInfo
+ */
+export function openIdeaConfigModal() {
+    const modal = document.getElementById('idea-config-modal');
+    const thematicSelect = document.getElementById('config-thematic-line');
+    const methodologySelect = document.getElementById('config-methodology');
+
+    // Recuperar datos actuales del store
+    const callInfo = store.callInfo;
+
+    if (!callInfo) {
+        alert("No se han cargado los datos de la convocatoria");
+        return;
+    }
+
+    // 1. Poblar Líneas Temáticas
+    thematicSelect.innerHTML = '<option value="">Cualquier línea temática (General)</option>';
+    let lines = callInfo.thematic_lines || [];
+    if (typeof lines === 'string') lines = lines.split(',').map(s => s.trim());
+
+    lines.forEach(line => {
+        const opt = document.createElement('option');
+        opt.value = line;
+        opt.textContent = line;
+        thematicSelect.appendChild(opt);
+    });
+
+    // 2. Poblar Metodología
+    methodologySelect.innerHTML = '';
+    const frameworks = callInfo.suggested_frameworks || ["MGA WEB", "SMART", "PMI", "SCRUM", "ISO 21500"];
+
+    frameworks.forEach(fw => {
+        const opt = document.createElement('option');
+        opt.value = fw;
+        opt.textContent = fw;
+        // Seleccionar SMART por defecto si existe
+        if (fw.toUpperCase() === 'SMART') opt.selected = true;
+        methodologySelect.appendChild(opt);
+    });
+
+    // Mostrar modal
+    modal.classList.remove('hidden');
+    document.body.style.overflow = 'hidden'; // Evitar scroll
+}
+
+/**
+ * Cierra el modal de configuración
+ */
+export function closeIdeaConfigModal() {
+    const modal = document.getElementById('idea-config-modal');
+    modal.classList.add('hidden');
+    document.body.style.overflow = '';
+}
+
+/**
+ * Confirma la selección e inicia la generación de ideas (go to step 2)
+ */
+export function confirmIdeaGeneration() {
+    const thematicLine = document.getElementById('config-thematic-line').value || "General / No especificada";
+    const methodology = document.getElementById('config-methodology').value || "No especificada";
+
+    console.log('📝 Modal Confirmed:', { thematicLine, methodology });
+
+    // FIX: Guardar en store global para que persistan entre módulos JS
+    store.selectedThematicLine = thematicLine;
+    store.selectedMethodology = methodology;
+
+    console.log('💾 Saved to store:', {
+        selectedThematicLine: store.selectedThematicLine,
+        selectedMethodology: store.selectedMethodology
+    });
+
+    closeIdeaConfigModal();
+
+    // Llamar a goToStep2 pasando los parámetros de configuración
+    // Nota: Necesitaremos modificar goToStep2 para aceptar estos parámetros o guardarlos en store
+    goToStep2(thematicLine, methodology);
+}
+
+// Hacerlas globales para onclick
+window.openIdeaConfigModal = openIdeaConfigModal;
+window.closeIdeaConfigModal = closeIdeaConfigModal;
+window.confirmIdeaGeneration = confirmIdeaGeneration;

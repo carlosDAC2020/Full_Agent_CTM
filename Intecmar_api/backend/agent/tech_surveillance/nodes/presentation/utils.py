@@ -177,6 +177,15 @@ def create_marp_from_text(raw_text: str, title: str) -> str:
 <div style="font-size: 0.8em;">
   {content}
 </div>
+""",
+        "METODOLOGIA": """
+---
+<!-- _class: compact -->
+<!-- header: '14. ESTRUCTURA Y ENFOQUE METODOLÓGICO' -->
+<h2>📋 Estructura Técnico-Metodológica</h2>
+<div class="card warning">
+  {content}
+</div>
 """
     }
 

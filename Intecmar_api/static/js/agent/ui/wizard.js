@@ -10,7 +10,7 @@ export { updateFileStatus, navigateToStep } from './common.js';
 
 // Step Logic
 // Step Logic
-export { startAnalysis, startResearch, appendDocs } from './steps/step1.js';
+export { startAnalysis, startResearch, appendDocs, openIdeaConfigModal, closeIdeaConfigModal, confirmIdeaGeneration } from './steps/step1.js';
 export { goToStep2, cancelEdit } from './steps/step2.js';
 export { confirmIdea } from './steps/step3.js';
 export { generateFinal } from './steps/step4.js';

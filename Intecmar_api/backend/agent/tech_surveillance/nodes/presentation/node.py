@@ -53,11 +53,17 @@ def presentation_generation_docs_node(state: GraphState):
     # Construir ruta de carpeta organizada
     minio_folder = f"{user_email}/Agent_Sessions/{session_id}/presentation"
     
-    # Subir y obtener las KEYS (ej: "email/Agent_Sessions/uuid/presentation/archivo.pdf")
-    # Subir y obtener las KEYS (ej: "email/Agent_Sessions/uuid/presentation/archivo.pdf")
+    # MD siempre existe si llegamos aquí
     md_key = storage_service.upload_file(filename, f"{minio_folder}/{os.path.basename(filename)}", remove_after_upload=True)
-    pdf_key = storage_service.upload_file(pdf_path, f"{minio_folder}/{os.path.basename(pdf_path)}", remove_after_upload=True)
-    pptx_key = storage_service.upload_file(pptx_path, f"{minio_folder}/{os.path.basename(pptx_path)}", remove_after_upload=True)
+    
+    # PDF y PPTX son opcionales (dependen de la conversión)
+    pdf_key = None
+    if pdf_path and os.path.exists(pdf_path):
+        pdf_key = storage_service.upload_file(pdf_path, f"{minio_folder}/{os.path.basename(pdf_path)}", remove_after_upload=True)
+    
+    pptx_key = None
+    if pptx_path and os.path.exists(pptx_path):
+        pptx_key = storage_service.upload_file(pptx_path, f"{minio_folder}/{os.path.basename(pptx_path)}", remove_after_upload=True)
     
     # Actualizamos el estado con las KEYS de MinIO, no las rutas locales
     docs_paths: DocsPaths = state.get("docs_paths") or DocsPaths()
@@ -74,9 +80,12 @@ def presentation_generation_docs_node(state: GraphState):
     # Crear entrada de historial (usaremos la key de MinIO, que el API firmará después)
     history_entry = {
         "name": f"Presentación {datetime.datetime.now().strftime('%d/%m/%Y %H:%M')}",
-        "url": pdf_key,
+        "url": pdf_key or md_key, # Link principal al PDF, o MD si falló
+        "pdf": pdf_key,
+        "pptx": pptx_key,
+        "md": md_key,
         "date": datetime.datetime.now().isoformat(),
-        "type": "pdf"
+        "type": "presentation"
     }
     
     # Evitar duplicados si por alguna razón se re-ejecuta el mismo archivo (poco probable por el timestamp)

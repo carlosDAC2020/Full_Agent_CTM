@@ -5,7 +5,7 @@ from fastapi import File, UploadFile, Form
 
 import uuid
 from fastapi import APIRouter
-from backend.app.schemas.requests import IngestRequest, SelectionRequest, NextStepRequest
+from backend.app.schemas.requests import IngestRequest, SelectionRequest, NextStepRequest, IdeaGenerationRequest
 from backend.app.workers.tech_surveillance.tasks import task_process_agent_step
 
 from sqlalchemy.orm import Session
@@ -112,10 +112,16 @@ async def start_ingest(
 
 @router.post("/generate-ideas", summary="Paso 2: Generar Ideas", description="Basado en la ingesta inicial, dispara el proceso de brainstorming para proponer ideas de proyectos técnicos.")
 async def generate_ideas(
-    request: NextStepRequest,
+    request: IdeaGenerationRequest,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
+    # DEBUG: Log para ver qué recibe el backend
+    print(f"📥 RECEIVED /generate-ideas request:")
+    print(f"   session_id: {request.session_id}")
+    print(f"   selected_thematic_line: {request.selected_thematic_line}")
+    print(f"   selected_methodology: {request.selected_methodology}")
+    
     # Verify session belongs to user
     session = db.query(AgentSession).filter(
         AgentSession.id == request.session_id,
@@ -126,7 +132,11 @@ async def generate_ideas(
     
     task = task_process_agent_step.delay(
         session_id=request.session_id, 
-        input_data={"user_email": current_user.email}, 
+        input_data={
+            "user_email": current_user.email,
+            "selected_thematic_line": request.selected_thematic_line,
+            "selected_methodology": request.selected_methodology
+        }, 
         step_type="proposal_ideas"
     )
     return {"task_id": task.id, "session_id": request.session_id}
@@ -300,9 +310,11 @@ async def get_session_history(
                 # Proxy Presentation History
                 if "presentation_history" in ci and isinstance(ci["presentation_history"], list):
                     for entry in ci["presentation_history"]:
-                        if "url" in entry and entry["url"] and "/" in entry["url"]:
-                            if not entry["url"].startswith("/api/"):
-                                entry["url"] = f"/api/minio_agent/{entry['url']}"
+                        # Proxy url, pdf, pptx, md
+                        for field in ["url", "pdf", "pptx", "md"]:
+                            if field in entry and entry[field] and "/" in entry[field]:
+                                if not entry[field].startswith("/api/"):
+                                    entry[field] = f"/api/minio_agent/{entry[field]}"
                 
                 # Proxy Context Docs
                 if "context_docs" in ci and isinstance(ci["context_docs"], list):

@@ -35,13 +35,22 @@ def propose_ides_node(state: GraphState) -> dict:
         }
 
     # 2. Extraer datos para el prompt (manejo de nulos seguro)
+    selected_thematic_line = state.get("selected_thematic_line") or "General / No especificada"
+    selected_methodology = state.get("selected_methodology") or "No especificada (proponer una adecuada)"
+    
+    print(f"🔍 DEBUG propose_ides_node - Received from state:")
+    print(f"   selected_thematic_line: {selected_thematic_line}")
+    print(f"   selected_methodology: {selected_methodology}")
+
     data_for_prompt = {
         "title": call_info.title or "N/A",
         "objective": call_info.objective or "N/A",
         "funding": call_info.funding or "N/A",
         "keywords": ", ".join(call_info.keywords) if call_info.keywords else "N/A",
         "important_dates": call_info.important_dates or "N/A",
-        "benefits": ", ".join(call_info.benefits) if call_info.benefits else "N/A"
+        "benefits": ", ".join(call_info.benefits) if call_info.benefits else "N/A",
+        "selected_thematic_line": selected_thematic_line,
+        "selected_methodology": selected_methodology
     }
 
     # 3. Preparar el Prompt
@@ -51,7 +60,7 @@ def propose_ides_node(state: GraphState) -> dict:
 
     prompt_template = PromptTemplate(
         template=propose_ideas_template, 
-        input_variables=["title", "objective", "funding", "keywords", "important_dates", "benefits", "research_report"]
+        input_variables=["title", "objective", "funding", "keywords", "important_dates", "benefits", "research_report", "selected_thematic_line", "selected_methodology"]
     )
     
     formatted_prompt = prompt_template.format(**data_for_prompt)
@@ -70,10 +79,18 @@ def propose_ides_node(state: GraphState) -> dict:
 
         # 6. Retornar actualización del estado
         # NOTA: La clave en GraphState es 'proposal_ideas', no 'proposal_idea_response'
-        return {
+        result = {
             "proposal_ideas": response,
+            "selected_thematic_line": selected_thematic_line,
+            "selected_methodology": selected_methodology,
             "messages": [AIMessage(content=summary_msg)]
         }
+        
+        print(f"🔍 DEBUG propose_ides_node - Returning to state:")
+        print(f"   selected_thematic_line: {result['selected_thematic_line']}")
+        print(f"   selected_methodology: {result['selected_methodology']}")
+        
+        return result
 
     except Exception as e:
         print(f"--- Error generando ideas: {e} ---")

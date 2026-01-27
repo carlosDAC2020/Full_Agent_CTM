@@ -10,6 +10,10 @@ Your goal is to analyze the provided details of a "Call for Proposals" (Grant/Fu
 - **Important Dates:** {important_dates}
 - **Benefits:** {benefits}
 
+### SELECTED CRITERIA (USER CHOICE):
+- **Selected Thematic Line:** {selected_thematic_line}
+- **Selected Methodology Framework:** {selected_methodology}
+
 ### DETAILED RESEARCH REPORT / PRESENTATION SUMMARY:
 {research_report}
 
@@ -23,7 +27,7 @@ Your goal is to analyze the provided details of a "Call for Proposals" (Grant/Fu
 
 ### INSTRUCTIONS:
 1. **Analyze** the objective and constraints.
-2. **Brainstorm** 5 unique concepts based on the guidelines above.
+2. **Brainstorm** 5 unique concepts based on the guidelines above. **CRITICAL:** All ideas MUST be aligned with the **Selected Thematic Line** ({selected_thematic_line}) and specifically designed to be developed under the **Selected Methodology Framework** ({selected_methodology}).
 3. **Structure** each idea with the following fields:
     - **Idea Title:** Professional, descriptive, and catchy.
     - **Description:** A concise paragraph (50-80 words) clearly explaining the **problem**, the **proposed technical solution**, and the **value proposition**.

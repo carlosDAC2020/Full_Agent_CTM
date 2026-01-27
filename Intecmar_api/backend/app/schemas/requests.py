@@ -12,6 +12,11 @@ class SelectionRequest(BaseModel):
 class NextStepRequest(BaseModel):
     session_id: str
 
+class IdeaGenerationRequest(BaseModel):
+    session_id: str
+    selected_thematic_line: Optional[str] = None
+    selected_methodology: Optional[str] = None
+
 class ConvocatoriaOut(BaseModel):
     id: int
     title: str

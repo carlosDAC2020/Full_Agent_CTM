@@ -5,18 +5,49 @@ import { getElements, updateStepper } from '../common.js';
 import { loadHistory } from '../sidebar.js';
 
 // Paso 2: Generar Ideas
-export async function goToStep2() {
+export async function goToStep2(thematicLine = null, methodology = null) {
     const { step1, loader, loaderText, step2 } = getElements();
+
+    console.log('🚀 goToStep2 RECEIVED args:', { thematicLine, methodology });
+    console.log('🚀 goToStep2 STORE values:', {
+        selectedThematicLine: store.selectedThematicLine,
+        selectedMethodology: store.selectedMethodology
+    });
+
+    // FIX: Priorizar store como fuente de verdad, luego argumentos, luego DOM
+    if (!thematicLine) {
+        thematicLine = store.selectedThematicLine;
+    }
+    if (!methodology) {
+        methodology = store.selectedMethodology;
+    }
+
+    // Fallback final al DOM solo si todo lo demás falló
+    if (!thematicLine) {
+        const domThematic = document.getElementById('config-thematic-line');
+        thematicLine = domThematic?.value || "General / No especificada";
+    }
+    if (!methodology) {
+        const domMethod = document.getElementById('config-methodology');
+        methodology = domMethod?.value || "No especificada";
+    }
+
+    console.log('🚀 goToStep2 FINAL values to send:', { thematicLine, methodology });
 
     // UI Transition
     step1.classList.add('hidden');
     loader.classList.remove('hidden');
-    loaderText.innerText = "Analizando oportunidades y generando ideas innovadoras...";
+
+    let loadingMsg = "Analizando oportunidades y generando ideas innovadoras...";
+    if (methodology && methodology !== "No especificada") {
+        loadingMsg = `Generando ideas bajo el marco ${methodology}...`;
+    }
+    loaderText.innerText = loadingMsg;
     updateStepper(2);
 
     try {
         // 1. Start Generate Ideas Task
-        const { task_id } = await generateIdeas(store.sessionId);
+        const { task_id } = await generateIdeas(store.sessionId, thematicLine, methodology);
 
         // 2. Poll Task Progress
         pollTask(
@@ -50,6 +81,22 @@ export async function goToStep2() {
 export function renderIdeas(data) {
     const { ideasContainer } = getElements();
     ideasContainer.innerHTML = '';
+
+    // Mostrar criterios seleccionados
+    const thematicDisp = document.getElementById('display-selected-thematic');
+    const methodologyDisp = document.getElementById('display-selected-methodology');
+
+    console.log('👀 RenderIdeas - Received Data:', {
+        selected_thematic_line: data?.selected_thematic_line,
+        selected_methodology: data?.selected_methodology
+    });
+
+    if (thematicDisp) {
+        thematicDisp.innerText = data?.selected_thematic_line || "General / No especificada";
+    }
+    if (methodologyDisp) {
+        methodologyDisp.innerText = data?.selected_methodology || "No especificado";
+    }
 
     // Data structure from backend: data.proposal_ideas.ideas (Array)
     const ideas = data?.proposal_ideas?.ideas || [];

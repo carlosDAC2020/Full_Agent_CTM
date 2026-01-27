@@ -45,7 +45,11 @@ async def call_info_refiner_node(state: GraphState):
     2. **FINANCIAMIENTO (funding)**: Extrae montos máximos, porcentajes de financiación y si es no dilutiva.
     3. **OBJETIVO (objective)**: Refina el objetivo si el reporte describe mejor para qué sirve la convocatoria.
     4. **DOCS Y URL**: Mantén los documentos de contexto ('context_docs') e 'url' intactos si ya existen.
-    5. **KEYWORDS Y BENEFICIOS**: Asegúrate de capturar los beneficios encontrados en el reporte.
+    6. **LÍNEAS TEMÁTICAS (thematic_lines)**: EXTRAE solo las líneas de investigación explícitas. <strong>REGLA DE ORO: NO INFIERAS LINEAS NO EXISTENTES.</strong>
+    7. **ENFOQUE METODOLÓGICO (methodology)**: Identifica el marco metodológico requerido (ej: MGA WEB, SMART).
+    
+    IMPORTANTE: El campo 'thematic_lines' debe ser una lista con solo las líneas reales encontradas. No inventes para llenar cupos.
+     El campo 'methodology' debe ser una descripción breve focalizada en el marco de trabajo (SMART, MGA, etc.).
     
     El resultado debe ser un objeto CallInfo completo, profesional y refinado.
     """
@@ -68,10 +72,18 @@ async def call_info_refiner_node(state: GraphState):
                 refined_info.url = current_call_info.url
             if hasattr(current_call_info, "presentation_history") and current_call_info.presentation_history:
                 refined_info.presentation_history = current_call_info.presentation_history
+            
+            # Asegurar que thematic_lines y methodology no se pierdan si el LLM falla en este intento pero existían
+            if not refined_info.thematic_lines and hasattr(current_call_info, "thematic_lines"):
+                refined_info.thematic_lines = current_call_info.thematic_lines
+            if not refined_info.methodology and hasattr(current_call_info, "methodology"):
+                refined_info.methodology = current_call_info.methodology
 
             print(f"✅ [REFINER] Información refinada:")
             print(f"   - Título: {refined_info.title}")
             print(f"   - Fechas Extraídas: {refined_info.important_dates or refined_info.dates}")
+            print(f"   - Líneas Temáticas: {refined_info.thematic_lines}")
+            print(f"   - Metodología (snippet): {refined_info.methodology[:100] if refined_info.methodology else 'VACÍO'}...")
             
             return {"call_info": refined_info}
             

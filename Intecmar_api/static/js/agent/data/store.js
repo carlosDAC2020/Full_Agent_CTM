@@ -6,6 +6,10 @@ export const store = {
     currentSelectedIdea: null,
     maxReachedStep: 1,
     convocatorias: [],     // Real convocatorias from DB
+    callInfo: null,        // NEW: Current analyzed call details
     statusFilter: 'active',
-    categoryFilter: 'all'
+    categoryFilter: 'all',
+    // NEW: Store selected thematic line and methodology for idea generation
+    selectedThematicLine: null,
+    selectedMethodology: null
 };

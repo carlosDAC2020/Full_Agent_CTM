@@ -24,12 +24,32 @@ class GeneralInfo(BaseModel):
     keywords: Optional[List[str]] = Field(
         default=None, 
         description="Keywords separated by commas")
-    main_entity: Optional[str] = Field(
+
+    # aliansas
+    executor_entity: Optional[str] = Field(
         default=None, 
-        description="Main entity")
-    collaborating_entities: Optional[List[str]] = Field(
+        description="Executor entity"
+    )
+    executor_entity_logo: Optional[str] = Field(
         default=None, 
-        description="Collaborating entities separated by commas")
+        description="Executor entity logo"
+    )   
+    coejecutors_entities: Optional[List[str]] = Field(
+        default=None, 
+        description="Co-executors entities list"
+    )
+    coejecutors_entities_logos: Optional[List[str]] = Field(
+        default=None, 
+        description="Co-executors entities logos list"
+    )
+    collaborators_entities: Optional[List[str]] = Field(
+        default=None, 
+        description="Collaborators entities list"
+    )
+    collaborators_entities_logos: Optional[List[str]] = Field(
+        default=None, 
+        description="Collaborators entities logos list"
+    )
 
 class TheoreticalFramework(BaseModel):
     """Schema for the Theoretical Framework and State of the Art section."""
@@ -152,11 +172,34 @@ class CallInfo(BaseModel):
     important_dates: Optional[str] = Field(default=None, description="Opening and closing dates of the call (e.g., 'Apertura: [Fecha] | Cierre: [Fecha]')")
     dates: Optional[str] = Field(default=None, description="Alias for important_dates to ensure compatibility")
     benefits: Optional[List[str]] = Field(default=None, description="Beneficios listados")
-    presentation_history: Optional[List[dict]] = Field(default=None, description="History of generated presentations (versions).")
+    
+    # lineas tematicas
+    thematic_lines: Optional[List[str]] = Field(
+        default=None, 
+        description="Lineas tematicas listadas"
+    )
+
+    # enfoque metodologico
+    methodology: Optional[str] = Field(
+        default=None, 
+        description="Enfoque metodologico de la convocatoria (ej: MGA WEB, SMART, PMI, SCRUM)"
+    )
+    
+    suggested_frameworks: Optional[List[str]] = Field(
+        default=["MGA WEB", "SMART", "PMI", "SCRUM", "ISO 21500"],
+        description="Lista de marcos metodológicos sugeridos o detectados"
+    )
+    
+    presentation_history: Optional[List[dict]] = Field(
+        default=None, 
+        description="History of generated presentations (versions)."
+    )
+
     url: Optional[str] = Field(
         default=None, 
         description="URL de más información"
     )
+
     context_docs: Optional[List[str]] = Field(
         default=None,
         description="Rutas a documentos relevantes de la convocatoria"
@@ -164,9 +207,56 @@ class CallInfo(BaseModel):
 
 class ProposalIdea(BaseModel):
     """Idea de proyecto propuesta por el usuario."""
-    idea_title: Optional[str] = Field(default=None, description="Título de la idea de proyecto")
-    idea_description: Optional[str] = Field(default=None, description="Descripción de la idea de proyecto") 
-    idea_objectives: Optional[List[str]] = Field(default=None, description="5 objetivos de la idea de proyecto basadas en en la metodologia smart ")
+    idea_title: Optional[str] = Field(
+        default=None, 
+        description="Título de la idea de proyecto"
+    )
+    idea_description: Optional[str] = Field(
+        default=None, 
+        description="Descripción de la idea de proyecto"
+    ) 
+    # objetivo genral
+    idea_general_objective: Optional[str] = Field(
+        default=None, 
+        description="Objetivo general de la idea de proyecto"
+    )
+    # objetivos espeficios
+    idea_specific_objectives: Optional[List[str]] = Field(
+        default=None, 
+        description="5 objetivos de la idea de proyecto basadas en en la metodologia seleccionada"
+    )
+
+    # ---------------- campos q debe llenar el usuario -----------------
+    # duracion
+    duration_time: Optional[str] = Field(
+        default=None, 
+        description="Duración del proyecto"
+    )
+    # aliansas
+    executor_entity: Optional[str] = Field(
+        default=None, 
+        description="Executor entity"
+    )
+    executor_entity_logo: Optional[str] = Field(
+        default=None, 
+        description="Executor entity logo"
+    )   
+    coejecutors_entities: Optional[List[str]] = Field(
+        default=None, 
+        description="Co-executors entities list"
+    )
+    coejecutors_entities_logos: Optional[List[str]] = Field(
+        default=None, 
+        description="Co-executors entities logos list"
+    )
+    collaborators_entities: Optional[List[str]] = Field(
+        default=None, 
+        description="Collaborators entities list"
+    )
+    collaborators_entities_logos: Optional[List[str]] = Field(
+        default=None, 
+        description="Collaborators entities logos list"
+    )
 
 class proposalIdeaResponse(BaseModel):
     ideas: Optional[List[ProposalIdea]] = Field(
@@ -214,7 +304,6 @@ class DocsPaths(BaseModel):
         description="Ruta del poster del proyetco generado"
     )
 
-# --- Estado Principal del Grafo (Híbrido: TypedDict + Pydantic) ---
 
 class GraphState(TypedDict):
     """Estado del grafo con validación Pydantic."""
@@ -234,6 +323,10 @@ class GraphState(TypedDict):
     # ideas de proyecto propuestas
     proposal_ideas: Optional[proposalIdeaResponse]
     selected_idea: Optional[ProposalIdea]
+    
+    # Preferencias del usuario para la generación de ideas
+    selected_thematic_line: Optional[str]
+    selected_methodology: Optional[str]
 
     # resumen de presentacion
     presentation_summary : Optional[str]

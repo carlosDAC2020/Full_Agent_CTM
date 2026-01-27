@@ -54,12 +54,23 @@ export async function ingestCall(text, files = []) {
     }
 }
 
-export async function generateIdeas(sessionId) {
+export async function generateIdeas(sessionId, thematicLine = null, methodology = null) {
     try {
+        // DEBUG: Log ANTES del fetch para ver qué se envía
+        console.log('📤 ABOUT TO SEND to /generate-ideas:', {
+            session_id: sessionId,
+            selected_thematic_line: thematicLine,
+            selected_methodology: methodology
+        });
+
         const response = await fetch('/api/agent/generate-ideas', {
             method: 'POST',
             headers: getAuthHeaders(),
-            body: JSON.stringify({ session_id: sessionId })
+            body: JSON.stringify({
+                session_id: sessionId,
+                selected_thematic_line: thematicLine,
+                selected_methodology: methodology
+            })
         });
 
         if (!response.ok) {

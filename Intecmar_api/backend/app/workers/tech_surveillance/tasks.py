@@ -95,6 +95,9 @@ def task_process_agent_step(self, session_id: str, input_data: dict, step_type: 
     bind=True permite acceder a 'self' para actualizar el estado.
     """
     
+    print(f"🏁 STARTING TASK task_process_agent_step: step_type={step_type}")
+    print(f"🔍 DEBUG INPUT DATA: {json.dumps(input_data, default=str)}")
+
     # ==========================================
     # 1. GESTIÓN DE BASE DE DATOS (SESIÓN)
     # ==========================================
@@ -263,6 +266,15 @@ def task_process_agent_step(self, session_id: str, input_data: dict, step_type: 
     
     elif step_type == "proposal_ideas":
         current_state["route_decision"] = "proposal_ideas"
+        
+        # FIXED: Check existence of key rather than truthiness (handles empty string case better)
+        if "selected_thematic_line" in input_data:
+            current_state["selected_thematic_line"] = input_data["selected_thematic_line"]
+            print(f"✅ INJECTED selected_thematic_line: {input_data['selected_thematic_line']}")
+            
+        if "selected_methodology" in input_data:
+            current_state["selected_methodology"] = input_data["selected_methodology"]
+            print(f"✅ INJECTED selected_methodology: {input_data['selected_methodology']}")
     
     elif step_type == "project_idea":
         current_state["route_decision"] = "project_idea"
