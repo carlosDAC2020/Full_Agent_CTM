@@ -3,51 +3,39 @@
 SMART_OBJECTIVES_PROMPT = """\
 ## ROLE: You are a seasoned Project Management Professional (PMP) and strategic planner.
 
-## MISSION: Develop a "Project Objectives" section for a formal R&D proposal. This section must include one high-level General Objective and 3-5 Specific Objectives using the S.M.A.R.T. methodology.
+## MISSION: Refine and format the "Project Objectives" for a formal R&D proposal. You must ensure they are professional, well-structured, and strictly aligned with the project's justification and the selected methodology.
 
 ## CONTEXT FOR YOUR TASK
 - **Project Title:** {project_title}
-- **Project Duration:** {duration} (Total planned time)
+- **Project Duration:** {duration}
 - **Problem Statement & Justification:** {problem_statement_justification}
+- **Selected Methodology (Framework):** {selected_methodology}
+
+## REFERENCE OBJECTIVES (From Step 3)
+These are the objectives the user has already approved or drafted. You MUST use these as your primary base. You may refine the wording for professional quality, but do NOT change their core intent.
+{reference_objectives}
 
 ## INSTRUCTIONS
-
-### Part 1: General Objective
-- Formulate a single, concise sentence that encapsulates the ultimate goal or vision of the project. This should be the overarching aim.
-
-### Part 2: Specific Objectives (S.M.A.R.T. Methodology)
-- Create 3 to 5 specific objectives.
-- **Critical Alignment:** Each specific objective MUST be a direct, logical step towards solving the problem described in the "Problem Statement & Justification".
-- **Strict S.M.A.R.T. Formatting:** For each objective, you MUST explicitly detail each of the five S.M.A.R.T. criteria in a sub-list.
-
-## S.M.A.R.T. Criteria Definition
-- **S (Specific):** What exactly needs to be accomplished? Who is responsible? What are the constraints?
-- **M (Measurable):** What concrete metrics or KPIs will be used to prove the objective is met? (e.g., "reduce downtime by 15%", "achieve 95% prediction accuracy").
-- **A (Achievable):** Is this objective realistic given the project's scope and technology? Briefly state why.
-- **R (Relevant):** How does this objective contribute directly to achieving the General Objective and solving the core problem?
-- **T (Time-bound):** What is the specific deadline or timeframe for achieving this objective? (e.g., "within the first 6 months", "by the end of Q3").
+1.  **Alignment:** Ensure the objectives directly address the "knowledge gaps" or "technology gaps" identified in the justification.
+2.  **Methodology Adaptation:** Format the objectives according to the **{selected_methodology}** framework.
+    - If the methodology is **MGA**, ensure they are focused on measurable contributions to the chain of value.
+    - If the methodology is **SMART**, follow the specific S.M.A.R.T. criteria for each objective.
+    - For other methodologies, provide a clear, professional title and a descriptive paragraph for each point.
+3.  **Strictness:** Do NOT invent new objectives that were not in the Reference Objectives unless it's strictly necessary for the logical flow of the {selected_methodology} framework.
 
 ## LANGUAGE CONSTRAINT
-- You MUST write the response in the **SAME LANGUAGE** as the provided context. If the justification is in Spanish, your objectives must be in Spanish.
+- You MUST write the response in the **SAME LANGUAGE** as the provided context (likely Spanish).
 
-## REQUIRED OUTPUT FORMAT (Strictly follow this Markdown)
+## REQUIRED OUTPUT FORMAT (Markdown)
 
 ### 5.1. Objetivo General
-(Your generated general objective here.)
+- MUST be a single, comprehensive statement.
+- **Mandatory Structure:** You MUST strictly follow the formula: **[Verbo en Infinitivo] + [Objeto/Qué] + [Método/Cómo] + [Propósito/Para qué]**.
+- It must clearly and explicitly answer: ¿Qué se va a hacer?, ¿Cómo se va a lograr? y ¿Para qué servirá?.
 
-### 5.2. Objetivos Específicos (SMART)
-
-1.  **Objetivo:** (Title of the first specific objective).
-    *   **Específico (S):** (Detailed explanation).
-    *   **Medible (M):** (Detailed explanation).
-    *   **Alcanzable (A):** (Detailed explanation).
-    *   **Relevante (R):** (Detailed explanation).
-    *   **Plazo (T):** (Detailed explanation).
-
-2.  **Objetivo:** (Title of the second specific objective).
-    *   **Específico (S):** (Detailed explanation).
-    *   ... (and so on for all criteria) ...
+### 5.2. Objetivos Específicos
+(Refined list of 3-5 specific objectives, formatted according to {selected_methodology}. If {selected_methodology} is SMART, include S-M-A-R-T sub-points for each. If not, provide the objective title and a brief descriptive paragraph for each.)
 
 ---
-Proceed to generate the objectives section now based on the provided context.
+Proceed to refine the objectives now.
 """

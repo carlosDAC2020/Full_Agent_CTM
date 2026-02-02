@@ -44,12 +44,11 @@ Your process MUST follow these steps before generating the final report:
 
 ---
 
-### **9. Referencias Bibliográficas (APA 7th Edition Format)**
+### **9. Referencias Bibliográficas ({ref_style} Format)**
 
-(CRITICAL: After the horizontal rule, create a bibliography list. For every paper or source mentioned in the report, provide a full citation formatted STRICTLY in APA 7th Edition style. You MUST generate these citations yourself based on the information from the tools. Extract authors, year, title, and publication venue.)
+(CRITICAL: After the horizontal rule, create a bibliography list. For every paper or source mentioned in the report, provide a full citation formatted STRICTLY in {ref_style} style. You MUST generate these citations yourself based on the information from the tools. Extract authors, year, title, and publication venue.)
 
-**Ejemplo de formato APA:**
-- Author, A. A., & Author, B. B. (Year). Title of the article. *Title of the Periodical, volume number*(issue number), pages. https://doi.org/xxxx
-- Author, A. A. (Year). *Title of work*. Publisher.
+**Exemple for reference format:**
+Follow the rules of the selected style ({ref_style}).
 
 """

@@ -11,6 +11,10 @@ IMPACTS_PROMPT = """\
 - **Project Specific Objectives:**
 {specific_objectives_smart}
 
+## CONFIGURATION
+- **Character Limit:** Approximately {char_limit} characters.
+- **Reference Style:** {ref_style} (If you use citations, follow this style).
+
 ## INSTRUCTIONS
 
 Your response must be structured into two distinct sub-sections: "Expected Results (Deliverables)" and "Expected Impacts".

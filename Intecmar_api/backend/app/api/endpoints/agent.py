@@ -178,7 +178,10 @@ async def finalize_project(
     
     task = task_process_agent_step.delay(
         session_id=request.session_id, 
-        input_data={"user_email": current_user.email}, 
+        input_data={
+            "user_email": current_user.email,
+            "generation_config": request.generation_config
+        }, 
         step_type="generate_project"
     )
     return {"task_id": task.id, "session_id": request.session_id}
@@ -265,6 +268,49 @@ async def append_documents(
     return {"task_id": task.id, "session_id": session_id, "added_docs": len(new_docs_paths)}
 
 
+@router.post("/upload-alliance-logo", summary="Subir logo de alianza", description="Sube un logo de entidad aliada (ejecutor, coejecutor, colaborador) a la carpeta de la sesión.")
+async def upload_alliance_logo(
+    session_id: str = Form(...),
+    file: UploadFile = File(...),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Sube un logo de alianza a MinIO en la carpeta alianzas/ de la sesión."""
+    # Verificar que la sesión pertenece al usuario
+    session = db.query(AgentSession).filter(
+        AgentSession.id == session_id,
+        AgentSession.user_id == current_user.id
+    ).first()
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found or access denied")
+    
+    # Generar nombre único para evitar colisiones
+    file_ext = os.path.splitext(file.filename)[1] if file.filename else ".png"
+    unique_name = f"{uuid.uuid4().hex[:8]}_{file.filename}"
+    
+    # Ruta en MinIO: {email}/Agent_Sessions/{session_id}/alianzas/{unique_name}
+    minio_path = f"{current_user.email}/Agent_Sessions/{session_id}/alianzas/{unique_name}"
+    
+    # Guardar temporalmente y subir
+    with tempfile.NamedTemporaryFile(delete=False, suffix=file_ext) as tmp:
+        shutil.copyfileobj(file.file, tmp)
+        tmp_path = tmp.name
+    
+    try:
+        object_key = storage_service.upload_file(tmp_path, minio_path)
+        if not object_key:
+            raise HTTPException(status_code=500, detail="Error uploading file to storage")
+    finally:
+        if os.path.exists(tmp_path):
+            os.remove(tmp_path)
+    
+    return {
+        "path": object_key,
+        "url": f"/api/minio_agent/{object_key}",
+        "filename": unique_name
+    }
+
+
 @router.get("/history/{session_id}", summary="Recuperar sesión", description="Obtiene el estado completo y los datos de todos los pasos de una sesión específica para restaurar el wizard.")
 async def get_session_history(
     session_id: str,
@@ -327,6 +373,54 @@ async def get_session_history(
                                 doc["url"] = f"/api/minio_agent/{doc['url']}"
                 
                 step_data["call_info"] = ci
+            
+            # 3. Selected Idea & General Info Alliance Logos
+            # Para general_info en report_components
+            if "report_components" in step_data and step_data["report_components"]:
+                rc = step_data["report_components"]
+                if "general_info" in rc and rc["general_info"]:
+                    gi = rc["general_info"]
+                    # Proxy executor logo
+                    if gi.get("executor_entity_logo") and "/" in gi["executor_entity_logo"]:
+                        if not gi["executor_entity_logo"].startswith("/api/"):
+                            gi["executor_entity_logo"] = f"/api/minio_agent/{gi['executor_entity_logo']}"
+                    
+                    # Proxy coexecutors logos
+                    if gi.get("coejecutors_entities_logos") and isinstance(gi["coejecutors_entities_logos"], list):
+                        gi["coejecutors_entities_logos"] = [
+                            f"/api/minio_agent/{logo}" if logo and "/" in logo and not str(logo).startswith("/api/") else logo 
+                            for logo in gi["coejecutors_entities_logos"]
+                        ]
+                    
+                    # Proxy collaborators logos
+                    if gi.get("collaborators_entities_logos") and isinstance(gi["collaborators_entities_logos"], list):
+                        gi["collaborators_entities_logos"] = [
+                            f"/api/minio_agent/{logo}" if logo and "/" in logo and not str(logo).startswith("/api/") else logo 
+                            for logo in gi["collaborators_entities_logos"]
+                        ]
+                    rc["general_info"] = gi
+                step_data["report_components"] = rc
+
+            # Para selected_idea directo
+            if "selected_idea" in step_data and step_data["selected_idea"]:
+                si = step_data["selected_idea"]
+                if isinstance(si, dict):
+                    if si.get("executor_entity_logo") and "/" in si["executor_entity_logo"]:
+                        if not si["executor_entity_logo"].startswith("/api/"):
+                            si["executor_entity_logo"] = f"/api/minio_agent/{si['executor_entity_logo']}"
+                    
+                    if si.get("coejecutors_entities_logos") and isinstance(si["coejecutors_entities_logos"], list):
+                        si["coejecutors_entities_logos"] = [
+                            f"/api/minio_agent/{logo}" if logo and "/" in logo and not str(logo).startswith("/api/") else logo 
+                            for logo in si["coejecutors_entities_logos"]
+                        ]
+                    
+                    if si.get("collaborators_entities_logos") and isinstance(si["collaborators_entities_logos"], list):
+                        si["collaborators_entities_logos"] = [
+                            f"/api/minio_agent/{logo}" if logo and "/" in logo and not str(logo).startswith("/api/") else logo 
+                            for logo in si["collaborators_entities_logos"]
+                        ]
+                    step_data["selected_idea"] = si
             
             last_processed_data = step_data
         

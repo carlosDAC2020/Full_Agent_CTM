@@ -11,6 +11,7 @@ class SelectionRequest(BaseModel):
 
 class NextStepRequest(BaseModel):
     session_id: str
+    generation_config: Optional[dict] = None
 
 class IdeaGenerationRequest(BaseModel):
     session_id: str

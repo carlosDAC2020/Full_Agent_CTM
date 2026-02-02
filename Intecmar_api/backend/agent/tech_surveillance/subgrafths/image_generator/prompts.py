@@ -127,6 +127,32 @@ template_image_prompt_nn = """You are an expert AI Art Director and Graphic Desi
 Write ONLY the final English prompt as a single flowing paragraph. No explanations. Ready for Imagen API.
 """
 
+template_image_refinement_prompt = """You are an expert AI Art Director specializing in professional poster design. Your task is to REFINE a project poster prompt based on specific USER FEEDBACK, while ensuring the result remains photorealistic, professional, and compliant with mandatory design rules.
+
+**Project Context:**
+- **Full Title:** {title}
+- **Description:** {description}
+
+**User Feedback (CRITICAL):**
+"{user_feedback}"
+
+**Your Mission:**
+1. **Incorporate Feedback:** Modify the visual concept of the poster to reflect the user's specific requests (e.g., changes in lighting, subjects, environment, or mood).
+2. **Preserve Professionalism:** Ensure the scene remains a high-quality "real-world" photograph (no cartoons, no abstract digital art).
+3. **Strict Compliance (MANDATORY):**
+   - **Aspect Ratio:** Must be 3:4 (vertical).
+   - **Title Placement:** Use the EXACT title '{title}' in the TOP or MIDDLE area.
+   - **Slogan:** Include a short, punchy 3-5 word slogan.
+   - **Bottom Area:** The bottom 20% MUST be a smooth dark gradient/fade to black for logo placement. No text or details there.
+   - **Technical Quality:** Professional camera specs, 4K resolution, HDR.
+
+**PROMPT PATTERN:**
+A [photography-style] poster in 3:4 aspect ratio, vertical composition, with the title '{title}' [creative placement in UPPER/MIDDLE zones] and slogan '[GENERATED_SLOGAN]' [complementary placement], featuring [REFINED VISUAL SCENARIO reflecting user feedback - 2-3 specific sentences], shot with [lens + settings], [realistic lighting description], set in [real environment], color graded with [style], shot on professional camera equipment with 4K resolution and high dynamic range, [composition rule]. The bottom 20% of the image features a smooth dark gradient fade to black, explicitly kept free of text or details for legal logo placement.
+
+**OUTPUT:**
+Write ONLY the final English prompt as a single flowing paragraph. No explanations.
+"""
+
 template_image_prompt = """You are an expert AI Art Director specializing in professional poster design. Your task is to create a precise prompt for the Gemini 3 Pro Image model to generate a photorealistic and CREATIVE vertical poster tailored to the specific project context.
 
 **Project Inputs:**

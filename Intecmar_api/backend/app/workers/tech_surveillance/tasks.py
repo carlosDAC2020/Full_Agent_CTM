@@ -15,7 +15,9 @@ from backend.agent.tech_surveillance.state import (
     DocsPaths, 
     proposalIdeaResponse, 
     ProposalIdea,
-    GeneralInfo
+    GeneralInfo,
+    GenerationConfig,
+    GraphState
 )
 
 # --- IMPORTACIONES DE BASE DE DATOS ---
@@ -293,7 +295,14 @@ def task_process_agent_step(self, session_id: str, input_data: dict, step_type: 
                     general_info=GeneralInfo(
                         project_title=si.get("idea_title"),
                         project_description=si.get("idea_description"),
-                        keywords=current_state.get("call_info").keywords if "call_info" in current_state else []
+                        duration_months=si.get("duration_time"),
+                        executor_entity=si.get("executor_entity"),
+                        executor_entity_logo=si.get("executor_entity_logo"),
+                        coejecutors_entities=si.get("coejecutors_entities"),
+                        coejecutors_entities_logos=si.get("coejecutors_entities_logos"),
+                        collaborators_entities=si.get("collaborators_entities"),
+                        collaborators_entities_logos=si.get("collaborators_entities_logos"),
+                        keywords=current_state.get("call_info").keywords if "call_info" in current_state and current_state["call_info"] else []
                     )
                 )
             else:
@@ -301,16 +310,38 @@ def task_process_agent_step(self, session_id: str, input_data: dict, step_type: 
                 if not rc.general_info:
                     rc.general_info = GeneralInfo()
                 
-                rc.general_info.project_title = si.get("idea_title")
-                rc.general_info.project_description = si.get("idea_description")
+                gi = rc.general_info
+                gi.project_title = si.get("idea_title") or gi.project_title
+                gi.project_description = si.get("idea_description") or gi.project_description
+                gi.duration_months = si.get("duration_time") or gi.duration_months
+                gi.executor_entity = si.get("executor_entity") or gi.executor_entity
+                gi.executor_entity_logo = si.get("executor_entity_logo") or gi.executor_entity_logo
+                gi.coejecutors_entities = si.get("coejecutors_entities") or gi.coejecutors_entities
+                gi.coejecutors_entities_logos = si.get("coejecutors_entities_logos") or gi.coejecutors_entities_logos
+                gi.collaborators_entities = si.get("collaborators_entities") or gi.collaborators_entities
+                gi.collaborators_entities_logos = si.get("collaborators_entities_logos") or gi.collaborators_entities_logos
+
                 # Intentar heredar palabras clave de la convocatoria si no hay
-                if not rc.general_info.keywords and "call_info" in current_state:
-                    rc.general_info.keywords = current_state["call_info"].keywords
+                if not gi.keywords and "call_info" in current_state and current_state["call_info"]:
+                    gi.keywords = current_state["call_info"].keywords or []
             # -------------------------------------------------------------------------
 
             
     elif step_type == "generate_project":
         current_state["route_decision"] = "generate_proyect" # Typo intencional según tu grafo
+        
+        # Inject generation_config if provided
+        if "generation_config" in input_data and input_data["generation_config"]:
+            config_data = input_data["generation_config"]
+            current_state["generation_config"] = GenerationConfig(**config_data)
+            print(f"✅ INJECTED generation_config: {config_data}")
+
+        # Ensure thematic line is preserved if present in state but not in general_info
+        if "selected_thematic_line" in current_state and current_state["report_components"]:
+            rc = current_state["report_components"]
+            if rc.general_info and not rc.general_info.thematic_line:
+                rc.general_info.thematic_line = current_state["selected_thematic_line"]
+                print(f"✅ PERSISTED thematic_line: {rc.general_info.thematic_line}")
         
         # DEBUG: Verificar qué hay en el estado
         print(f"🔍 DEBUG (generate_project): selected_idea presente? {'selected_idea' in current_state}")

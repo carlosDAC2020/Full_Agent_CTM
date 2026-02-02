@@ -44,6 +44,60 @@ def prompt_generator_image_node(state: GraphState):
         project_title = report_components.general_info.project_title or "proyecto tecnológico"
         project_description = report_components.general_info.project_description or "un proyecto innovador"
     
+    # --- REVISAR SOBREESCRITURA DE PROMPT ---
+    gen_config = state.get("generation_config")
+    if isinstance(gen_config, dict):
+        try:
+            from backend.agent.tech_surveillance.state import GenerationConfig
+            gen_config = GenerationConfig(**gen_config)
+        except:
+            pass
+            
+    override_prompt = getattr(gen_config, "poster_prompt_override", None) if gen_config else None
+    
+    # Skip if image already exists and no refinement/regeneration requested
+    if getattr(report_components, "poster_image_path", None) and not override_prompt:
+        # If we are in "selective regeneration" mode (config exists) and poster wasn't requested
+        # we skip to save time/tokens.
+        if gen_config and gen_config.sections_to_regenerate:
+            print("⏭️ SKIP: El póster ya existe y no se solicitó refinamiento.")
+            return {
+                "messages": [AIMessage(content="Póster preservado (no se solicitó refinamiento).")]
+            }
+
+    if override_prompt:
+        print("🚀 Refinando prompt de póster con feedback del usuario.")
+        from .prompts import template_image_refinement_prompt
+        
+        prompt_template = PromptTemplate(
+            input_variables=["title", "description", "user_feedback"],
+            template=template_image_refinement_prompt
+        )
+        
+        chain = prompt_template | chat_model
+        
+        try:
+            result = chain.invoke({
+                "title": project_title,
+                "description": project_description,
+                "user_feedback": override_prompt
+            })
+            
+            generated_prompt = result.content
+            message = AIMessage(
+                content="✓ Prompt de póster refinado con tu feedback, manteniendo las directrices de diseño."
+            )
+            return {
+                "messages": [message],
+                "image_prompt": generated_prompt 
+            }
+        except Exception as e:
+            print(f"⚠️ Error refinando prompt: {e}")
+            return {
+                "messages": [AIMessage(content="⚠ Error en refinamiento, usando feedback directo.")],
+                "image_prompt": override_prompt 
+            }
+
     # Template para generar el prompt de imagen
     prompt_template = PromptTemplate(
         input_variables=["title", "description"],

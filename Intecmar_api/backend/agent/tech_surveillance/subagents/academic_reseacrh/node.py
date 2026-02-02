@@ -46,6 +46,28 @@ async def academic_research_node(state: GraphState):
             print(f"⚠️ Error rehidratando ReportSchema: {e}")
             current_report = ReportSchema()
 
+    # --- CONFIGURACIÓN DE GENERACIÓN ---
+    gen_config = state.get("generation_config")
+    if isinstance(gen_config, dict):
+        try:
+            from backend.agent.tech_surveillance.state import GenerationConfig
+            gen_config = GenerationConfig(**gen_config)
+        except:
+            pass
+    
+    redo_framework = getattr(gen_config, "redo_theoretical_framework", False) if gen_config else False
+
+    # --- OPTIMIZACIÓN: Saltar si ya existe el marco teórico Y no se pidió rehacer ---
+    if current_report.theoretical_framework and current_report.theoretical_framework.body and not redo_framework:
+        print("⏭️ OPTIMIZACIÓN: Marco teórico ya existe y no se solicitó regenerar. Saltando investigación académica.")
+        return { 
+            "messages": [AIMessage(content="Saltando investigación académica (contenido persistente).")],
+            "report_components": current_report,
+        }
+
+    print("🔍 Iniciando investigación académica (contenido no encontrado o incompleto)...")
+
+    selected_idea = state.get("selected_idea")
     general_info = current_report.general_info
     
     # --- LÓGICA DE PRIORIDAD: Usar información del reporte (GeneralInfo) ---
@@ -91,10 +113,14 @@ async def academic_research_node(state: GraphState):
 
     print(f"DEBUG: Título proyecto para investigación: {project_title}")
 
+    # --- Configuración de Generación ---
+    ref_style = getattr(gen_config, "refStyle", "APA") if gen_config else "APA"
+
     system_content = RESEARCH_PROMPT_TEMPLATE.format(
         project_title=project_title,
         project_desc=project_desc,
-        keywords=', '.join(keywords) if isinstance(keywords, list) else (keywords or "")
+        keywords=', '.join(keywords) if isinstance(keywords, list) else (keywords or ""),
+        ref_style=ref_style
     )
     
     try:

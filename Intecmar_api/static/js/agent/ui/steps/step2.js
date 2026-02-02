@@ -115,10 +115,21 @@ export function renderIdeas(data) {
 
         // Store for editing
         // Adapter for frontend structure expectation in openEditIdea
+        // Store for editing
+        // Adapter for frontend structure expectation in openEditIdea
         const ideaObj = {
             title: idea.idea_title,
             desc: idea.idea_description,
-            objectives: idea.idea_objectives || []
+            objectives: idea.idea_specific_objectives || idea.idea_objectives || [], // Fallback por si cambia nombre en backend
+            suggested_duration_months: idea.suggested_duration_months,
+            general_objective: idea.idea_general_objective,
+            // Alianzas
+            executor_entity: idea.executor_entity,
+            executor_entity_logo: idea.executor_entity_logo,
+            coejecutors_entities: idea.coejecutors_entities,
+            coejecutors_entities_logos: idea.coejecutors_entities_logos,
+            collaborators_entities: idea.collaborators_entities,
+            collaborators_entities_logos: idea.collaborators_entities_logos
         };
 
         card.onclick = () => openEditIdea(ideaObj);
@@ -136,14 +147,46 @@ export function renderIdeas(data) {
 
 // --- Logic for Editing Ideas (Internal to Step 2) ---
 
+// --- Logic for Editing Ideas (Internal to Step 2) ---
+
 function openEditIdea(idea) {
     const { ideasContainer, ideaEditor } = getElements();
     store.currentSelectedIdea = idea;
+
+    // Ocultar el banner de criterios, header y el grid de ideas
+    const banner = document.getElementById('selected-criteria-banner');
+    const header = document.getElementById('ideas-header');
+    if (banner) banner.classList.add('hidden');
+    if (header) header.classList.add('hidden');
+
     ideasContainer.classList.add('hidden');
     ideaEditor.classList.remove('hidden');
 
-    document.getElementById('edit-title').value = idea.title;
-    document.getElementById('edit-desc').value = idea.desc;
+    document.getElementById('edit-title').value = idea.title || '';
+
+    const descTextarea = document.getElementById('edit-desc');
+    descTextarea.value = idea.desc || '';
+    autoResizeTextarea(descTextarea);
+
+    // Nuevo: Objetivo General
+    const generalObjInput = document.getElementById('edit-general-objective');
+    if (generalObjInput) {
+        generalObjInput.value = idea.general_objective || '';
+        autoResizeTextarea(generalObjInput);
+    }
+
+    // Nuevo: Duración
+    document.getElementById('edit-duration').value = idea.suggested_duration_months || '';
+
+    // Nuevo: Ejecutor
+    document.getElementById('edit-executor').value = idea.executor_entity || '';
+    if (idea.executor_entity_logo) {
+        showPreview('executor', idea.executor_entity_logo);
+        store.allianceLogos = store.allianceLogos || {};
+        store.allianceLogos['executor'] = idea.executor_entity_logo;
+    } else {
+        clearLogo('executor', false);
+    }
 
     // Clear and populate objectives
     document.getElementById('objectives-list').innerHTML = '';
@@ -152,15 +195,57 @@ function openEditIdea(idea) {
     } else {
         addObjectiveInput(''); // Start with one empty
     }
+
+    // Nuevo: Poblar Coejecutores
+    document.getElementById('coejecutors-list').innerHTML = '';
+    if (idea.coejecutors_entities && Array.isArray(idea.coejecutors_entities)) {
+        idea.coejecutors_entities.forEach((name, index) => {
+            const logo = idea.coejecutors_entities_logos ? idea.coejecutors_entities_logos[index] : null;
+            addAllianceInput('coejecutor', name, logo);
+        });
+    }
+
+    // Nuevo: Poblar Colaboradores
+    document.getElementById('collaborators-list').innerHTML = '';
+    if (idea.collaborators_entities && Array.isArray(idea.collaborators_entities)) {
+        idea.collaborators_entities.forEach((name, index) => {
+            const logo = idea.collaborators_entities_logos ? idea.collaborators_entities_logos[index] : null;
+            addAllianceInput('collaborator', name, logo);
+        });
+    }
 }
 
 export function cancelEdit() {
     const { ideasContainer, ideaEditor } = getElements();
     ideaEditor.classList.add('hidden');
     ideasContainer.classList.remove('hidden');
+
+    // Mostrar de nuevo el banner de criterios y header
+    const banner = document.getElementById('selected-criteria-banner');
+    const header = document.getElementById('ideas-header');
+    if (banner) banner.classList.remove('hidden');
+    if (header) header.classList.remove('hidden');
+
+    // Limpiar store temporal de logos para no afectar siguiente edición si se cancela?
+    // Mejor mantener simple.
 }
 
-// Dynamic Objectives Logic - Exported if needed by HTML onclicks, or attached to window
+// Auto-resize textarea to fit content
+function autoResizeTextarea(textarea) {
+    if (!textarea) return;
+    textarea.style.height = 'auto';
+    textarea.style.height = textarea.scrollHeight + 'px';
+}
+
+// Initialize auto-resize on all textareas in the editor
+function initAutoResizeTextareas() {
+    const textareas = document.querySelectorAll('#idea-editor textarea');
+    textareas.forEach(textarea => {
+        textarea.addEventListener('input', () => autoResizeTextarea(textarea));
+    });
+}
+
+// Dynamic Objectives Logic
 export function addObjectiveInput(value = '') {
     const list = document.getElementById('objectives-list');
     const div = document.createElement('div');
@@ -174,8 +259,8 @@ export function addObjectiveInput(value = '') {
         <textarea 
             class="flex-1 bg-white border-2 border-gray-200 rounded-lg px-3 py-2.5 text-sm text-gray-700 leading-relaxed
                    focus:border-cotecmar-light focus:ring-4 focus:ring-cotecmar-light/20 outline-none transition-all
-                   hover:border-gray-300 resize-none"
-            rows="3"
+                   hover:border-gray-300 resize-none objective-textarea"
+            rows="1"
             placeholder="Ej: Desarrollar un prototipo funcional con precisión del 85% en 12 meses...">${value}</textarea>
         <button 
             onclick="removeObjectiveInput(this)" 
@@ -186,14 +271,17 @@ export function addObjectiveInput(value = '') {
     `;
     list.appendChild(div);
 
-    // Renumerar todos los objetivos
+    // Auto-resize the textarea after adding
+    const textarea = div.querySelector('textarea');
+    if (textarea) {
+        autoResizeTextarea(textarea);
+        textarea.addEventListener('input', () => autoResizeTextarea(textarea));
+    }
+
     renumberObjectives();
 }
 
 export function removeObjectiveInput(btn) {
-    // Si se llama desde HTML inline (onclick="removeObjectiveInput(this)"), 
-    // asegurarse de que la función esté disponible globalmente o manejar el evento de otra forma.
-    // Como estamos modulando, lo ideal es asignar al window para compatibilidad con el HTML existente.
     if (btn && btn.parentElement) btn.parentElement.remove();
     renumberObjectives();
 }
@@ -209,6 +297,128 @@ function renumberObjectives() {
     }
 }
 
+// --- LOGICA DE ALIANZAS Y LOGOS (NUEVO) ---
+
+// Subir logo
+export async function handleLogoUpload(input, typeOrId) {
+    const file = input.files[0];
+    if (!file) return;
+
+    // Mostrar loading o algo? Poner opacidad
+    const previewImg = document.getElementById(`preview-${typeOrId}-logo`);
+    if (previewImg) previewImg.style.opacity = '0.5';
+
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('session_id', store.sessionId);
+
+    try {
+        const token = localStorage.getItem('auth_token');
+        const response = await fetch('/api/agent/upload-alliance-logo', {
+            method: 'POST',
+            headers: { ...(token && { 'Authorization': `Bearer ${token}` }) },
+            body: formData
+        });
+
+        if (!response.ok) throw new Error("Error upload");
+
+        const result = await response.json();
+
+        // Guardar path en store temporal
+        store.allianceLogos = store.allianceLogos || {};
+        store.allianceLogos[typeOrId] = result.path; // Guardamos path relativo para guardar en DB
+
+        // Mostrar preview
+        showPreview(typeOrId, result.url); // URL para mostrar en img src
+
+    } catch (e) {
+        console.error("Error upload logo", e);
+        alert("Error subiendo logo");
+    } finally {
+        if (previewImg) previewImg.style.opacity = '1';
+    }
+}
+
+function showPreview(typeOrId, src) {
+    // Si viene de DB (path minio), convertir a URL proxy si no lo es ya
+    let url = src;
+    if (!src.startsWith('http') && !src.startsWith('/api/')) {
+        url = `/api/minio_agent/${src}`;
+    }
+
+    const img = document.getElementById(`preview-${typeOrId}-logo`);
+    const container = document.getElementById(`preview-container-${typeOrId}`) || img.parentElement.parentElement.querySelector(`#preview-container-${typeOrId}`); // fallback busqueda
+
+    // Caso especial para dinámicos que tienen estructura diferente o IDs directos
+    // En dinamico: id="preview-{uniqueId}-logo", container es el padre (div relative)
+    const dynamicContainer = document.getElementById(`preview-container-${typeOrId}`);
+
+    if (img) {
+        img.src = url;
+        if (dynamicContainer) {
+            dynamicContainer.classList.remove('hidden');
+        } else {
+            // Fallback para ejecutor static
+            const staticContainer = document.getElementById(`preview-container-${typeOrId}`);
+            if (staticContainer) staticContainer.classList.remove('hidden');
+        }
+    }
+}
+
+export function clearLogo(typeOrId, clearStore = true) {
+    const container = document.getElementById(`preview-container-${typeOrId}`);
+    const input = document.getElementById(`edit-${typeOrId}-logo`) || document.querySelector(`input[onchange*="${typeOrId}"]`);
+
+    if (container) container.classList.add('hidden');
+    if (input) input.value = '';
+
+    if (clearStore && store.allianceLogos) {
+        delete store.allianceLogos[typeOrId];
+    }
+}
+
+// Agregar input dinámico de alianza
+export function addAllianceInput(type, value = '', logoPath = '') {
+    const list = document.getElementById(`${type}s-list`);
+    const id = `${type}-${Date.now()}-${Math.floor(Math.random() * 1000)}`; // ID único robusto
+
+    // Si viene logoPath previo (edicion), guardarlo en store con este ID
+    if (logoPath) {
+        store.allianceLogos = store.allianceLogos || {};
+        store.allianceLogos[id] = logoPath;
+    }
+
+    const div = document.createElement('div');
+    div.className = "flex gap-2 items-center group/ally animate-fade-in";
+    div.innerHTML = `
+        <input type="text" value="${value}" placeholder="Nombre de la entidad" data-ally-type="${type}"
+            class="flex-1 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 focus:border-blue-300 outline-none transition-colors">
+        
+        <div class="relative">
+            <label class="flex items-center justify-center w-9 h-9 bg-gray-100 hover:bg-gray-200 rounded-lg cursor-pointer transition-colors text-gray-500 hover:text-blue-600" title="Subir Logo">
+                <i class="ph ph-image"></i>
+                <input type="file" accept="image/*" class="hidden" onchange="handleLogoUpload(this, '${id}')">
+            </label>
+        </div>
+
+        <div id="preview-container-${id}" class="${logoPath ? '' : 'hidden'} w-9 h-9 rounded-lg border border-gray-200 bg-white p-0.5 relative flex-shrink-0">
+            <img id="preview-${id}-logo" class="w-full h-full object-contain" src="${logoPath ? (logoPath.startsWith('/api/') ? logoPath : '/api/minio_agent/' + logoPath) : ''}">
+             <button onclick="clearLogo('${id}')" class="absolute -top-1 -right-1 w-3 h-3 bg-red-500 text-white rounded-full flex items-center justify-center hover:scale-110 transition-transform">
+                <i class="ph-bold ph-x text-[8px]"></i>
+            </button>
+        </div>
+
+        <button onclick="this.parentElement.remove(); clearLogo('${id}')" class="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all">
+            <i class="ph ph-trash"></i>
+        </button>
+    `;
+    list.appendChild(div);
+}
+
 // Attach to window for HTML onclick compatibility
 window.addObjectiveInput = addObjectiveInput;
 window.removeObjectiveInput = removeObjectiveInput;
+window.handleLogoUpload = handleLogoUpload;
+window.clearLogo = clearLogo;
+window.addAllianceInput = addAllianceInput;
+

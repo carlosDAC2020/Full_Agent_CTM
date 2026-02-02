@@ -32,11 +32,35 @@ def create_activity_schedule(state: GraphState) -> dict:
     Nodo 4: Crea el Cronograma de Actividades usando Structured Output.
     """
     print("---SUBGRAPH: Creando Cronograma (Structured)---")
-    time.sleep(10)
+    
+    # Debug API Key
+    if not os.environ.get("GEMINI_API_KEY"):
+        print("❌ ERROR: GEMINI_API_KEY no encontrada.")
 
     # 1. Leer de forma segura el estado actual
     report_components = state.get("report_components") or ReportSchema()
     
+    # --- LÓGICA DE REGENERACIÓN SELECTIVA ---
+    config = state.get("generation_config")
+    if isinstance(config, dict):
+        try:
+            from backend.agent.tech_surveillance.state import GenerationConfig
+            config = GenerationConfig(**config)
+        except:
+            pass
+    
+    sections_to_regen = getattr(config, "sections_to_regenerate", []) or []
+    
+    # Si la sección ya existe y no está marcada para regenerar, saltar
+    # El cronograma está dentro de 'execution_plan'
+    has_schedule = report_components.execution_plan and report_components.execution_plan.activity_schedule
+    if has_schedule and "activity_schedule" not in sections_to_regen:
+        print("⏭️ SKIP: Cronograma ya existe y no fue seleccionado para regenerar.")
+        return {
+            "report_components": report_components,
+            "messages": [AIMessage(content="Omitiendo generación de Cronograma (contenido persistente).")]
+        }
+
     project_title = "No especificado"
     if report_components.general_info:
         project_title = report_components.general_info.project_title or "No especificado"
@@ -57,21 +81,41 @@ def create_activity_schedule(state: GraphState) -> dict:
     if report_components.general_info:
         duration = f"{report_components.general_info.duration_months} meses" if report_components.general_info.duration_months else "No especificada"
 
-    # 2. Formatear el prompt
+    # 2. Configuración (Límite de caracteres)
+    char_limit = getattr(config, "charLimit", 2500) if config else 2500
+    section_limits = getattr(config, "section_char_limits", {}) or {}
+    char_limit = section_limits.get("activity_schedule", char_limit)
+    
+    print(f"--- Usando límite de caracteres: {char_limit} ---")
+
+    # 3. Formatear el prompt
     prompt = ACTIVITY_SCHEDULE_PROMPT.format(
         project_title=project_title,
         methodology=methodology,
         specific_objectives_smart=specific_objectives,
-        duration=duration
+        duration=duration,
+        char_limit=char_limit
     )
 
     # 3. Configurar el LLM para salida estructurada
     # Usamos un esquema intermedio para capturar también la duración
     structured_llm = llm.with_structured_output(ScheduleGenerationOutput)
 
-    # 4. Invocar al LLM
+    # 4. Invocar al LLM con Reintentos
     full_prompt = header_prompt + "\n" + prompt
-    generated_output = structured_llm.invoke(full_prompt)
+    
+    generated_output = None
+    max_retries = 3
+    for attempt in range(max_retries):
+        try:
+            generated_output = structured_llm.invoke(full_prompt)
+            if generated_output: break
+        except Exception as e:
+            print(f"⚠️ Intento {attempt+1} fallido en Cronograma: {e}")
+            if attempt < max_retries - 1:
+                time.sleep(2)
+            else:
+                raise e
 
     # 5. Actualizar el esquema del reporte en el estado
     

@@ -13,6 +13,10 @@ METHODOLOGY_PROMPT = """\
   - **General:** {general_objective}
   - **Specifics:** {specific_objectives_smart}
 
+## CONFIGURATION
+- **Character Limit:** Approximately {char_limit} characters.
+- **Reference Style:** {ref_style} (If you use citations, follow this style).
+
 ## INSTRUCTIONS
 
 **Step 1: Select an Appropriate Methodology.**

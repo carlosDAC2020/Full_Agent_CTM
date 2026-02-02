@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import Optional, List, Annotated , Any
+from typing import Optional, List, Annotated, Any, Dict
 from langgraph.graph import add_messages
 from langchain_core.messages import BaseMessage
 from typing_extensions import TypedDict
@@ -77,11 +77,18 @@ class TheoreticalFramework(BaseModel):
 
 class Justification(BaseModel):
     """Section 3: Problem Statement and Justification."""
-    content: Optional[str] = Field(
+    problem_statement: Optional[str] = Field(
         default=None,
         description=(
-            "The complete text for the Problem Statement and Justification section in Markdown. "
-            "It should clearly define the problem, its magnitude, and why this project is necessary."
+            "The Problem Statement (Planteamiento del Problema). "
+            "It should clearly define the problem, its magnitude, and current context."
+        )
+    )
+    justification: Optional[str] = Field(
+        default=None,
+        description=(
+            "The Project Justification (Justificación). "
+            "It should explain why this project is the necessary solution and its strategic importance."
         )
     )
 
@@ -127,6 +134,13 @@ class ExecutionPlan(BaseModel):
         description=(
             "A risk matrix or analysis in Markdown format (e.g., a table). "
             "It should identify potential risks, their probability, impact, and mitigation strategies."
+        )
+    )
+    budget: Optional[str] = Field(
+        default=None,
+        description=(
+            "A detailed budget or financial plan in Markdown format (e.g., a table). "
+            "It should outline the resources and costs required for the project."
         )
     )
 
@@ -225,8 +239,20 @@ class ProposalIdea(BaseModel):
         default=None, 
         description="5 objetivos de la idea de proyecto basadas en en la metodologia seleccionada"
     )
+    # Alias para compatibilidad con frontend
+    idea_objectives: Optional[List[str]] = Field(
+        default=None, 
+        description="Alias para idea_specific_objectives"
+    )
+
+    # Duración sugerida (inferida de la convocatoria o generada por el modelo)
+    suggested_duration_months: Optional[int] = Field(
+        default=None, 
+        description="Duración sugerida del proyecto en meses, inferida de la información de la convocatoria"
+    )
 
     # ---------------- campos q debe llenar el usuario -----------------
+
     # duracion
     duration_time: Optional[str] = Field(
         default=None, 
@@ -305,6 +331,17 @@ class DocsPaths(BaseModel):
     )
 
 
+class GenerationConfig(BaseModel):
+    """Configuración para la generación del reporte (Paso 4)."""
+    charLimit: int = Field(default=2050, description="Límite aproximado de caracteres por sección.")
+    refStyle: str = Field(default="APA", description="Estilo de citación (APA, IEEE, etc.).")
+    
+    # Nuevos campos para regeneración selectiva
+    sections_to_regenerate: List[str] = Field(default_factory=list, description="Lista de IDs de secciones a regenerar.")
+    redo_theoretical_framework: bool = Field(default=False, description="Si es True, se vuelve a ejecutar academic_research.")
+    section_char_limits: Dict[str, int] = Field(default_factory=dict, description="Límites específicos por sección.")
+    poster_prompt_override: Optional[str] = Field(default=None, description="Nuevo prompt para la generación del póster.")
+
 class GraphState(TypedDict):
     """Estado del grafo con validación Pydantic."""
     messages: Annotated[list[BaseMessage], add_messages]
@@ -336,6 +373,9 @@ class GraphState(TypedDict):
 
     # rutas de documentos generados
     docs_paths: Optional[DocsPaths]
+
+    # Configuracion de generacion
+    generation_config: Optional[GenerationConfig]
     
     randonm_response: Optional[Any]
 

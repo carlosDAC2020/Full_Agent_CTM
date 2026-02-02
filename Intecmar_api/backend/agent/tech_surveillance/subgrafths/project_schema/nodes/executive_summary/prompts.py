@@ -37,7 +37,7 @@ You must synthesize the provided context into a powerful, 4-paragraph summary. D
 - Conclude with a strong, forward-looking sentence that reinforces the project's strategic importance and its potential for transformation.
 
 ## CRITICAL CONSTRAINTS
-- **Brevity is Key:** The entire summary should be no more than 250-300 words.
+- **Length Constraint:** Approximately {char_limit} characters.
 - **Language:** You MUST write the response in the **SAME LANGUAGE** as the provided context.
 
 ## REQUIRED OUTPUT FORMAT (Strictly follow this Markdown)

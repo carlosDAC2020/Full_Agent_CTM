@@ -70,13 +70,42 @@ def report_node(state: GraphState):
     desc = get_field(gen_info, 'project_description', "N/A") if gen_info else "N/A"
     kws = get_field(gen_info, 'keywords', []) if gen_info else []
     duration = get_field(gen_info, 'duration_months', "N/A") if gen_info else "N/A"
+    thematic_line = get_field(gen_info, 'thematic_line', "N/A") if gen_info else "N/A"
+    
+    # Alianzas
+    executor = get_field(gen_info, 'executor_entity', "COTECMAR")
+    executor_logo = get_field(gen_info, 'executor_entity_logo')
+    
+    co_executors = get_field(gen_info, 'coejecutors_entities', [])
+    co_executors_logos = get_field(gen_info, 'coejecutors_entities_logos', [])
+    
+    collaborators = get_field(gen_info, 'collaborators_entities', [])
+    collaborators_logos = get_field(gen_info, 'collaborators_entities_logos', [])
+    
+    # Construir tabla de alianzas en Markdown
+    alliances_table = "| Rol | Entidad |\n| :--- | :--- |\n"
+    alliances_table += f"| **Ejecutor** | {executor} |\n"
+    
+    for ce in co_executors:
+        alliances_table += f"| Co-ejecutor | {ce} |\n"
+        
+    for col in collaborators:
+        alliances_table += f"| Colaborador | {col} |\n"
+
     if isinstance(kws, str): kws = [kws]
     
+    # ... (rest of data extraction looks ok) ...
     # 2. Resumen Ejecutivo
     exec_summary = get_section_content(get_field(data, 'executive_summary'), 'content')
 
     # 3. Justificación
-    justification = get_section_content(get_field(data, 'problem_statement_justification'), 'content')
+    justification_obj = get_field(data, 'problem_statement_justification')
+    if justification_obj:
+        ps = get_field(justification_obj, 'problem_statement', '')
+        js = get_field(justification_obj, 'justification', '')
+        justification = f"### 3.1. Planteamiento del Problema\n{ps}\n\n### 3.2. Justificación\n{js}"
+    else:
+        justification = ""
 
     # 4. Marco Teórico
     theo_frame_obj = get_field(data, 'theoretical_framework')
@@ -96,7 +125,9 @@ def report_node(state: GraphState):
     plan_obj = get_field(data, 'execution_plan')
     schedule = get_field(plan_obj, 'activity_schedule', '') if plan_obj else ''
     risks = get_field(plan_obj, 'risk_matrix', '') if plan_obj else ''
-    execution_text = f"**Cronograma de Actividades**\n\n{schedule}\n\n**Matriz de Riesgos**\n\n{risks}"
+    budget = get_field(plan_obj, 'budget', '') if plan_obj else ''
+
+    execution_text = f"**Cronograma de Actividades**\n\n{schedule}\n\n**Presupuesto Estimado**\n\n{budget}\n\n**Matriz de Riesgos**\n\n{risks}"
 
     # 8. Resultados
     results = get_section_content(get_field(data, 'results_and_impacts'), 'content')
@@ -112,9 +143,10 @@ def report_node(state: GraphState):
 **Título:** {title}
 **Convocatoria:** {call_info.title if call_info else 'N/A'}
 **Duración:** {duration} meses
-**Entidad/Persona:** COTECMAR
-**Línea Temática:** {', '.join(call_info.keywords) if call_info and call_info.keywords else 'N/A'}
+**Línea Temática:** {thematic_line}
 
+**Alianzas del Proyecto**
+{alliances_table}
 
 * **Descripción:** {desc}
 * **Palabras Clave:** {', '.join(kws) if kws else 'N/A'}

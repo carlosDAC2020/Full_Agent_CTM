@@ -15,7 +15,8 @@ ACTIVITY_SCHEDULE_PROMPT = """\
 
 ## INSTRUCTIONS
 
-1.  **Adopt the Structure:** Use the high-level phases provided in the "Proposed Methodology" as the main sections of your schedule.
+1.  **Professional Detail:** Regardless of any general character limit ({char_limit}), this section MUST be detailed and comprehensive. Provide a high-level overview but ensure the activities are actionable and clear.
+2.  **Adopt the Structure:** Use the high-level phases provided in the "Proposed Methodology" as the main sections of your schedule.
 2.  **Define Activities:** For each phase, define 2-4 specific, actionable activities or milestones.
 3.  **CRITICAL ALIGNMENT:** Ensure that the activities you define are concrete steps required to meet the "Specific Project Objectives". The schedule must be a practical roadmap for achieving those goals.
 4.  **Identify Deliverables:** For each activity, specify the main tangible output (e.g., "Technical Requirements Document", "Trained AI Model v1.0", "Final Report").

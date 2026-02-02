@@ -16,7 +16,9 @@ export async function generateFinal() {
 
     try {
         // 1. Iniciar Tarea (API Real)
-        const { task_id } = await finalizeProject(store.sessionId);
+        const config = store.generationConfig || {};
+        console.log("📤 Sending Generation Config:", config);
+        const { task_id } = await finalizeProject(store.sessionId, config);
 
         // 2. Polling
         pollTask(
@@ -66,7 +68,10 @@ export function renderFinalResult(data) {
     const viewPosterBtn = document.getElementById('btn-view-poster');
 
     if (docs.poster_image_path) {
-        const absoluteUrl = getAssetUrl(docs.poster_image_path);
+        // Cache-busting: add timestamp to ensure refresh
+        const timestamp = new Date().getTime();
+        const absoluteUrl = getAssetUrl(docs.poster_image_path) + `?t=${timestamp}`;
+
         posterImg.src = absoluteUrl;
         posterImg.classList.remove('hidden');
         posterPlaceholder.classList.add('hidden');
@@ -83,7 +88,8 @@ export function renderFinalResult(data) {
     // 2. Configurar Botón PDF
     const pdfBtn = document.getElementById('final-btn-pdf');
     if (docs.proyect_proposal_pdf) {
-        pdfBtn.href = getAssetUrl(docs.proyect_proposal_pdf);
+        const timestamp = new Date().getTime();
+        pdfBtn.href = getAssetUrl(docs.proyect_proposal_pdf) + `?t=${timestamp}`;
         pdfBtn.classList.remove('opacity-50', 'pointer-events-none');
         pdfBtn.classList.add('ring-2', 'ring-red-100', 'bg-red-50');
     } else {
@@ -94,7 +100,8 @@ export function renderFinalResult(data) {
     // 3. Configurar Botón Markdown
     const mdBtn = document.getElementById('final-btn-md');
     if (docs.proyect_proposal_md) {
-        mdBtn.href = getAssetUrl(docs.proyect_proposal_md);
+        const timestamp = new Date().getTime();
+        mdBtn.href = getAssetUrl(docs.proyect_proposal_md) + `?t=${timestamp}`;
         mdBtn.classList.remove('opacity-50', 'pointer-events-none');
         mdBtn.classList.add('ring-2', 'ring-gray-200', 'bg-gray-50');
     } else {

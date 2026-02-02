@@ -63,9 +63,10 @@ def get_custom_styles():
             fontSize=10, 
             fontName='Helvetica', 
             leading=14, 
-            alignment=TA_LEFT,  # ← CAMBIO: era TA_JUSTIFY
-            spaceAfter=6,
-            textColor=colors.HexColor('#2C2C2C')
+            alignment=TA_JUSTIFY,
+            spaceAfter=8, # Aumentado un poco el espacio tras párrafo
+            textColor=colors.HexColor('#2C2C2C'),
+            hyphenation=True # Habilitar guiones para mejor justificación
         ))
     if 'CustomBullet' not in styles:
         styles.add(ParagraphStyle(
@@ -90,7 +91,7 @@ def get_custom_styles():
             fontSize=8, 
             fontName='Helvetica', 
             leading=10, 
-            alignment=TA_LEFT
+            alignment=TA_JUSTIFY # Justificar también en tablas para descripciones largas
         ))
     
     if 'TOCHeading1' not in styles:
@@ -276,18 +277,23 @@ def markdown_to_flowables(markdown_text, styles):
     while i < len(lines):
         line = lines[i].strip()
         
-        # 1. Tablas
-        if line.startswith('|'):
+        # 0. Saltar líneas vacías iniciales para evitar exceso de espacio arriba
+        if not line and not flowables:
+            i += 1
+            continue
+
+        # 1. Tablas (Detección más robusta incluso si hay indentación o texto antes en la misma lógica)
+        if '|' in line and (i + 1 < len(lines) and '|' in lines[i+1]) and '---' not in line:
             table_lines = []
-            while i < len(lines) and (lines[i].strip().startswith('|') or lines[i].strip() == ""):
+            while i < len(lines) and ('|' in lines[i] or lines[i].strip() == ""):
                 if lines[i].strip():
                     table_lines.append(lines[i])
                 i += 1
             table = process_table('\n'.join(table_lines), styles)
             if table:
-                flowables.append(Spacer(1, 0.3*cm))
+                flowables.append(Spacer(1, 0.5*cm)) # Espacio antes de tabla
                 flowables.append(table)
-                flowables.append(Spacer(1, 0.5*cm))
+                flowables.append(Spacer(1, 0.6*cm)) # Espacio después de tabla
             continue
             
         # 2. Encabezados
@@ -301,17 +307,19 @@ def markdown_to_flowables(markdown_text, styles):
             if line.startswith('#### '):
                 style = styles['H3'] 
                 level = 2
+                flowables.append(Spacer(1, 0.3*cm))
             elif line.startswith('### '):
                 style = styles['H3']
                 level = 2
+                flowables.append(Spacer(1, 0.4*cm))
             elif line.startswith('## '):
                 style = styles['H2']
                 level = 1
-                # Agregar línea decorativa antes de H2
-                flowables.append(Spacer(1, 0.3*cm))
+                flowables.append(Spacer(1, 0.6*cm))
             else:
                 style = styles['H1']
                 level = 0
+                flowables.append(Spacer(1, 0.8*cm))
             
             p_text = f'{text_content}<a name="{bookmark_name}"/>'
             p = Paragraph(p_text, style)
@@ -320,20 +328,30 @@ def markdown_to_flowables(markdown_text, styles):
             p._toc_key = bookmark_name
             
             flowables.append(p)
+            flowables.append(Spacer(1, 0.3*cm)) # Espacio después del título
 
         # 3. Listas
-        elif line.startswith('* ') or line.startswith('- '):
-            item_text = line[2:]
+        elif line.startswith('* ') or line.startswith('- ') or (line and line[0].isdigit() and line[1:3] == ". "):
+            # Soporte simple para listas numeradas o con viñetas
+            item_text = re.sub(r'^(\*|-|\d+\.)\s+', '', line)
             bullet_style = styles['CustomBullet']
             flowables.append(Paragraph(f'<font color="{COTECMAR_BLUE}">●</font> {clean_text(item_text)}', bullet_style))
+            flowables.append(Spacer(1, 0.15*cm))
             
         # 4. Párrafos normales
         elif line:
-            flowables.append(Paragraph(clean_text(line), styles['Body']))
+            # Detectar si es una línea de tabla amontonada (que no empezó con | pero tiene |)
+            if line.count('|') > 2:
+                # Tratar como tabla de una sola línea
+                table = process_table(line, styles)
+                if table:
+                    flowables.append(Spacer(1, 0.4*cm))
+                    flowables.append(table)
+                    flowables.append(Spacer(1, 0.4*cm))
+            else:
+                flowables.append(Paragraph(clean_text(line), styles['Body']))
+                flowables.append(Spacer(1, 0.25*cm)) # Espacio entre párrafos
         
-        if line and not line.startswith('|'):
-             flowables.append(Spacer(1, 0.2*cm))
-             
         i += 1
         
     return flowables

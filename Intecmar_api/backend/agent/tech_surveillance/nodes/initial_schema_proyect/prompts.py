@@ -15,36 +15,36 @@ You must ensure logical coherence between the **Funding Opportunity (Call)** and
    - **Initial Objectives:** {idea_objectives}
 
 ### INSTRUCTIONS:
-Generate a structured outline for the final document. For each section below, provide a **"Content Guide"** (a brief paragraph or bullet points) explaining exactly how to develop the content based on the input context.
+Generate a structured blueprint (Conceptual Schema) for the final project proposal. Your response must follow the exact 9-section structure of the final report. For each section, provide a "Content Guide" based on the input context.
 
-The structure must include:
+### FINAL REPORT STRUCTURE (Strictly follow this for the Blueprint):
 
-  1. **General Project Alignment:** Briefly explain how this specific idea fits the call's thematic lines and requirements.
-  2. **Executive Summary Strategy:** Key points to highlight (Problem -> Solution -> Impact) to captivate the evaluator.
-  3. **Problem Statement Strategy:** How to articulate the specific problem this idea solves, emphasizing the gap in current solutions.
-  
-  4. **Objectives Definition (SMART Refinement):**
-    *   **General Objective:** Refine the provided idea's goal into a formal General Objective.
-    *   **Specific Objectives:** Review the provided initial objectives and refine them into strict **SMART** criteria (Specific, Measurable, Achievable, Relevant, Time-bound). Explicitly suggest metrics and deadlines.
-
-  5. **Methodology Framework:** Suggest a standard engineering or scientific framework (e.g., CRISP-DM, V-Model, Agile, Experimental Design) suitable for this specific idea.
-  6. **Execution Plan Strategy:**
-    *   Suggest high-level phases for the activity schedule.
-    *   Identify 3 critical risks (Technical, Operational) specific to this idea.
-  7. **Expected Impacts:** Define Technical, Economic, and Social impacts based on the idea's description.
+1.  **Generalidades del Proyecto:** How the idea aligns with the call's thematic lines.
+    - **Línea Temática:** Identify the specific thematic line from the call that best fits this project.
+2.  **Resumen Ejecutivo:** Define the "Problem -> Solution -> Impact" strategy.
+3.  **Planteamiento del Problema y Justificación:**
+    - **Problem Statement:** Flesh out the specific industry/domain problem.
+    - **Justification:** Explain why this project is the necessary solution.
+4.  **Marco Teórico y Estado del Arte:** Identify 3-4 key technical or academic pillars to research.
+5.  **Objetivos:**
+    - **Objetivo General:** Refine the project title/goal into a single formal statement.
+    - **Objetivos Específicos:** **STRICTLY USE THE OBJECTIVES PROVIDED** in the Selected Project Idea context ({idea_objectives}). Do not invent new ones. Refine their wording for professional delivery while strictly maintaining their original intent.
+6.  **Metodología Propuesta:** Suggest a standard framework (e.g., V-Model, CRISP-DM, Agile) suitable for this idea.
+7.  **Plan de Ejecución y Gestión:** 
+    - **Cronograma:** Suggest high-level project phases.
+    - **Presupuesto:** Suggest resource categories (Hardware, Personnel, etc.).
+    - **Matriz de Riesgos:** Identify 3 critical technical or operational risks.
+8.  **Resultados e Impactos Esperados:** Define tangible deliverables and broader impacts (Technical, Economic, Social).
+9.  **Referencias Bibliográficas:** Guidance on the type of academic or industry sources needed.
 
 ### OUTPUT FORMAT RULES:
 
-You must return the response in **Strict Markdown** format. Follow these visual hierarchy rules to ensure the document renders beautifully in the UI:
+You must return the response in **Strict Markdown** format with a professional hierarchy:
 
-1.  **Title:** Start with a single H1 (`#`) title: `# Blueprint de Propuesta: [Project Title]`
-2.  **Section Headers:** Use **H3 (`###`)** for the main 7 numbered sections (e.g., `### 1. Alineación General...`).
-3.  **Subsections:** Use **H4 (`####`)** for inner dividers if needed.
-4.  **Content Styling:**
-    *   Use **Bold** (`**text**`) for key terms, metrics, and emphasis.
-    *   Use `> Blockquotes` to highlight the "Content Guide" or specific strategic advice.
-    *   Use Bullet points (`- `) for lists.
-5.  **Spacing:** Ensure there is a blank line between headers and the text below them.
+1.  **Title:** `# Blueprint de Propuesta: [Project Title]`
+2.  **Section Headers:** Use **H3 (`###`)** for the 9 sections.
+3.  **Subsection Content:** Use **H4 (`####`)** or `> Blockquotes` for strategic advice.
+4.  **Language:** Formats/Instructions are in English, but **GENERATED CONTENT MUST BE IN SPANISH**.
 
 **IMPORTANT:** While the formatting instructions are in English, the **generated content itself (the analysis and blueprint) MUST BE IN SPANISH**.
 """

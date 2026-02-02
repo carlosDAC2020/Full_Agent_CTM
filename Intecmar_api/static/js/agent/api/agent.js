@@ -86,6 +86,7 @@ export async function generateIdeas(sessionId, thematicLine = null, methodology 
 }
 
 export async function selectIdea(sessionId, idea) {
+    console.log("🚀 [API] selectIdea V2.0 - Sending data:", idea);
     try {
         const response = await fetch('/api/agent/select-idea', {
             method: 'POST',
@@ -95,7 +96,15 @@ export async function selectIdea(sessionId, idea) {
                 selected_idea: {
                     idea_title: idea.idea_title || idea.title,
                     idea_description: idea.idea_description || idea.desc,
-                    idea_objectives: idea.idea_objectives || idea.objectives
+                    idea_objectives: idea.idea_objectives || idea.objectives,
+                    idea_general_objective: idea.idea_general_objective || idea.general_objective,
+                    duration_time: idea.duration_time || idea.suggested_duration_months,
+                    executor_entity: idea.executor_entity,
+                    executor_entity_logo: idea.executor_entity_logo,
+                    coejecutors_entities: idea.coejecutors_entities,
+                    coejecutors_entities_logos: idea.coejecutors_entities_logos,
+                    collaborators_entities: idea.collaborators_entities,
+                    collaborators_entities_logos: idea.collaborators_entities_logos
                 }
             })
         });
@@ -126,12 +135,15 @@ export async function getSessionHistory(sessionId) {
     }
 }
 
-export async function finalizeProject(sessionId) {
+export async function finalizeProject(sessionId, config = {}) {
     try {
         const response = await fetch('/api/agent/finalize', {
             method: 'POST',
             headers: getAuthHeaders(),
-            body: JSON.stringify({ session_id: sessionId })
+            body: JSON.stringify({
+                session_id: sessionId,
+                generation_config: config
+            })
         });
 
         if (!response.ok) {

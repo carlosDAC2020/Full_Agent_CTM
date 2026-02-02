@@ -14,7 +14,10 @@ import {
     resetInterface,
     openIdeaConfigModal,
     closeIdeaConfigModal,
-    confirmIdeaGeneration
+    confirmIdeaGeneration,
+    openConfigModal,
+    closeConfigModal,
+    saveConfigAndGenerate
 } from './ui/wizard.js';
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -46,6 +49,10 @@ document.addEventListener('DOMContentLoaded', () => {
     window.openIdeaConfigModal = openIdeaConfigModal;
     window.closeIdeaConfigModal = closeIdeaConfigModal;
     window.confirmIdeaGeneration = confirmIdeaGeneration;
+
+    window.openConfigModal = openConfigModal;
+    window.closeConfigModal = closeConfigModal;
+    window.saveConfigAndGenerate = saveConfigAndGenerate;
 
     // Navigation function to Magazine app
     window.navigateToMagazineHome = function () {

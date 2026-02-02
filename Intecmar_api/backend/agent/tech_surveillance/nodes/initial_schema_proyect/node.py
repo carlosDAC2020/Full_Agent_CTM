@@ -22,6 +22,8 @@ def initial_schema_node(state: GraphState):
     call_info_summary = state.get("presentation_summary", "Información de convocatoria no disponible.")
     selected_idea = state.get("selected_idea")
     
+    print(f"🔍 DEBUG RAW selected_idea (node): {selected_idea}")
+
     # Validaciones de seguridad y rehidratación de emergencia
     if not selected_idea:
         print("⚠️ [NODE] Error: selected_idea no encontrado en el estado.")
@@ -81,10 +83,11 @@ Conceptual Schema:
 Strictly retrieve the following fields based on the schema and the project's identity:
 - Title (should match or be a refined version of "{idea_title}")
 - Description
-- Duration
-- Keywords
-- Main Entity
-- Collaborating Entities
+- Duration (in months, as a number)
+- Thematic Line (Línea Temática)
+- Keywords (List)
+- Main Entity (Ejecutor)
+- Collaborating Entities (List of names)
 """
             )
         # Fix: Ensure input is a list of messages
@@ -95,11 +98,44 @@ Strictly retrieve the following fields based on the schema and the project's ide
         general_info.project_title = idea_title
         general_info.project_description = idea_description
         
-        # 2. El resto de campos (keywords, duration, entities, etc.) vienen enriquecidos por el LLM 
-        # desde el esquema generado.
+        # --- NUEVO: Propagar Alianzas y Duración desde selected_idea (Híbrido) ---
+        def get_val(obj, key):
+            if isinstance(obj, dict): return obj.get(key)
+            return getattr(obj, key, None)
+
+        print(f"🛠️ [ENRICHMENT] Checking selected_idea for alliances...")
+        
+        # Duración
+        s_dur = get_val(selected_idea, "duration_time") or get_val(selected_idea, "suggested_duration_months")
+        if s_dur: general_info.duration_months = int(s_dur) if str(s_dur).isdigit() else general_info.duration_months
+
+        # Ejecutor
+        s_exec = get_val(selected_idea, "executor_entity")
+        if s_exec: general_info.executor_entity = s_exec
+        s_exec_logo = get_val(selected_idea, "executor_entity_logo")
+        if s_exec_logo: general_info.executor_entity_logo = s_exec_logo
+
+        # Coejecutores
+        s_co_ent = get_val(selected_idea, "coejecutors_entities")
+        if s_co_ent: general_info.coejecutors_entities = s_co_ent
+        s_co_log = get_val(selected_idea, "coejecutors_entities_logos")
+        if s_co_log: general_info.coejecutors_entities_logos = s_co_log
+
+        # Colaboradores
+        s_col_ent = get_val(selected_idea, "collaborators_entities")
+        if s_col_ent: general_info.collaborators_entities = s_col_ent
+        s_col_log = get_val(selected_idea, "collaborators_entities_logos")
+        if s_col_log: general_info.collaborators_entities_logos = s_col_log
+
+        print(f"📊 [ENRICHMENT] Result: Exec='{general_info.executor_entity}', Co-Execs={len(general_info.coejecutors_entities or [])}")
+        # -------------------------------------------------------------------------
+
+        # 2. El resto de campos (keywords, etc.) vienen enriquecidos por el LLM 
+        # desde el esquema generado, a menos que ya los tengamos.
+        
         print(f"✅ GeneralInfo enriquecido. Título forzado: {general_info.project_title}")
-        print(f"   Keywords detectadas: {general_info.keywords}")
-            
+        print(f"   Alianzas Ejecutor: {general_info.executor_entity}")
+
         # actualizamos en el estado 
         current_components = state.get("report_components")
         
