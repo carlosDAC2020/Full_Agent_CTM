@@ -21,14 +21,21 @@ REPORTS_DIR = "generated_reports"
 
 
 def report_node(state: GraphState):
-    print("--- Ejecutando Nodo: Generación de Reporte PDF ---")
+    print("\n--- [REPORT_NODE] START ---")
     
-    report_components = state.get("report_components")
-
+    # --- DEBUG STATE ---
+    curr_history = state.get("generation_history", []) or []
+    curr_docs = state.get("docs_paths")
+    print(f"🧐 [DEBUG REPORT_NODE] Versiones recibidas: {len(curr_history)}")
+    
+    # --- Restore missing variables ---
     session_id = state.get("session_id", "default_session")
     user_email = state.get("user_email", "unknown_user")
-
+    
+    report_components = state.get("report_components")
+    
     if not report_components:
+        print("⚠️ [REPORT_NODE] No report_components found in state!")
         return {}
 
     # Convertir a objeto si es dict
@@ -397,17 +404,49 @@ def report_node(state: GraphState):
         if img_key:
              docs_paths.poster_image_path = img_key # Actualizamos con la ruta nube si queremos
         
+        # --- Actualizar Historial con PDF/MD ---
+        current_history = state.get("generation_history", []) or []
+        if current_history:
+            last_item = current_history[-1]
+            
+            # El estado puede venir como dict o como objeto Pydantic
+            if isinstance(last_item, dict):
+                if pdf_key: last_item['pdf_path'] = pdf_key
+                if md_key: last_item['md_path'] = md_key
+            else:
+                try:
+                    if pdf_key: last_item.pdf_path = pdf_key
+                    if md_key: last_item.md_path = md_key
+                except AttributeError:
+                    # Fallback si por alguna razón no es lo que esperábamos
+                    if pdf_key: last_item['pdf_path'] = pdf_key
+                    if md_key: last_item['md_path'] = md_key
+            
+            current_history[-1] = last_item
+            
+        print("\n" + "="*50)
+        print(f"🧐 [DEBUG REPORT_NODE] HISTORIAL FINALIZADO (Total: {len(current_history)})")
+        for i, item in enumerate(current_history):
+            p = item.get('poster_path') if isinstance(item, dict) else item.poster_path
+            pdf = item.get('pdf_path') if isinstance(item, dict) else item.pdf_path
+            print(f"   [{i+1}] Poster: {p[-30:] if p else 'None'} | PDF: {'OK' if pdf else 'Missing'}")
+        print("="*50 + "\n")
+
         message = AIMessage(
             content=f"✓ Reporte final generado."
         )
 
         return {
             "messages": [message],
-            "docs_paths": docs_paths
+            "docs_paths": docs_paths,
+            "generation_history": current_history
         }
 
     except Exception as e:
         print(f"   ❌ Error generando PDF: {e}")
         import traceback
         traceback.print_exc()
-        return {"final_report": f"Error: {e}"}
+        return {
+            "generation_history": state.get("generation_history", []),
+            "final_report_error": str(e)
+        }

@@ -342,6 +342,19 @@ class GenerationConfig(BaseModel):
     section_char_limits: Dict[str, int] = Field(default_factory=dict, description="Límites específicos por sección.")
     poster_prompt_override: Optional[str] = Field(default=None, description="Nuevo prompt para la generación del póster.")
 
+
+class GenerationItem(BaseModel):
+    """Representa una iteración de generación (Poster + PDF + MD)."""
+    timestamp: str = Field(description="ISO timestamp of generation")
+    poster_path: Optional[str] = Field(default=None, description="Path or URL to the poster image")
+    base_image_path: Optional[str] = Field(default=None, description="Path or URL to the base poster image (no logos)")
+    pdf_path: Optional[str] = Field(default=None, description="Path or URL to the PDF report")
+    md_path: Optional[str] = Field(default=None, description="Path or URL to the Markdown report")
+    prompt_used: Optional[str] = Field(default=None, description="Prompt used for this generation")
+
+    class Config:
+        validate_assignment = True
+
 class GraphState(TypedDict):
     """Estado del grafo con validación Pydantic."""
     messages: Annotated[list[BaseMessage], add_messages]
@@ -367,7 +380,7 @@ class GraphState(TypedDict):
 
     # resumen de presentacion
     presentation_summary : Optional[str]
-
+    
     # esquema incial de dpocumento 
     initial_schema: Optional[str]
 
@@ -384,3 +397,6 @@ class GraphState(TypedDict):
     
     # Email del usuario para organizacion de carpetas
     user_email: Optional[str]
+    
+    # Historial de generaciones
+    generation_history: Optional[List[GenerationItem]]

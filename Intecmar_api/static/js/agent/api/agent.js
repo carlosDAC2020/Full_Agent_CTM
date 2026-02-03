@@ -201,3 +201,61 @@ export async function appendDocsCall(sessionId, files) {
         throw error;
     }
 }
+export async function uploadAllianceLogo(sessionId, file) {
+    try {
+        const formData = new FormData();
+        formData.append('session_id', sessionId);
+        formData.append('file', file);
+
+        const token = localStorage.getItem('auth_token');
+        const response = await fetch('/api/agent/upload-alliance-logo', {
+            method: 'POST',
+            headers: { ...(token && { 'Authorization': `Bearer ${token}` }) },
+            body: formData
+        });
+
+        if (!response.ok) {
+            const err = await response.json();
+            throw new Error(err.detail || 'Error uploading logo');
+        }
+
+        return await response.json(); // { path, url, filename }
+    } catch (error) {
+        console.error('API Upload Logo Error:', error);
+        throw error;
+    }
+}
+
+export async function getPosterHistory(sessionId) {
+    try {
+        const token = localStorage.getItem('auth_token');
+        const response = await fetch(`/api/agent/poster-history/${sessionId}`, {
+            headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+        });
+        if (!response.ok) throw new Error('Error fetching poster history');
+        return await response.json();
+    } catch (error) {
+        console.error('API Poster History Error:', error);
+        throw error;
+    }
+}
+
+export async function applyLogos(payload) {
+    try {
+        const response = await fetch('/api/agent/apply-logos', {
+            method: 'POST',
+            headers: getAuthHeaders(),
+            body: JSON.stringify(payload)
+        });
+
+        if (!response.ok) {
+            const err = await response.json();
+            throw new Error(err.detail || 'Error applying logos');
+        }
+
+        return await response.json();
+    } catch (error) {
+        console.error('API Apply Logos Error:', error);
+        throw error;
+    }
+}

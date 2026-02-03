@@ -928,7 +928,7 @@
             <div class="flex items-center gap-5">
                 <div
                     class="w-14 h-14 bg-gradient-to-br from-cotecmar-main to-blue-600 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/20">
-                    <i class="ph-fill ph-check-circle text-3xl"></i>
+                    <i class="ph-fill ph-presentation-chart text-3xl"></i>
                 </div>
                 <div>
                     <div class="inline-flex items-center gap-2 text-green-600 mb-1">
@@ -982,38 +982,8 @@
                     </div>
                 </div>
 
-                <!-- Botones de Descarga -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <!-- PDF -->
-                    <a id="final-btn-pdf" href="#" target="_blank"
-                        class="flex items-center p-4 bg-red-50 border-2 border-red-100 hover:border-red-300 hover:bg-red-100 rounded-xl transition-all group opacity-50 pointer-events-none">
-                        <div
-                            class="w-12 h-12 bg-red-500 text-white rounded-lg flex items-center justify-center shadow-md group-hover:scale-110 transition-transform flex-shrink-0">
-                            <i class="ph-fill ph-file-pdf text-2xl"></i>
-                        </div>
-                        <div class="ml-4">
-                            <div class="text-gray-900 font-bold text-lg">Propuesta Técnica</div>
-                            <div class="text-red-500 text-sm font-medium flex items-center gap-1">
-                                Descargar PDF <i class="ph-bold ph-download-simple"></i>
-                            </div>
-                        </div>
-                    </a>
-
-                    <!-- Markdown -->
-                    <a id="final-btn-md" href="#" target="_blank"
-                        class="flex items-center p-4 bg-gray-50 border-2 border-gray-200 hover:border-gray-400 hover:bg-gray-100 rounded-xl transition-all group opacity-50 pointer-events-none">
-                        <div
-                            class="w-12 h-12 bg-gray-800 text-white rounded-lg flex items-center justify-center shadow-md group-hover:scale-110 transition-transform flex-shrink-0">
-                            <i class="ph-fill ph-markdown-logo text-2xl"></i>
-                        </div>
-                        <div class="ml-4">
-                            <div class="text-gray-900 font-bold text-lg">Fuente Markdown</div>
-                            <div class="text-gray-600 text-sm font-medium flex items-center gap-1">
-                                Descargar Archivo <i class="ph-bold ph-download-simple"></i>
-                            </div>
-                        </div>
-                    </a>
-                </div>
+                <!-- Botones de Descarga (Eliminados - ahora en overlay) -->
+                <div class="hidden"></div>
             </div>
 
             <!-- COLUMNA DERECHA: Información General (35%) -->
@@ -1079,6 +1049,37 @@
                                 <span class="text-gray-400 text-sm italic">Sin palabras clave</span>
                             </div>
                         </div>
+
+                        <hr class="border-gray-100 pl-4 pr-4">
+
+                        <!-- Sección de Alianzas (NUEVO) -->
+                        <div id="final-alliances-container" class="space-y-4">
+                            <div class="flex justify-between items-center">
+                                <label
+                                    class="text-xs font-bold text-gray-400 uppercase tracking-wider block">Alianzas</label>
+                                <button onclick="openAllianceModal()"
+                                    class="text-[10px] font-bold text-blue-600 hover:text-blue-800 bg-blue-50 px-2 py-1 rounded-lg transition-colors shadow-sm border border-blue-100 flex items-center gap-1">
+                                    <i class="ph-bold ph-pencil-simple"></i> Editar
+                                </button>
+                            </div>
+
+                            <!-- Ejecutor -->
+                            <div id="final-executor-display"
+                                class="hidden flex items-center gap-2 bg-gray-50 p-2 rounded-lg border border-gray-100">
+                                <img id="final-executor-img"
+                                    class="w-8 h-8 object-contain bg-white rounded-md border border-gray-100 p-0.5">
+                                <span id="final-executor-name" class="text-sm font-medium text-gray-700"></span>
+                            </div>
+
+                            <!-- Coejecutores -->
+                            <div id="final-coexecutors-list" class="flex flex-wrap gap-2 empty:hidden"></div>
+
+                            <!-- Colaboradores -->
+                            <div id="final-collaborators-list" class="flex flex-wrap gap-2 empty:hidden"></div>
+
+                            <div id="final-no-alliances" class="hidden text-xs text-gray-400 italic text-center">Sin
+                                alianzas registradas</div>
+                        </div>
                     </div>
                 </div>
 
@@ -1099,7 +1100,7 @@
 
 <!-- MODAL: CONFIGURACIÓN DE GENERACIÓN FINAL (Step 3) -->
 <div id="config-modal"
-    class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm animate-fade-in">
+    class="hidden fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm animate-fade-in">
     <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden transform transition-all scale-100">
         <!-- Header -->
         <div class="bg-gray-800 px-6 py-4 flex justify-between items-center text-white">
@@ -1403,6 +1404,149 @@
                 class="w-full bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white rounded-2xl py-5 font-bold text-lg shadow-xl shadow-blue-500/20 hover:shadow-blue-500/30 active:scale-95 transition-all flex items-center justify-center gap-3 group">
                 <span>Generar Propuestas Inteligentes</span>
                 <i class="ph ph-sparkle text-xl transition-transform group-hover:rotate-12"></i>
+            </button>
+        </div>
+    </div>
+</div>
+<!-- MODAL: GESTIÓN DE ALIANZAS (STEP 4) -->
+<div id="alliance-modal" class="hidden fixed inset-0 z-[110] flex items-center justify-center p-4">
+    <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm animate-fade-in" onclick="closeAllianceModal()"></div>
+
+    <div
+        class="relative bg-white w-full max-w-2xl rounded-[2rem] shadow-2xl border border-gray-100 overflow-hidden animate-zoom-in max-h-[90vh] flex flex-col">
+        <!-- Header -->
+        <div class="bg-gray-800 px-8 py-5 flex justify-between items-center text-white flex-shrink-0">
+            <h3 class="font-bold text-lg flex items-center gap-3">
+                <i class="ph-fill ph-users-three text-blue-400"></i> Gestión de Alianzas
+            </h3>
+            <button onclick="closeAllianceModal()" class="hover:bg-white/20 p-2 rounded-lg transition-colors">
+                <i class="ph ph-x text-lg"></i>
+            </button>
+        </div>
+
+        <!-- Body Scrollable -->
+        <div class="p-8 space-y-8 overflow-y-auto custom-scrollbar flex-1">
+
+            <!-- Aviso -->
+            <div class="bg-blue-50 border border-blue-100 rounded-xl p-4 flex items-start gap-3">
+                <i class="ph-fill ph-info text-blue-500 text-xl mt-0.5"></i>
+                <div class="text-sm text-blue-800">
+                    <p class="font-bold mb-1">Logos y Transparencia</p>
+                    <p class="opacity-80">El sistema intentará eliminar fondos blancos automáticamente. Para mejores
+                        resultados, sube imágenes PNG con fondo transparente.</p>
+                </div>
+            </div>
+
+            <!-- 1. Ejecutor -->
+            <div class="space-y-3">
+                <label class="text-xs font-bold text-gray-500 uppercase tracking-wider block">Entidad Ejecutora
+                    (Principal)</label>
+                <div class="flex gap-4 items-start">
+                    <div
+                        class="w-20 h-20 bg-gray-50 border-2 border-dashed border-gray-300 rounded-xl flex items-center justify-center relative group overflow-hidden hover:border-blue-400 transition-colors">
+                        <img id="modal-executor-preview" class="hidden w-full h-full object-contain p-2">
+                        <div id="modal-executor-placeholder" class="text-center text-gray-400">
+                            <i class="ph ph-image text-2xl"></i>
+                            <span class="text-[10px] block mt-1">Logo</span>
+                        </div>
+                        <input type="file" accept="image/*" class="absolute inset-0 opacity-0 cursor-pointer"
+                            onchange="handleModalLogoUpload(this, 'executor')">
+                    </div>
+                    <div class="flex-1">
+                        <input type="text" id="modal-executor-name" placeholder="Nombre de la entidad..."
+                            class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 text-sm font-medium focus:border-blue-500 outline-none mb-2">
+                        <p class="text-[10px] text-gray-400">La entidad principal responsable del proyecto.</p>
+                    </div>
+                </div>
+            </div>
+
+            <hr class="border-gray-100">
+
+            <!-- 2. Coejecutores -->
+            <div class="space-y-3">
+                <div class="flex justify-between items-center">
+                    <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">Coejecutores</label>
+                    <button onclick="addModalAllianceItem('coexecutor')"
+                        class="text-xs font-bold text-blue-600 bg-blue-50 px-3 py-1.5 rounded-lg hover:bg-blue-100 transition-colors">
+                        <i class="ph-bold ph-plus"></i> Añadir
+                    </button>
+                </div>
+                <div id="modal-coexecutors-list" class="space-y-3">
+                    <!-- Dynamic Items -->
+                </div>
+            </div>
+
+            <hr class="border-gray-100">
+
+            <!-- 3. Colaboradores -->
+            <div class="space-y-3">
+                <div class="flex justify-between items-center">
+                    <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">Colaboradores</label>
+                    <button onclick="addModalAllianceItem('collaborator')"
+                        class="text-xs font-bold text-purple-600 bg-purple-50 px-3 py-1.5 rounded-lg hover:bg-purple-100 transition-colors">
+                        <i class="ph-bold ph-plus"></i> Añadir
+                    </button>
+                </div>
+                <div id="modal-collaborators-list" class="space-y-3">
+                    <!-- Dynamic Items -->
+                </div>
+            </div>
+
+            <!-- Selector de Imagen Base (Opcional, si queremos forzar regeneración sobre base específica) -->
+            <div class="space-y-3 pt-4 border-t border-gray-100">
+                <label class="text-xs font-bold text-gray-500 uppercase tracking-wider block">Opciones de
+                    Aplicación</label>
+
+                <div class="space-y-4">
+                    <!-- Toggle Modes -->
+                    <div class="flex gap-4">
+                        <label
+                            class="flex-1 flex items-center gap-3 p-3 border border-gray-200 rounded-xl cursor-pointer hover:bg-gray-50 has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50 transition-all">
+                            <input type="radio" name="apply-mode" value="current" checked class="w-4 h-4 text-blue-600"
+                                onchange="toggleBaseHistory(false)">
+                            <div>
+                                <span class="block text-sm font-bold text-gray-800">Usar Base Actual</span>
+                                <span class="block text-xs text-gray-500">Aplica logos sobre la última versión
+                                    generada.</span>
+                            </div>
+                        </label>
+
+                        <label
+                            class="flex-1 flex items-center gap-3 p-3 border border-gray-200 rounded-xl cursor-pointer hover:bg-gray-50 has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50 transition-all">
+                            <input type="radio" name="apply-mode" value="history" class="w-4 h-4 text-blue-600"
+                                onchange="toggleBaseHistory(true)">
+                            <div>
+                                <span class="block text-sm font-bold text-gray-800">Seleccionar de Historial</span>
+                                <span class="block text-xs text-gray-500">Elige una imagen base anterior.</span>
+                            </div>
+                        </label>
+                    </div>
+
+                    <!-- History Grid Container -->
+                    <div id="base-history-selector" class="hidden space-y-2 animate-fade-in">
+                        <label class="text-[10px] font-bold text-gray-400 uppercase">Selecciona una base:</label>
+                        <div id="base-history-grid"
+                            class="grid grid-cols-3 gap-3 max-h-48 overflow-y-auto custom-scrollbar p-1">
+                            <!-- JS populates this -->
+                            <div class="animate-pulse bg-gray-100 h-24 rounded-lg"></div>
+                            <div class="animate-pulse bg-gray-100 h-24 rounded-lg"></div>
+                            <div class="animate-pulse bg-gray-100 h-24 rounded-lg"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Footer -->
+        <div class="bg-gray-50 px-8 py-5 flex justify-end gap-3 border-t border-gray-100 flex-shrink-0">
+            <button onclick="closeAllianceModal()"
+                class="px-5 py-2.5 text-gray-600 font-medium hover:bg-gray-200 rounded-xl transition-colors">
+                Cancelar
+            </button>
+            <button onclick="saveAllianceChanges()"
+                class="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all flex items-center gap-2">
+                <i class="ph-bold ph-check"></i> Aplicar Cambios
             </button>
         </div>
     </div>

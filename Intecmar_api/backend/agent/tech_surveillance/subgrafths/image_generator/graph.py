@@ -8,8 +8,9 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.prompts import PromptTemplate
 from google import genai
 from google.genai import types
-from PIL import Image
+from PIL import Image, ImageDraw
 from io import BytesIO
+from datetime import datetime
 
 from backend.agent.tech_surveillance.state import GraphState, ReportSchema, DocsPaths
 from .prompts import template_image_prompt
@@ -18,6 +19,8 @@ from backend.app.services.core.storage import storage_service
 
 # Cliente de Google Genai para generación de imágenes
 genai_client = genai.Client(api_key=os.environ.get("NANO_BANANA_API_KEY"))
+
+print("\n🚀 [VERSION 1.2] GRAPH.PY LOADED - TIMESTAMP LOGIC ENABLED\n")
 
 # Modelo base para chat general
 chat_model = ChatGoogleGenerativeAI(
@@ -134,6 +137,176 @@ def prompt_generator_image_node(state: GraphState):
         }
 
 
+# --- HELPER FUNCTIONS FOR IMAGE PROCESSING ---
+
+def remove_background(logo_img, threshold=30):
+    """
+    Elimina el fondo blanco/claro de un logo automáticamente.
+    - Detecta el color de fondo muestreando las esquinas
+    - Hace transparentes todos los píxeles similares al fondo
+    """
+    # Convertir a RGBA si no lo está
+    if logo_img.mode != 'RGBA':
+        logo_img = logo_img.convert('RGBA')
+    
+    # Obtener datos de píxeles
+    data = logo_img.getdata()
+    
+    # Muestrear las 4 esquinas para detectar el color de fondo
+    width, height = logo_img.size
+    corners = [
+        logo_img.getpixel((0, 0)),
+        logo_img.getpixel((width-1, 0)),
+        logo_img.getpixel((0, height-1)),
+        logo_img.getpixel((width-1, height-1))
+    ]
+    
+    # Calcular el color de fondo promedio (asumiendo que las esquinas son fondo)
+    bg_r = sum(c[0] for c in corners) // 4
+    bg_g = sum(c[1] for c in corners) // 4
+    bg_b = sum(c[2] for c in corners) // 4
+    
+    # Si el fondo es muy claro (blanco/gris claro), eliminarlo
+    if bg_r > 200 and bg_g > 200 and bg_b > 200:
+        new_data = []
+        for item in data:
+            # Calcular diferencia de color con el fondo
+            diff = abs(item[0] - bg_r) + abs(item[1] - bg_g) + abs(item[2] - bg_b)
+            
+            # Si es muy similar al fondo, hacerlo transparente
+            if diff < threshold:
+                new_data.append((item[0], item[1], item[2], 0))
+            else:
+                new_data.append(item)
+        
+        logo_img.putdata(new_data)
+    
+    return logo_img
+
+def apply_logos_to_image(img: Image.Image, report_components: ReportSchema, logo_default_path: str):
+    """
+    Aplica los logos a la imagen base siguiendo la jerarquía y estilos definidos.
+    """
+    # Copiar imagen para no modificar la original si se pasa por referencia
+    img_with_logos = img.copy()
+    
+    # Definir categorías con sus tamaños relativos (jerarquía)
+    # EJECUTOR: 100%, CO-EJECUTORES: 80%, COLABORADORES: 65%
+    categories = []
+    
+    # 1. Ejecutor (tamaño base = 1.0)
+    if report_components.general_info and report_components.general_info.executor_entity_logo:
+        categories.append({
+            "role": "EJECUTOR",
+            "sources": [report_components.general_info.executor_entity_logo],
+            "size_factor": 1.0
+        })
+    elif not (report_components.general_info and (report_components.general_info.coejecutors_entities_logos or report_components.general_info.collaborators_entities_logos)):
+        categories.append({
+            "role": "EJECUTOR",
+            "sources": [logo_default_path],
+            "size_factor": 1.0
+        })
+        
+    # 2. Co-ejecutores (80% del tamaño del ejecutor)
+    if report_components.general_info and report_components.general_info.coejecutors_entities_logos:
+        categories.append({
+            "role": "CO-EJECUTOR",
+            "sources": report_components.general_info.coejecutors_entities_logos,
+            "size_factor": 0.80
+        })
+
+    # 3. Colaboradores (65% del tamaño del ejecutor)
+    if report_components.general_info and report_components.general_info.collaborators_entities_logos:
+        categories.append({
+            "role": "COLABORADOR",
+            "sources": report_components.general_info.collaborators_entities_logos,
+            "size_factor": 0.65
+        })
+
+    # Cargar y procesar logos manteniendo colores originales
+    all_logos = []
+    
+    for cat in categories:
+        base_height = int(img_with_logos.height * 0.12)  # 12% de altura base - MUY VISIBLE
+        target_height = int(base_height * cat["size_factor"])
+        
+        for src in cat["sources"]:
+            try:
+                pil_logo = None
+                if src.startswith("http"):
+                    import requests
+                    resp = requests.get(src, timeout=10)
+                    if resp.status_code == 200:
+                        pil_logo = Image.open(BytesIO(resp.content)).convert("RGBA")
+                elif os.path.exists(src):
+                    pil_logo = Image.open(src).convert("RGBA")
+                elif "/" in src:
+                    if src.startswith("/api/minio_agent/"):
+                        src = src.replace("/api/minio_agent/", "")
+                    print(f"   ⬇️ Descargando logo de MinIO Key: {src}")
+                    data = storage_service.download_file(src)
+                    if data:
+                        pil_logo = Image.open(BytesIO(data)).convert("RGBA")
+                    elif os.path.exists(src):
+                        pil_logo = Image.open(src).convert("RGBA")
+                
+                if pil_logo:
+                    # ✨ ELIMINAR FONDO AUTOMÁTICAMENTE
+                    pil_logo = remove_background(pil_logo, threshold=40)
+                    
+                    # Redimensionar manteniendo proporción y colores originales
+                    aspect = pil_logo.width / pil_logo.height
+                    new_w = int(target_height * aspect)
+                    resized = pil_logo.resize((new_w, target_height), Image.Resampling.LANCZOS)
+                    
+                    all_logos.append({
+                        "image": resized,
+                        "role": cat["role"],
+                        "width": new_w,
+                        "height": target_height
+                    })
+                    
+            except Exception as e:
+                print(f"Error cargando logo {src}: {e}")
+
+    if all_logos:
+        try:
+            # --- Configuración de Layout ---
+            padding_x = int(img_with_logos.width * 0.025)  # Espacio entre logos
+            left_margin = int(img_with_logos.width * 0.04)  # Margen izquierdo
+            bottom_margin = int(img_with_logos.height * 0.04)  # Margen inferior
+            
+            # Calcular ancho total
+            total_width = sum(l["width"] for l in all_logos) + (len(all_logos) - 1) * padding_x
+            
+            # Altura máxima de logo
+            max_logo_height = max(l["height"] for l in all_logos)
+            
+            # --- Posicionamiento (Esquina inferior izquierda) ---
+            base_y = img_with_logos.height - max_logo_height - bottom_margin
+            current_x = left_margin
+            
+            # --- Pegar Logos DIRECTAMENTE (sin fondo blanco) ---
+            for logo_data in all_logos:
+                logo_img = logo_data["image"]
+                # Centrar verticalmente cada logo según su altura
+                y_offset = base_y + (max_logo_height - logo_data["height"]) // 2
+                
+                # Pegar con transparencia
+                img_with_logos.paste(logo_img, (current_x, y_offset), logo_img)
+                current_x += logo_data["width"] + padding_x
+                
+            print(f"✅ {len(all_logos)} logos (tamaño 12%) integrados sin fondo - alineados izquierda.")
+            
+        except Exception as e:
+            print(f"Error en composición de logos: {e}")
+            import traceback
+            traceback.print_exc()
+            
+    return img_with_logos
+
+
 def generator_image_node(state: GraphState):
     """
     Genera un póster vertical usando Gemini 3  (capacidad nativa de imagen).
@@ -185,73 +358,84 @@ def generator_image_node(state: GraphState):
         )
 
         image_path = None
+        base_image_key = None # Key de MinIO para imagen base
 
         # 3. Procesar la respuesta
         for part in response.parts:
             if part.inline_data:
                 # A. Cargar imagen generada desde memoria
                 image_bytes = part.inline_data.data
-                img = Image.open(BytesIO(image_bytes)).convert("RGBA") # Convertir a RGBA para manejar transparencias
-                
-                # B. Lógica de Integración del Logo
-                if os.path.exists(logo_path):
-                    try:
-                        logo = Image.open(logo_path).convert("RGBA")
-                        
-                        # --- 1. Redimensionar Logo ---
-                        # El logo ocupará el 25% del ancho total del póster (aprox 216px en un ancho de 864px)
-                        logo_width_ratio = 0.25 
-                        target_width = int(img.width * logo_width_ratio)
-                        
-                        # Calcular altura manteniendo proporción (aspect ratio del logo)
-                        w_percent = (target_width / float(logo.size[0]))
-                        h_size = int((float(logo.size[1]) * float(w_percent)))
-                        
-                        logo = logo.resize((target_width, h_size), Image.Resampling.LANCZOS)
-                        
-                        # --- 2. Calcular Posición (Inferior Izquierda) ---
-                        # Margen del 5% del ancho de la imagen (aprox 43px)
-                        margin = int(img.width * 0.05)
-                        
-                        # Coordenada X (Izquierda): Solo el margen
-                        pos_x = margin
-                        
-                        # Coordenada Y (Abajo): Altura total - Altura logo - Margen
-                        pos_y = img.height - logo.height - margin
-                        
-                        # --- 3. Pegar el Logo ---
-                        # El tercer parámetro 'logo' sirve como máscara para usar la transparencia del PNG
-                        img.paste(logo, (pos_x, pos_y), logo)
-                        
-                        print(f"Logo integrado en ({pos_x}, {pos_y}) con tamaño {target_width}x{h_size}")
-                        
-                    except Exception as e:
-                        print(f"Error al procesar el logo: {e}")
-                else:
-                    print(f"Advertencia: No se encontró el logo en {logo_path}")
-
-                # C. Guardar Imagen Final
-                # Convertimos a RGB antes de guardar (por si se guarda en JPG, aunque PNG soporta RGBA)
-                # Si quieres mantener transparencia del fondo generado (raro en pósters), quita la conversión.
-                img = img.convert("RGB") 
+                img_base = Image.open(BytesIO(image_bytes)).convert("RGBA") # Convertir a RGBA para manejar transparencias
                 
                 sanitized_title = "".join(x for x in project_title if x.isalnum() or x in " _-").replace(" ", "_").lower()
-                image_filename = f"{sanitized_title}_poster.png"
-                full_image_path = os.path.join(output_dir, image_filename)
+                # Usar timestamp para evitar sobrescritura y mantener historial visual correcto
+                timestamp_str = datetime.now().strftime('%Y%m%d%H%M%S')
                 
-                img.save(full_image_path)
-                image_path = full_image_path
-                print(f"   ✅ Poster guardado localmente: {full_image_path}")
+                # --- GUARDAR IMAGEN BASE (SIN LOGOS) ---
+                base_filename = f"{sanitized_title}_base_{timestamp_str}.png"
+                full_base_path = os.path.join(output_dir, base_filename)
+                
+                # Convertir a RGB para guardar PNG base (mantener transparencia si el modelo generó algo transparente, 
+                # pero generalmente es opaco. Usamos RGBA por consistencia)
+                img_base.save(full_base_path)
+                print(f"   ✅ Poster BASE guardado localmente: {full_base_path}")
+                
+                print("   ☁️ Subiendo póster BASE a MinIO...")
+                minio_folder_base = f"{user_email}/Agent_Sessions/{session_id}/generated_images/base"
+                base_image_key = storage_service.upload_file(full_base_path, f"{minio_folder_base}/{base_filename}")
+                
+                # --- APLICAR LOGOS ---
+                # Usamos una copia para la final
+                img_final = apply_logos_to_image(img_base, report_components, logo_path)
+                
+                # --- GUARDAR IMAGEN FINAL (CON LOGOS) ---
+                img_final = img_final.convert("RGB") 
+                
+                final_filename = f"{sanitized_title}_final_{timestamp_str}.png"
+                full_final_path = os.path.join(output_dir, final_filename)
+                
+                img_final.save(full_final_path)
+                image_path = full_final_path
+                print(f"   ✅ Poster FINAL guardado localmente: {full_final_path}")
                 
                 # D. Subir a MinIO
-                print("   ☁️ Subiendo póster a MinIO...")
-                minio_folder = f"{user_email}/Agent_Sessions/{session_id}/generated_images"
-                minio_key = storage_service.upload_file(full_image_path, f"{minio_folder}/{image_filename}")
+                print("   ☁️ Subiendo póster FINAL a MinIO...")
+                minio_folder_final = f"{user_email}/Agent_Sessions/{session_id}/generated_images/final"
+                minio_key = storage_service.upload_file(full_final_path, f"{minio_folder_final}/{final_filename}")
                 break 
         
         if image_path:
              # Actualizando estado
+            
+            # --- Historial ---
+            from backend.agent.tech_surveillance.state import GenerationItem
+            
+            new_history_item = GenerationItem(
+                timestamp=datetime.now().isoformat(),
+                poster_path=minio_key if minio_key else image_path,
+                base_image_path=base_image_key if base_image_key else full_base_path,
+                prompt_used=image_prompt
+            )
+            
+            current_history = state.get("generation_history", []) or []
+            current_history.append(new_history_item)
+
+            # --- DEBUG LOGGING REQUESTED BY USER ---
+            print("\n" + "="*50)
+            print(f"🧐 DEBUG HISTORIAL (Total versiones: {len(current_history)})")
+            for idx, item in enumerate(current_history):
+                try:
+                    ts = item.get('timestamp') if isinstance(item, dict) else item.timestamp
+                    p = item.get('poster_path') if isinstance(item, dict) else item.poster_path
+                    b = item.get('base_image_path') if isinstance(item, dict) else getattr(item, 'base_image_path', 'N/A')
+                    print(f"   [{idx+1}] TS: {ts} | FINAL: {p[-30:] if p else 'None'} | BASE: {b[-30:] if b else 'None'}")
+                except Exception as e:
+                    print(f"   [{idx+1}] Error imprimiendo item: {e}")
+            print("="*50 + "\n")
+
             docs_paths: DocsPaths = state.get("docs_paths") or DocsPaths()
+            if isinstance(docs_paths, dict):
+                docs_paths = DocsPaths(**docs_paths)
             
             # Guardamos la KEY de MinIO si existe, o la ruta local como fallback
             docs_paths.poster_image_path = minio_key if minio_key else image_path
@@ -261,15 +445,19 @@ def generator_image_node(state: GraphState):
             return {
                 "messages": [AIMessage(content=f"✓ Póster generado: {image_path}")],
                 "generated_image_path": image_path, # Ruta LOCAL para uso inmediato en PDF
-                "docs_paths": docs_paths # Key NUBE para descarga final
+                "docs_paths": docs_paths, # Retornamos objeto para que TypedDict lo valide
+                "generation_history": current_history
             }
         else:
             return {"messages": [AIMessage(content="⚠ La API respondió pero no se encontró imagen.")]}
             
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         return {
             "messages": [AIMessage(content=f"✗ Error generando imagen: {str(e)}")]
         }
+
 
 # Construcción del grafo
 workflow = StateGraph(GraphState)

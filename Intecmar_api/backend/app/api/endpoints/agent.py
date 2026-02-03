@@ -437,3 +437,166 @@ async def get_session_history(
     }
     
     return response
+
+@router.get("/poster-history/{session_id}", summary="Historial de Pósters", description="Obtiene el historial específico de versiones de pósters generados.")
+async def get_poster_history(
+    session_id: str,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Retorna la lista 'generation_history' del último paso disponible en la sesión.
+    """
+    session = db.query(AgentSession).filter(
+        AgentSession.id == session_id,
+        AgentSession.user_id == current_user.id
+    ).first()
+    if not session:
+        raise HTTPException(status_code=404, detail="Sesión no encontrada")
+
+    # Buscar el último paso que tenga 'generation_history'
+    # Recorremos pasos en orden inverso
+    steps = db.query(AgentStep).filter(
+        AgentStep.session_id == session_id
+    ).order_by(AgentStep.created_at.desc()).all()
+    
+    history = []
+    
+    for step in steps:
+        if step.output_data and "generation_history" in step.output_data:
+            history = step.output_data["generation_history"]
+            break
+            
+    # Procesar URLs para el frontend
+    processed_history = []
+    if history:
+        for item in history:
+            # Pydantic model dump or dict
+            entry = item if isinstance(item, dict) else item.dict()
+            
+            # Helper para proxear URLs
+            def proxy_url(path_val):
+                if path_val and isinstance(path_val, str) and "/" in path_val and not path_val.startswith("/api/"):
+                    return f"/api/minio_agent/{path_val}"
+                return path_val
+
+            entry["poster_url"] = proxy_url(entry.get("poster_path"))
+            entry["base_image_url"] = proxy_url(entry.get("base_image_path"))
+            entry["pdf_url"] = proxy_url(entry.get("pdf_path"))
+            
+            processed_history.append(entry)
+            
+    return processed_history
+
+
+class ApplyLogosRequest(BaseModel):
+    session_id: str
+    base_image_path: str # MinIO Key or path
+    report_components: dict # ReportSchema dict with general_info and alliance logos
+
+@router.post("/apply-logos", summary="Aplicar logos a imagen base", description="Genera una nueva versión del póster aplicando logos a una imagen base existente sin regenerar con IA.")
+async def apply_logos_endpoint(
+    request: ApplyLogosRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    1. Descarga la imagen base.
+    2. Aplica los logos proporcionados.
+    3. Sube la nueva imagen final.
+    4. Actualiza el historial (retornando el nuevo item).
+    """
+    from PIL import Image
+    from io import BytesIO
+    from backend.agent.tech_surveillance.state import ReportSchema, GenerationItem
+    # Importar función reutilizable (cuidado con imports circulares, hacerlo dentro)
+    from backend.agent.tech_surveillance.subgrafths.image_generator.graph import apply_logos_to_image
+    
+    # Verificar sesión
+    session = db.query(AgentSession).filter(
+        AgentSession.id == request.session_id,
+        AgentSession.user_id == current_user.id
+    ).first()
+    if not session:
+        raise HTTPException(status_code=404, detail="Sesión no encontrada")
+
+    try:
+        # 1. Recuperar imagen base
+        base_path = request.base_image_path
+        # Si viene con prefijo de API, limpiarlo
+        if base_path.startswith("/api/minio_agent/"):
+            base_path = base_path.replace("/api/minio_agent/", "")
+            
+        print(f"🔄 [APPLY LOGOS] Descargando base: {base_path}")
+        image_data = storage_service.download_file(base_path)
+        if not image_data:
+            # Intentar local si falla MinIO (fallback desarrollo)
+            if os.path.exists(base_path):
+                 with open(base_path, "rb") as f:
+                     image_data = f.read()
+            else:
+                raise HTTPException(status_code=404, detail="Imagen base no encontrada")
+
+        img_base = Image.open(BytesIO(image_data)).convert("RGBA")
+        
+        # 2. Parsear componentes y logos
+        # Construimos ReportSchema a partir del dict recibido
+        try:
+            report_components = ReportSchema(**request.report_components)
+        except Exception as e:
+            print(f"⚠️ Error parseando ReportSchema: {e}")
+            # Fallback manual básico si falla validación estricta
+            report_components = ReportSchema() 
+            # (Aquí podrías manejar error 400 si prefieres estricto)
+
+        # Definir ruta de logo fallback (mismo fallback que graph.py)
+        logo_fallback_path = "/app/static/images/CotecmarLogo_white.png"
+        if not os.path.exists(logo_fallback_path):
+             base_dir_api = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "..")) 
+             logo_fallback_path = os.path.join(base_dir_api, "static", "images", "CotecmarLogo_white.png")
+
+        # 3. Aplicar logos
+        img_final = apply_logos_to_image(img_base, report_components, logo_fallback_path)
+        
+        # 4. Guardar y Subir
+        img_final = img_final.convert("RGB")
+        timestamp_str = datetime.now().strftime('%Y%m%d%H%M%S')
+        filename = f"poster_v_edit_{timestamp_str}.png"
+        
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".png") as tmp:
+            img_final.save(tmp.name)
+            tmp_path = tmp.name
+            
+        minio_folder = f"{current_user.email}/Agent_Sessions/{request.session_id}/generated_images/final"
+        # Subir
+        final_key = storage_service.upload_file(tmp_path, f"{minio_folder}/{filename}")
+        os.remove(tmp_path)
+        
+        if not final_key:
+            raise HTTPException(status_code=500, detail="Error subiendo imagen final")
+
+        # 5. Crear Item de Historial
+        new_item = GenerationItem(
+            timestamp=datetime.now().isoformat(),
+            poster_path=final_key,
+            base_image_path=base_path, # Mantenemos referencia a la base usada
+            prompt_used="Manual Logo Overlay"
+        )
+        
+        # Retornar datos para que el frontend actualice su estado
+        return {
+            "status": "success",
+            "new_history_item": {
+                **new_item.dict(),
+                "poster_url": f"/api/minio_agent/{final_key}",
+                "base_image_url": f"/api/minio_agent/{base_path}"
+            },
+            "poster_path": final_key
+        }
+
+    except Exception as e:
+        print(f"❌ Error en apply-logos: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Error procesando logos: {str(e)}")
+
