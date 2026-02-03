@@ -1,9 +1,34 @@
 import { store } from '../../data/store.js';
-import { selectIdea } from '../../api/agent.js'; // Note: check if selectIdea is exported in api/agent.js
+import { selectIdea, getPosterHistory, applyLogos } from '../../api/agent.js';
 import { pollTask } from '../../api/tasks.js';
-import { getElements, updateStepper } from '../common.js';
+import { getElements, updateStepper, getAssetUrl } from '../common.js';
 import { loadHistory } from '../sidebar.js';
 import { generateFinal } from './step4.js';
+
+let baseImageMode = 'current'; // 'current' or 'history'
+let selectedBaseImagePath = null;
+
+// Listen for updates from Alliance Modal (Synchronization across steps)
+window.addEventListener('poster-updated', (e) => {
+    console.log("📢 [step3.js] Poster Update Event received", e.detail);
+    const generalInfo = e.detail?.report_components?.general_info;
+    if (generalInfo) {
+        console.log("📊 [step3.js] Updating alliances with:", generalInfo);
+        // Sync store.currentSelectedIdea so Step 3 displays latest alliance data
+        if (store.currentSelectedIdea) {
+            console.log("🔄 [step3.js] Syncing store.currentSelectedIdea");
+            store.currentSelectedIdea.executor_entity = generalInfo.executor_entity;
+            store.currentSelectedIdea.executor_entity_logo = generalInfo.executor_entity_logo;
+            store.currentSelectedIdea.coejecutors_entities = generalInfo.coejecutors_entities || [];
+            store.currentSelectedIdea.coejecutors_entities_logos = generalInfo.coejecutors_entities_logos || [];
+            store.currentSelectedIdea.collaborators_entities = generalInfo.collaborators_entities || [];
+            store.currentSelectedIdea.collaborators_entities_logos = generalInfo.collaborators_entities_logos || [];
+        }
+        renderAlliances(generalInfo, store.currentSelectedIdea || {});
+    } else {
+        console.warn("⚠️ [step3.js] Event received but no general_info found in detail");
+    }
+});
 
 // Paso 3: Confirmar Idea y Generar Esquema
 export async function confirmIdea() {
@@ -291,8 +316,8 @@ function renderAlliances(generalInfo, selectedIdea) {
                 ? executorLogo
                 : '/api/minio_agent/' + executorLogo;
             executorLogoImg.src = logoUrl;
-        } else {
-            executorLogoContainer?.classList.add('hidden');
+        } else if (executorLogoContainer) {
+            executorLogoContainer.classList.add('hidden');
         }
     }
 
@@ -505,7 +530,103 @@ export function openConfigModal(isRegen = false) {
     }
 
     modal.classList.remove('hidden');
+
+    // Reset History State
+    baseImageMode = 'current';
+    selectedBaseImagePath = null;
+    const currentRadio = document.querySelector('input[name="apply-mode"][value="current"]');
+    if (currentRadio) currentRadio.checked = true;
+    const historyDiv = document.getElementById('base-history-selector');
+    if (historyDiv) historyDiv.classList.add('hidden');
 }
+
+export function toggleBaseHistory(show) {
+    baseImageMode = show ? 'history' : 'current';
+    const container = document.getElementById('base-history-selector');
+    if (show) {
+        container.classList.remove('hidden');
+        loadBaseImageHistory();
+    } else {
+        container.classList.add('hidden');
+    }
+}
+window.toggleBaseHistory = toggleBaseHistory;
+
+async function loadBaseImageHistory() {
+    const grid = document.getElementById('base-history-grid');
+    if (!grid) return;
+
+    grid.innerHTML = '<div class="col-span-2 text-center text-slate-400 py-6"><i class="ph ph-spinner animate-spin text-xl"></i></div>';
+
+    try {
+        const history = await getPosterHistory(store.sessionId);
+
+        // De-duplicate by base_image_path to avoid repeating the same background
+        const uniqueBases = [];
+        const seenPaths = new Set();
+
+        // We iterate in natural order first, or reverse if we want the LATEST metadata for that base
+        // Given the original code used .reverse() later, let's de-duplicate first.
+        history.forEach(item => {
+            if (item.base_image_path && !seenPaths.has(item.base_image_path)) {
+                seenPaths.add(item.base_image_path);
+                uniqueBases.push(item);
+            }
+        });
+
+        grid.innerHTML = '';
+
+        if (uniqueBases.length === 0) {
+            grid.innerHTML = '<div class="col-span-2 text-center text-xs text-slate-400 py-4 italic">No hay versiones anteriores disponibles.</div>';
+            return;
+        }
+
+        uniqueBases.reverse().forEach((item, idx) => {
+            const div = document.createElement('div');
+            const isActive = selectedBaseImagePath === item.base_image_path;
+            div.className = `group/base relative aspect-[3/4] rounded-xl overflow-hidden border-2 cursor-pointer transition-all ${isActive ? 'border-blue-500 shadow-lg ring-4 ring-blue-500/10' : 'border-slate-200 hover:border-blue-300'}`;
+            div.onclick = () => selectBaseImage(item.base_image_path, div);
+
+            const url = item.base_image_url || getAssetUrl(item.base_image_path);
+
+            div.innerHTML = `
+                <img src="${url}" class="w-full h-full object-cover transition-transform group-hover/base:scale-110">
+                <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover/base:opacity-100 transition-opacity"></div>
+                <div class="absolute bottom-2 left-2 right-2 text-white text-[9px] font-bold truncate drop-shadow-md">
+                    ${new Date(item.timestamp).toLocaleDateString()}
+                </div>
+                ${isActive ? '<div class="absolute top-2 right-2 bg-blue-500 text-white w-6 h-6 rounded-full flex items-center justify-center shadow-lg border-2 border-white"><i class="ph-bold ph-check text-xs"></i></div>' : ''}
+             `;
+            grid.appendChild(div);
+        });
+
+    } catch (e) {
+        console.error(e);
+        grid.innerHTML = '<div class="col-span-2 text-center text-red-500 text-xs py-4 font-bold">Error cargando historial</div>';
+    }
+}
+
+export function selectBaseImage(path, element) {
+    selectedBaseImagePath = path;
+    const grid = document.getElementById('base-history-grid');
+    if (!grid) return;
+
+    Array.from(grid.children).forEach(child => {
+        child.classList.remove('border-blue-500', 'shadow-lg', 'ring-4', 'ring-blue-500/10');
+        child.classList.add('border-slate-200');
+        const check = child.querySelector('.ph-check')?.parentNode;
+        if (check) check.remove();
+    });
+
+    element.classList.remove('border-slate-200');
+    element.classList.add('border-blue-500', 'shadow-lg', 'ring-4', 'ring-blue-500/10');
+
+    const iconDiv = document.createElement('div');
+    iconDiv.className = "absolute top-2 right-2 bg-blue-500 text-white w-6 h-6 rounded-full flex items-center justify-center shadow-lg border-2 border-white animate-bounce-in";
+    iconDiv.innerHTML = '<i class="ph-bold ph-check text-xs"></i>';
+    element.appendChild(iconDiv);
+}
+window.selectBaseImage = selectBaseImage;
 
 export function closeConfigModal() {
     document.getElementById('config-modal').classList.add('hidden');
@@ -562,23 +683,19 @@ export function saveConfigAndGenerate() {
     const redoTheoretical = document.getElementById('redo-academic')?.checked || false;
     const posterOverride = document.getElementById('poster-prompt-override')?.value || null;
 
-    // Save and send
     store.generationConfig = {
         charLimit: parseInt(charLimit),
         refStyle: refStyle,
         sections_to_regenerate: sectionsToRegen,
         redo_theoretical_framework: redoTheoretical,
         section_char_limits: sectionLimits,
-        poster_prompt_override: posterOverride
+        poster_prompt_override: posterOverride,
+        base_image_path: baseImageMode === 'history' ? selectedBaseImagePath : null
     };
 
-    console.log("🚀 [UI] Final Generation Config:", store.generationConfig);
+    console.log("🚀 [UI] Unified Generation Config:", store.generationConfig);
 
-    // 2. Close Modal
+    // Default: Full Generation (Now supports historical image override in backend)
     closeConfigModal();
-
-    // 3. Trigger Generation
     generateFinal();
 }
-
-

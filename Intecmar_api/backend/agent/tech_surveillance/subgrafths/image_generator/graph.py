@@ -322,8 +322,19 @@ def generator_image_node(state: GraphState):
     if report_components.general_info:
         project_title = report_components.general_info.project_title or "proyecto_tecnologico"
     
-    if not image_prompt:
-        return {"messages": [AIMessage(content="✗ No hay prompt para generar imagen.")]}
+    # 0. Check for historical base image override in config
+    gen_config = state.get("generation_config")
+    if isinstance(gen_config, dict):
+        try:
+            from backend.agent.tech_surveillance.state import GenerationConfig
+            gen_config = GenerationConfig(**gen_config)
+        except: pass
+        
+    override_base_path = getattr(gen_config, "base_image_path", None) if gen_config else None
+    
+    img_base = None
+    base_image_key = None
+    image_prompt = state.get("image_prompt")
 
     # 1. Definir carpeta
     base_path = os.getenv("SHARED_DATA_PATH", "generated_images")
@@ -345,64 +356,74 @@ def generator_image_node(state: GraphState):
     print(f"Buscando logo en: {logo_path}")
     
     try:
-        # 2. LLAMADA A LA API 
-        response = genai_client.models.generate_content(
-            model=os.environ.get("NANO_BANANA_MODEL", "gemini-2.5-flash-image"),
-            contents=[image_prompt],
-            config=types.GenerateContentConfig(
-                response_modalities=["Image"], 
-                image_config=types.ImageConfig(
-                    aspect_ratio="3:4" 
+        if override_base_path:
+            print(f"🔄 [IMAGE GEN] Usando imagen base histórica: {override_base_path}")
+            # Limpiar prefijo si existe
+            base_key = override_base_path.split("MinioContent/")[-1] if "MinioContent/" in override_base_path else override_base_path
+            base_key = base_key.replace("/api/minio_agent/", "")
+            
+            data = storage_service.download_file(base_key)
+            if data:
+                img_base = Image.open(BytesIO(data)).convert("RGBA")
+                base_image_key = base_key
+                print("   ✅ Imagen base histórica cargada correctamente.")
+            else:
+                print(f"   ⚠️ No se pudo descargar {base_key}, se intentará generar una nueva.")
+
+        # 1. GENERACIÓN IA (Solo si no hay base override o falló la descarga)
+        if not img_base:
+            if not image_prompt:
+                return {"messages": [AIMessage(content="✗ No hay prompt para generar imagen.")]}
+                
+            print("🎨 Generando nueva imagen con IA...")
+            response = genai_client.models.generate_content(
+                model=os.environ.get("NANO_BANANA_MODEL", "gemini-2.5-flash-image"),
+                contents=[image_prompt],
+                config=types.GenerateContentConfig(
+                    response_modalities=["Image"], 
+                    image_config=types.ImageConfig(
+                        aspect_ratio="3:4" 
+                    )
                 )
             )
-        )
 
-        image_path = None
-        base_image_key = None # Key de MinIO para imagen base
+            # Procesar la respuesta para obtener img_base
+            for part in response.parts:
+                if part.inline_data:
+                    image_bytes = part.inline_data.data
+                    img_base = Image.open(BytesIO(image_bytes)).convert("RGBA")
+                    break
+            
+            if not img_base:
+                 return {"messages": [AIMessage(content="⚠ La API respondió pero no se encontró imagen.")]}
 
-        # 3. Procesar la respuesta
-        for part in response.parts:
-            if part.inline_data:
-                # A. Cargar imagen generada desde memoria
-                image_bytes = part.inline_data.data
-                img_base = Image.open(BytesIO(image_bytes)).convert("RGBA") # Convertir a RGBA para manejar transparencias
-                
-                sanitized_title = "".join(x for x in project_title if x.isalnum() or x in " _-").replace(" ", "_").lower()
-                # Usar timestamp para evitar sobrescritura y mantener historial visual correcto
-                timestamp_str = datetime.now().strftime('%Y%m%d%H%M%S')
-                
-                # --- GUARDAR IMAGEN BASE (SIN LOGOS) ---
-                base_filename = f"{sanitized_title}_base_{timestamp_str}.png"
-                full_base_path = os.path.join(output_dir, base_filename)
-                
-                # Convertir a RGB para guardar PNG base (mantener transparencia si el modelo generó algo transparente, 
-                # pero generalmente es opaco. Usamos RGBA por consistencia)
-                img_base.save(full_base_path)
-                print(f"   ✅ Poster BASE guardado localmente: {full_base_path}")
-                
-                print("   ☁️ Subiendo póster BASE a MinIO...")
-                minio_folder_base = f"{user_email}/Agent_Sessions/{session_id}/generated_images/base"
-                base_image_key = storage_service.upload_file(full_base_path, f"{minio_folder_base}/{base_filename}")
-                
-                # --- APLICAR LOGOS ---
-                # Usamos una copia para la final
-                img_final = apply_logos_to_image(img_base, report_components, logo_path)
-                
-                # --- GUARDAR IMAGEN FINAL (CON LOGOS) ---
-                img_final = img_final.convert("RGB") 
-                
-                final_filename = f"{sanitized_title}_final_{timestamp_str}.png"
-                full_final_path = os.path.join(output_dir, final_filename)
-                
-                img_final.save(full_final_path)
-                image_path = full_final_path
-                print(f"   ✅ Poster FINAL guardado localmente: {full_final_path}")
-                
-                # D. Subir a MinIO
-                print("   ☁️ Subiendo póster FINAL a MinIO...")
-                minio_folder_final = f"{user_email}/Agent_Sessions/{session_id}/generated_images/final"
-                minio_key = storage_service.upload_file(full_final_path, f"{minio_folder_final}/{final_filename}")
-                break 
+        # 2. PROCESAMIENTO COMÚN (Logo Overlay & Storage)
+        sanitized_title = "".join(x for x in project_title if x.isalnum() or x in " _-").replace(" ", "_").lower()
+        timestamp_str = datetime.now().strftime('%Y%m%d%H%M%S')
+        
+        # Guardar imagen base (si es generada nueva, para mantener el historial de bases)
+        if not override_base_path:
+            base_filename = f"{sanitized_title}_base_{timestamp_str}.png"
+            full_base_path = os.path.join(output_dir, base_filename)
+            img_base.save(full_base_path)
+            minio_folder_base = f"{user_email}/Agent_Sessions/{session_id}/generated_images/base"
+            base_image_key = storage_service.upload_file(full_base_path, f"{minio_folder_base}/{base_filename}")
+            print(f"   ✅ Nueva imagen base guardada: {base_image_key}")
+        
+        # APLICAR LOGOS
+        img_final = apply_logos_to_image(img_base, report_components, logo_path)
+        
+        # GUARDAR IMAGEN FINAL
+        img_final_rgb = img_final.convert("RGB") 
+        final_filename = f"{sanitized_title}_final_{timestamp_str}.png"
+        full_final_path = os.path.join(output_dir, final_filename)
+        img_final_rgb.save(full_final_path)
+        
+        print("   ☁️ Subiendo póster FINAL a MinIO...")
+        minio_folder_final = f"{user_email}/Agent_Sessions/{session_id}/generated_images/final"
+        minio_key = storage_service.upload_file(full_final_path, f"{minio_folder_final}/{final_filename}")
+        
+        image_path = full_final_path
         
         if image_path:
              # Actualizando estado

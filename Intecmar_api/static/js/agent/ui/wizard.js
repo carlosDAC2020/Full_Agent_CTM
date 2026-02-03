@@ -61,7 +61,46 @@ export function resetInterface() {
     const researchModal = document.getElementById('research-loading-modal');
     if (researchModal) researchModal.classList.add('hidden');
 
-    // 7. Refresh History and List
+    // 7. Restore Poster Container Structure (if it was wiped by the history slider)
+    const posterImg = document.getElementById('final-poster-img');
+    if (!posterImg) {
+        // Find the container (it had classes bg-gray-100, border-dashed, etc.)
+        // We can find it by looking for the one that usually contains the placeholder if it was there, 
+        // but since it's wiped, we look for the one inside #step-4-final that's a sibling of the info card.
+        const step4 = document.getElementById('step-4-final');
+        if (step4) {
+            const posterCard = step4.querySelector('.border-dashed');
+            if (posterCard) {
+                console.log("🛠️ Restoring Poster Card DOM structure...");
+                posterCard.innerHTML = `
+                    <!-- Imagen del Poster -->
+                    <img id="final-poster-img"
+                        class="hidden w-full h-full object-contain rounded-lg shadow-2xl transition-transform duration-500 hover:scale-[1.02]"
+                        alt="Poster Científico">
+
+                    <!-- Placeholder por defecto -->
+                    <div id="final-poster-placeholder" class="text-center text-gray-400 p-8">
+                        <div class="w-20 h-20 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <i class="ph ph-image text-4xl"></i>
+                        </div>
+                        <p class="font-medium">El poster se visualizará aquí una vez generado</p>
+                    </div>
+
+                    <!-- Botón de ampliar (overlay) -->
+                    <div id="poster-overlay"
+                        class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center hidden">
+                        <button id="btn-view-poster"
+                            class="bg-white text-gray-900 px-6 py-3 rounded-full font-bold shadow-lg transform hover:scale-105 transition flex items-center gap-2">
+                            <i class="ph-fill ph-arrows-out-simple"></i>
+                            Ver en Alta Resolución
+                        </button>
+                    </div>
+                 `;
+            }
+        }
+    }
+
+    // 8. Refresh History and List
     loadHistory();
     import('./search.js').then(search => search.filterOptions());
 }

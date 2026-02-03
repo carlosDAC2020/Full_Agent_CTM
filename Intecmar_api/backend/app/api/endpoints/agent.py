@@ -2,7 +2,7 @@ import os
 import shutil
 import tempfile
 from fastapi import File, UploadFile, Form
-
+import copy
 import uuid
 from fastapi import APIRouter
 from backend.app.schemas.requests import IngestRequest, SelectionRequest, NextStepRequest, IdeaGenerationRequest
@@ -332,107 +332,89 @@ async def get_session_history(
         AgentStep.session_id == session_id
     ).order_by(AgentStep.created_at.asc()).all()
     
-    # 3. Determinar el estado actual
+    # 3. Determinar el estado actual (CUMULATIVO con deep merge para evitar fragmentación)
+    def deep_merge(target, source):
+        for key, value in source.items():
+            if key in target and isinstance(target[key], dict) and isinstance(value, dict):
+                deep_merge(target[key], value)
+            else:
+                target[key] = copy.deepcopy(value)
+        return target
+
+    cumulative_state = {}
     history_map = {}
-    last_processed_data = None
-    
     for step in steps:
         step_data = step.output_data
-        
         if step_data and isinstance(step_data, dict):
-            # 1. Docs Paths (Direct Keys)
+            # --- Procesamiento de Proxies para el Frontend ---
+            # 1. Docs Paths
             if "docs_paths" in step_data and step_data["docs_paths"]:
                 docs = step_data["docs_paths"]
                 for key, val in docs.items():
-                     if val and isinstance(val, str) and "/" in val: 
-                         # Usar el proxy para mayor estabilidad
-                         docs[key] = f"/api/minio_agent/{val}"
-                step_data["docs_paths"] = docs
+                     if val and isinstance(val, str) and "/" in val and not val.startswith("/api/"): 
+                          docs[key] = f"/api/minio_agent/{val}"
             
-            # 2. Call Info (Nested History and Context)
+            # 2. Call Info (Historial de Archivos y Contexto)
             if "call_info" in step_data and step_data["call_info"]:
                 ci = step_data["call_info"]
-                
-                # Proxy Presentation History
                 if "presentation_history" in ci and isinstance(ci["presentation_history"], list):
                     for entry in ci["presentation_history"]:
-                        # Proxy url, pdf, pptx, md
                         for field in ["url", "pdf", "pptx", "md"]:
-                            if field in entry and entry[field] and "/" in entry[field]:
-                                if not entry[field].startswith("/api/"):
-                                    entry[field] = f"/api/minio_agent/{entry[field]}"
+                            if field in entry and entry[field] and "/" in entry[field] and not str(entry[field]).startswith("/api/"):
+                                entry[field] = f"/api/minio_agent/{entry[field]}"
                 
-                # Proxy Context Docs
                 if "context_docs" in ci and isinstance(ci["context_docs"], list):
                     for i, doc in enumerate(ci["context_docs"]):
                         if isinstance(doc, str) and "/" in doc:
-                            url = f"/api/minio_agent/{doc}"
-                            ci["context_docs"][i] = {"name": os.path.basename(doc), "url": url}
-                        elif isinstance(doc, dict) and "url" in doc and "/" in doc["url"]:
-                            if not doc["url"].startswith("/api/"):
-                                doc["url"] = f"/api/minio_agent/{doc['url']}"
-                
-                step_data["call_info"] = ci
+                            ci["context_docs"][i] = {"name": os.path.basename(doc), "url": f"/api/minio_agent/{doc}"}
+                        elif isinstance(doc, dict) and "url" in doc and "/" in doc["url"] and not doc["url"].startswith("/api/"):
+                            doc["url"] = f"/api/minio_agent/{doc['url']}"
             
-            # 3. Selected Idea & General Info Alliance Logos
-            # Para general_info en report_components
+            # 3. Logos en Report Components (Alianzas)
             if "report_components" in step_data and step_data["report_components"]:
                 rc = step_data["report_components"]
                 if "general_info" in rc and rc["general_info"]:
                     gi = rc["general_info"]
-                    # Proxy executor logo
-                    if gi.get("executor_entity_logo") and "/" in gi["executor_entity_logo"]:
-                        if not gi["executor_entity_logo"].startswith("/api/"):
-                            gi["executor_entity_logo"] = f"/api/minio_agent/{gi['executor_entity_logo']}"
-                    
-                    # Proxy coexecutors logos
+                    # Executor
+                    if gi.get("executor_entity_logo") and "/" in gi["executor_entity_logo"] and not gi["executor_entity_logo"].startswith("/api/"):
+                        gi["executor_entity_logo"] = f"/api/minio_agent/{gi['executor_entity_logo']}"
+                    # Coexecutors
                     if gi.get("coejecutors_entities_logos") and isinstance(gi["coejecutors_entities_logos"], list):
                         gi["coejecutors_entities_logos"] = [
                             f"/api/minio_agent/{logo}" if logo and "/" in logo and not str(logo).startswith("/api/") else logo 
                             for logo in gi["coejecutors_entities_logos"]
                         ]
-                    
-                    # Proxy collaborators logos
+                    # Collaborators
                     if gi.get("collaborators_entities_logos") and isinstance(gi["collaborators_entities_logos"], list):
                         gi["collaborators_entities_logos"] = [
                             f"/api/minio_agent/{logo}" if logo and "/" in logo and not str(logo).startswith("/api/") else logo 
                             for logo in gi["collaborators_entities_logos"]
                         ]
-                    rc["general_info"] = gi
-                step_data["report_components"] = rc
-
-            # Para selected_idea directo
+            
+            # 4. Selected Idea fallback
             if "selected_idea" in step_data and step_data["selected_idea"]:
                 si = step_data["selected_idea"]
                 if isinstance(si, dict):
-                    if si.get("executor_entity_logo") and "/" in si["executor_entity_logo"]:
-                        if not si["executor_entity_logo"].startswith("/api/"):
-                            si["executor_entity_logo"] = f"/api/minio_agent/{si['executor_entity_logo']}"
-                    
+                    if si.get("executor_entity_logo") and "/" in si["executor_entity_logo"] and not si["executor_entity_logo"].startswith("/api/"):
+                        si["executor_entity_logo"] = f"/api/minio_agent/{si['executor_entity_logo']}"
                     if si.get("coejecutors_entities_logos") and isinstance(si["coejecutors_entities_logos"], list):
-                        si["coejecutors_entities_logos"] = [
-                            f"/api/minio_agent/{logo}" if logo and "/" in logo and not str(logo).startswith("/api/") else logo 
-                            for logo in si["coejecutors_entities_logos"]
-                        ]
-                    
+                         si["coejecutors_entities_logos"] = [f"/api/minio_agent/{l}" if l and "/" in l and not str(l).startswith("/api/") else l for l in si["coejecutors_entities_logos"]]
                     if si.get("collaborators_entities_logos") and isinstance(si["collaborators_entities_logos"], list):
-                        si["collaborators_entities_logos"] = [
-                            f"/api/minio_agent/{logo}" if logo and "/" in logo and not str(logo).startswith("/api/") else logo 
-                            for logo in si["collaborators_entities_logos"]
-                        ]
-                    step_data["selected_idea"] = si
-            
-            last_processed_data = step_data
-        
-        history_map[step.step_type] = step_data
+                         si["collaborators_entities_logos"] = [f"/api/minio_agent/{l}" if l and "/" in l and not str(l).startswith("/api/") else l for l in si["collaborators_entities_logos"]]
 
+
+            # Mergear recursivamente en el estado acumulado (CON PROXIES)
+            deep_merge(cumulative_state, step_data)
+
+            history_map[step.step_type] = step_data
+    
     response = {
         "session_id": session_id,
         "status": session.status,
         "current_task_id": session.current_task_id,
         "created_at": session.created_at,
         "steps_data": history_map,
-        "latest_data": last_processed_data,
+        "latest_data": cumulative_state,
         "last_step": steps[-1].step_type if steps else None
     }
     
@@ -582,6 +564,53 @@ async def apply_logos_endpoint(
             base_image_path=base_path, # Mantenemos referencia a la base usada
             prompt_used="Manual Logo Overlay"
         )
+        
+        # 6. PERSIST changes to the database
+        # Find the latest step with report_components
+        steps = db.query(AgentStep).filter(
+            AgentStep.session_id == request.session_id
+        ).order_by(AgentStep.created_at.desc()).all()
+        
+        target_step = None
+        for step in steps:
+            if step.output_data and "report_components" in step.output_data:
+                target_step = step
+                break
+        
+        if target_step:
+            import copy
+            from sqlalchemy.orm.attributes import flag_modified
+            # Deep copy to ensure nested changes are detected
+            updated_data = copy.deepcopy(target_step.output_data)
+            
+            print(f"🔍 [APPLY LOGOS] Persistence start for step {target_step.id}")
+            
+            if "report_components" not in updated_data:
+                updated_data["report_components"] = {}
+            if "general_info" not in updated_data["report_components"]:
+                updated_data["report_components"]["general_info"] = {}
+                
+            new_gi = request.report_components.get("general_info", {})
+            
+            # Debug log
+            old_count = len(updated_data["report_components"]["general_info"].get("coejecutors_entities", []))
+            new_count = len(new_gi.get("coejecutors_entities", []))
+            print(f"   - Coexecutors: {old_count} -> {new_count}")
+            
+            updated_data["report_components"]["general_info"].update(new_gi)
+            
+            if "docs_paths" not in updated_data:
+                updated_data["docs_paths"] = {}
+            updated_data["docs_paths"]["poster_image_path"] = final_key
+            
+            if "generation_history" not in updated_data:
+                updated_data["generation_history"] = []
+            updated_data["generation_history"].append(new_item.dict())
+            
+            target_step.output_data = updated_data
+            flag_modified(target_step, "output_data")
+            db.commit()
+            print(f"✅ [APPLY LOGOS] Persistence complete for step {target_step.id}")
         
         # Retornar datos para que el frontend actualice su estado
         return {

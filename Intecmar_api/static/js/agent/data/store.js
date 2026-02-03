@@ -11,5 +11,8 @@ export const store = {
     categoryFilter: 'all',
     // NEW: Store selected thematic line and methodology for idea generation
     selectedThematicLine: null,
-    selectedMethodology: null
+    selectedMethodology: null,
+
+    // NEW: Store final project results for modal population
+    finalResult: null
 };

@@ -85,11 +85,19 @@ export async function restoreSession(sessionId) {
             }
 
             if (data && data.selected_idea) {
-                const ideaData = data.selected_idea;
+                const si = data.selected_idea;
                 store.currentSelectedIdea = {
-                    title: ideaData.idea_title || ideaData.title,
-                    desc: ideaData.idea_description || ideaData.desc,
-                    objectives: ideaData.idea_objectives || ideaData.objectives || []
+                    idea_title: si.idea_title || si.title,
+                    idea_description: si.idea_description || si.desc,
+                    idea_objectives: si.idea_objectives || si.objectives || [],
+                    idea_general_objective: si.idea_general_objective,
+                    duration_time: si.duration_time,
+                    executor_entity: si.executor_entity,
+                    executor_entity_logo: si.executor_entity_logo,
+                    coejecutors_entities: si.coejecutors_entities || [],
+                    coejecutors_entities_logos: si.coejecutors_entities_logos || [],
+                    collaborators_entities: si.collaborators_entities || [],
+                    collaborators_entities_logos: si.collaborators_entities_logos || []
                 };
             }
             if (data && data.initial_schema) { // Corrected key: initial_schema

@@ -341,6 +341,7 @@ class GenerationConfig(BaseModel):
     redo_theoretical_framework: bool = Field(default=False, description="Si es True, se vuelve a ejecutar academic_research.")
     section_char_limits: Dict[str, int] = Field(default_factory=dict, description="Límites específicos por sección.")
     poster_prompt_override: Optional[str] = Field(default=None, description="Nuevo prompt para la generación del póster.")
+    base_image_path: Optional[str] = Field(default=None, description="Ruta de imagen base a usar (historial) en lugar de generar una nueva con IA.")
 
 
 class GenerationItem(BaseModel):

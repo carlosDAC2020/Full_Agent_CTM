@@ -53,6 +53,9 @@ export async function generateFinal() {
 
 export function renderFinalResult(data) {
     console.log("Rendering final result:", data);
+    // Persist to store so modals can access it
+    store.finalResult = data;
+
     const docs = data.docs_paths || {};
     const generalInfo = data.report_components?.general_info || {};
     const selectedIdea = data.selected_idea || {};
@@ -68,22 +71,24 @@ export function renderFinalResult(data) {
     const posterOverlay = document.getElementById('poster-overlay');
     const viewPosterBtn = document.getElementById('btn-view-poster');
 
-    if (docs.poster_image_path) {
+    if (docs.poster_image_path && posterImg) {
         // Cache-busting: add timestamp to ensure refresh
         const timestamp = new Date().getTime();
         const absoluteUrl = getAssetUrl(docs.poster_image_path) + `?t=${timestamp}`;
 
         posterImg.src = absoluteUrl;
         posterImg.classList.remove('hidden');
-        posterPlaceholder.classList.add('hidden');
-        posterOverlay.classList.remove('hidden');
+        if (posterPlaceholder) posterPlaceholder.classList.add('hidden');
+        if (posterOverlay) posterOverlay.classList.remove('hidden');
 
         // Botón ver en HD
-        viewPosterBtn.onclick = () => window.open(absoluteUrl, '_blank');
-    } else {
+        if (viewPosterBtn) {
+            viewPosterBtn.onclick = () => window.open(absoluteUrl, '_blank');
+        }
+    } else if (posterImg) {
         posterImg.classList.add('hidden');
-        posterPlaceholder.classList.remove('hidden');
-        posterOverlay.classList.add('hidden');
+        if (posterPlaceholder) posterPlaceholder.classList.remove('hidden');
+        if (posterOverlay) posterOverlay.classList.add('hidden');
     }
 
     // ----------------------------------------------------
@@ -128,17 +133,29 @@ export function renderFinalResult(data) {
     // HISTORIAL DE VERSIONES (SLIDER)
     // ----------------------------------------------------
     const history = data.generation_history || [];
-    const posterCard = document.getElementById('final-poster-img').parentElement;
+    const posterCard = document.getElementById('final-poster-img')?.parentElement;
 
-    if (history.length > 0) {
+    if (history.length > 0 && posterCard) {
         setupHistorySlider(posterCard, history, docs);
     }
 }
 
 // Listen for updates from Alliance Modal (Breaking circular dependency)
 window.addEventListener('poster-updated', (e) => {
-    console.log("📢 Poster Update Event received", e.detail);
-    renderFinalResult(e.detail);
+    console.log("📢 Poster Update Event received in step4.js");
+    console.log("   General Info:", e.detail?.report_components?.general_info);
+
+    // For alliance updates, we only need to refresh the alliance display
+    // The poster/slider may have replaced the original elements
+    const generalInfo = e.detail?.report_components?.general_info || {};
+    renderFinalAlliances(generalInfo);
+
+    // Also update the history slider if it exists
+    const history = e.detail?.generation_history || [];
+    const posterCard = document.getElementById('final-poster-img')?.parentElement;
+    if (history.length > 0 && posterCard) {
+        setupHistorySlider(posterCard, history, e.detail?.docs_paths || {});
+    }
 });
 
 function renderFinalAlliances(info) {
@@ -156,35 +173,43 @@ function renderFinalAlliances(info) {
 
     // 1. Executor
     const execContainer = document.getElementById('final-executor-display');
-    if (executorName) {
+    if (executorName && execContainer) {
         execContainer.classList.remove('hidden');
-        document.getElementById('final-executor-name').innerText = executorName;
+        const nameEl = document.getElementById('final-executor-name');
+        if (nameEl) nameEl.innerText = executorName;
+
         const img = document.getElementById('final-executor-img');
-        if (executorLogo) {
-            img.src = getAssetUrl(executorLogo);
-            img.classList.remove('hidden');
-        } else {
-            img.classList.add('hidden');
+        if (img) {
+            if (executorLogo) {
+                img.src = getAssetUrl(executorLogo);
+                img.classList.remove('hidden');
+            } else {
+                img.classList.add('hidden');
+            }
         }
-    } else {
+    } else if (execContainer) {
         execContainer.classList.add('hidden');
     }
 
     // 2. Coexecutors
     const coexecList = document.getElementById('final-coexecutors-list');
-    coexecList.innerHTML = '';
-    coexecutors.forEach((name, i) => {
-        const logo = coexecutorsLogos[i];
-        coexecList.appendChild(createAllianceChip(name, logo, 'blue'));
-    });
+    if (coexecList) {
+        coexecList.innerHTML = '';
+        coexecutors.forEach((name, i) => {
+            const logo = coexecutorsLogos[i];
+            coexecList.appendChild(createAllianceChip(name, logo, 'blue'));
+        });
+    }
 
     // 3. Collaborators
     const collabList = document.getElementById('final-collaborators-list');
-    collabList.innerHTML = '';
-    collaborators.forEach((name, i) => {
-        const logo = collaboratorsLogos[i];
-        collabList.appendChild(createAllianceChip(name, logo, 'purple'));
-    });
+    if (collabList) {
+        collabList.innerHTML = '';
+        collaborators.forEach((name, i) => {
+            const logo = collaboratorsLogos[i];
+            collabList.appendChild(createAllianceChip(name, logo, 'purple'));
+        });
+    }
 }
 
 function createAllianceChip(name, logo, color) {
