@@ -133,7 +133,7 @@ export function renderFinalResult(data) {
     // HISTORIAL DE VERSIONES (SLIDER)
     // ----------------------------------------------------
     const history = data.generation_history || [];
-    const posterCard = document.getElementById('final-poster-img')?.parentElement;
+    const posterCard = document.getElementById('final-poster-card');
 
     if (history.length > 0 && posterCard) {
         setupHistorySlider(posterCard, history, docs);
@@ -152,7 +152,28 @@ window.addEventListener('poster-updated', (e) => {
 
     // Also update the history slider if it exists
     const history = e.detail?.generation_history || [];
-    const posterCard = document.getElementById('final-poster-img')?.parentElement;
+    const posterCard = document.getElementById('final-poster-card'); // Fix container targeting
+    if (history.length > 0 && posterCard) {
+        setupHistorySlider(posterCard, history, e.detail?.docs_paths || {});
+    }
+});
+
+// Listen for final generation complete event
+window.addEventListener('final-generation-complete', (e) => {
+    console.log("🏁 Final generation event received:", e.detail);
+
+    // Check if the event belongs to the current session to avoid history taint
+    if (e.detail?.session_id && e.detail.session_id !== store.sessionId) {
+        console.warn("⚠️ Received generation event for a different session, ignoring.");
+        return;
+    }
+
+    const generalInfo = e.detail?.report_components?.general_info || {};
+    renderFinalAlliances(generalInfo);
+
+    // Also update the history slider if it exists
+    const history = e.detail?.generation_history || [];
+    const posterCard = document.getElementById('final-poster-card');
     if (history.length > 0 && posterCard) {
         setupHistorySlider(posterCard, history, e.detail?.docs_paths || {});
     }
@@ -235,13 +256,19 @@ function createAllianceChip(name, logo, color) {
 function setupHistorySlider(container, history, currentDocs) {
     // 1. Limpiar contenedor para el slider
     container.innerHTML = '';
-    // Usamos un fondo oscuro inmersivo
-    container.className = "relative w-full min-h-[600px] bg-slate-950 rounded-[2rem] overflow-hidden shadow-2xl group border border-white/5";
+    // Incrementamos la altura para llenar mejor el espacio vertical y centrar el poster
+    container.className = "relative w-full min-h-[600px] lg:h-[700px] bg-slate-950 rounded-[2rem] overflow-hidden shadow-2xl group border border-white/5 flex flex-col";
 
     let currentIndex = history.length - 1;
 
+    // Contenedor para los slides (ocupará el espacio restante arriba del navegador)
+    const slidesContainer = document.createElement('div');
+    slidesContainer.className = "relative flex-1 w-full overflow-hidden";
+    container.appendChild(slidesContainer);
+
     // 2. Render inicial
     renderSlide(currentIndex, null);
+    renderThumbnailBar();
 
     function renderSlide(idx, direction) {
         const item = history[idx];
@@ -275,9 +302,13 @@ function setupHistorySlider(container, history, currentDocs) {
         const img = document.createElement('img');
         img.src = fullImgUrl;
         img.className = "relative w-full h-full object-contain drop-shadow-[0_20px_60px_rgba(0,0,0,0.8)] z-10 select-none";
+        // Ensure the active slide's image has the ID so it can be targeted by resetInterface or other updates
+        if (!direction) {
+            img.id = 'final-poster-img';
+        }
         slide.appendChild(img);
 
-        // 3. Info de Versión (ESTILO "VERSION 4" IMAGE)
+        // 3. Info de Versión
         const infoOverlay = document.createElement('div');
         infoOverlay.className = "absolute top-6 left-6 flex flex-col gap-2 z-30 pointer-events-none";
         infoOverlay.innerHTML = `
@@ -291,22 +322,22 @@ function setupHistorySlider(container, history, currentDocs) {
         `;
         slide.appendChild(infoOverlay);
 
-        // 4. Icono Superior Derecho (Giroscopio/Mundo)
+        // 4. Icono Superior Derecho
         const topIcon = document.createElement('div');
         topIcon.className = "absolute top-6 right-6 w-10 h-10 bg-black/40 backdrop-blur-md rounded-full flex items-center justify-center text-white z-30 border border-white/10 shadow-lg";
         topIcon.innerHTML = `<i class="ph-fill ph-globe text-xl"></i>`;
         slide.appendChild(topIcon);
 
-        // 5. Botones de Acción (Overlay al final)
+        // 5. Botones de Acción (Overlay más compacto)
         const actionOverlay = document.createElement('div');
-        actionOverlay.className = "absolute bottom-10 left-0 right-0 flex justify-center gap-4 px-6 z-40 transition-all duration-400 transform translate-y-6 opacity-0 group-hover:translate-y-0 group-hover:opacity-100";
+        actionOverlay.className = "absolute bottom-6 left-0 right-0 flex justify-center gap-3 px-6 z-40 transition-all duration-400 transform translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100";
 
         if (item.pdf_path) {
             const pdfA = document.createElement('a');
             pdfA.href = getAssetUrl(item.pdf_path);
             pdfA.target = "_blank";
-            pdfA.className = "flex items-center gap-2 bg-white/95 text-red-600 px-6 py-4 rounded-2xl font-black shadow-2xl hover:bg-red-600 hover:text-white transition-all transform hover:-translate-y-1 text-xs uppercase tracking-widest";
-            pdfA.innerHTML = `<i class="ph-fill ph-file-pdf text-xl"></i> <span>DESCARGAR PDF</span>`;
+            pdfA.className = "flex items-center gap-2 bg-white/95 text-red-600 px-4 py-3 rounded-xl font-black shadow-xl hover:bg-red-600 hover:text-white transition-all transform hover:-translate-y-1 text-[10px] uppercase tracking-widest";
+            pdfA.innerHTML = `<i class="ph-fill ph-file-pdf text-lg"></i> <span>PDF</span>`;
             actionOverlay.appendChild(pdfA);
         }
 
@@ -314,72 +345,103 @@ function setupHistorySlider(container, history, currentDocs) {
             const mdA = document.createElement('a');
             mdA.href = getAssetUrl(item.md_path);
             mdA.target = "_blank";
-            mdA.className = "flex items-center gap-2 bg-white/95 text-slate-800 px-6 py-4 rounded-2xl font-black shadow-2xl hover:bg-slate-800 hover:text-white transition-all transform hover:-translate-y-1 text-xs uppercase tracking-widest";
-            mdA.innerHTML = `<i class="ph-fill ph-markdown-logo text-xl"></i> <span>FUENTES MD</span>`;
+            mdA.className = "flex items-center gap-2 bg-white/95 text-slate-800 px-4 py-3 rounded-xl font-black shadow-xl hover:bg-slate-800 hover:text-white transition-all transform hover:-translate-y-1 text-[10px] uppercase tracking-widest";
+            mdA.innerHTML = `<i class="ph-fill ph-markdown-logo text-lg"></i> <span>EDITAR</span>`;
             actionOverlay.appendChild(mdA);
         }
         slide.appendChild(actionOverlay);
 
-        container.appendChild(slide);
+        slidesContainer.appendChild(slide);
 
-        // --- Animación ---
         if (direction) {
+            // Transfer ID to the new active image immediately so updates target it
+            img.id = 'final-poster-img';
+
             requestAnimationFrame(() => {
                 slide.classList.remove('translate-x-full', '-translate-x-full', 'opacity-0');
                 slide.classList.add('translate-x-0', 'opacity-100');
             });
 
-            // Limpieza
-            const oldSlides = Array.from(container.children).filter(child => child !== slide && !child.classList.contains('nav-arrow') && !child.classList.contains('progress-bar'));
+            const oldSlides = Array.from(slidesContainer.children).filter(child => child !== slide);
             oldSlides.forEach(oldSlide => {
+                // Remove ID from old images to avoid collisions
+                const oldImg = oldSlide.querySelector('img[id="final-poster-img"]');
+                if (oldImg) oldImg.removeAttribute('id');
+
                 oldSlide.classList.add('opacity-0');
                 if (direction === 'next') oldSlide.classList.add('-translate-x-full');
                 else oldSlide.classList.add('translate-x-full');
                 setTimeout(() => {
-                    if (oldSlide.parentNode === container) container.removeChild(oldSlide);
+                    if (oldSlide.parentNode === slidesContainer) slidesContainer.removeChild(oldSlide);
                 }, 500);
             });
         }
     }
 
-    // --- Controles de Navegación (Estilo Círculo Blanco) ---
-    if (history.length > 1) {
-        const prevBtn = document.createElement('button');
-        prevBtn.className = "nav-arrow absolute left-6 top-1/2 -translate-y-1/2 w-14 h-14 bg-white/10 hover:bg-white/30 backdrop-blur-2xl rounded-full flex items-center justify-center text-white transition-all z-50 hover:scale-110 active:scale-95 shadow-2xl group-hover:opacity-100 opacity-0 border border-white/20";
-        prevBtn.innerHTML = `<i class="ph ph-caret-left text-2xl font-bold"></i>`;
-        prevBtn.onclick = (e) => {
-            e.stopPropagation();
-            if (currentIndex > 0) {
-                currentIndex--;
-                renderSlide(currentIndex, 'prev');
-                updateArrows();
-            }
-        };
-        container.appendChild(prevBtn);
+    function renderThumbnailBar() {
+        // Eliminar barra anterior si existe
+        const oldBar = container.querySelector('.thumbnail-nav');
+        if (oldBar) container.removeChild(oldBar);
 
-        const nextBtn = document.createElement('button');
-        nextBtn.className = "nav-arrow absolute right-6 top-1/2 -translate-y-1/2 w-14 h-14 bg-white/10 hover:bg-white/30 backdrop-blur-2xl rounded-full flex items-center justify-center text-white transition-all z-50 hover:scale-110 active:scale-95 shadow-2xl group-hover:opacity-100 opacity-0 border border-white/20";
-        nextBtn.innerHTML = `<i class="ph ph-caret-right text-2xl font-bold"></i>`;
-        nextBtn.onclick = (e) => {
-            e.stopPropagation();
-            if (currentIndex < history.length - 1) {
-                currentIndex++;
-                renderSlide(currentIndex, 'next');
-                updateArrows();
-            }
-        };
-        container.appendChild(nextBtn);
+        const nav = document.createElement('div');
+        nav.className = "thumbnail-nav w-full bg-black/40 backdrop-blur-xl border-t border-white/5 p-4 flex justify-center items-center gap-3 z-50";
 
-        function updateArrows() {
-            prevBtn.style.visibility = currentIndex === 0 ? 'hidden' : 'visible';
-            nextBtn.style.visibility = currentIndex === history.length - 1 ? 'hidden' : 'visible';
-        }
-        updateArrows();
+        history.forEach((item, idx) => {
+            const thumb = document.createElement('button');
+            const isActive = idx === currentIndex;
+
+            thumb.className = `relative w-12 h-16 rounded-lg overflow-hidden border-2 transition-all duration-300 transform ${isActive ? 'border-blue-500 scale-110 shadow-[0_0_15px_rgba(59,130,246,0.5)]' : 'border-white/10 hover:border-white/40 opacity-60 hover:opacity-100'}`;
+
+            const thumbImg = document.createElement('img');
+            thumbImg.src = getAssetUrl(item.poster_path);
+            thumbImg.className = "w-full h-full object-cover";
+            thumb.appendChild(thumbImg);
+
+            // Badge de versión mini
+            const badge = document.createElement('div');
+            badge.className = "absolute bottom-0 inset-x-0 bg-black/60 text-[8px] font-bold text-white py-0.5 text-center";
+            badge.innerText = `V${idx + 1}`;
+            thumb.appendChild(badge);
+
+            thumb.onclick = () => {
+                if (currentIndex === idx) return;
+                const direction = idx > currentIndex ? 'next' : 'prev';
+                currentIndex = idx;
+                renderSlide(idx, direction);
+                renderThumbnailBar();
+            };
+
+            nav.appendChild(thumb);
+        });
+
+        container.appendChild(nav);
     }
 
-    // Progress Bar
-    const progress = document.createElement('div');
-    progress.className = "progress-bar absolute bottom-0 left-0 h-1.5 bg-blue-500 shadow-[0_0_20px_rgba(59,130,246,0.8)] transition-all duration-700 z-[60]";
-    progress.style.width = `${((currentIndex + 1) / history.length) * 100}%`;
-    container.appendChild(progress);
+    // --- Controles de Navegación (Arrows) ---
+    if (history.length > 1) {
+        const createArrow = (dir) => {
+            const btn = document.createElement('button');
+            const isPrev = dir === 'prev';
+            // Permanecer visibles siempre y con diseño contrastado
+            btn.className = `absolute ${isPrev ? 'left-4' : 'right-4'} top-1/2 -translate-y-1/2 w-12 h-12 bg-black/40 hover:bg-black/60 backdrop-blur-md rounded-full flex items-center justify-center text-white transition-all z-50 hover:scale-110 active:scale-95 border border-white/20 shadow-2xl transition-opacity duration-300`;
+            btn.innerHTML = `<i class="ph-bold ph-caret-${isPrev ? 'left' : 'right'} text-2xl"></i>`;
+            btn.onclick = (e) => {
+                e.stopPropagation();
+                if (isPrev && currentIndex > 0) {
+                    currentIndex--;
+                } else if (!isPrev && currentIndex < history.length - 1) {
+                    currentIndex++;
+                } else {
+                    return;
+                }
+                renderSlide(currentIndex, isPrev ? 'prev' : 'next');
+                renderThumbnailBar();
+            };
+            return btn;
+        };
+
+        // Adjuntamos al contenedor principal o un wrapper que NO se limpie en renderSlide
+        container.appendChild(createArrow('prev'));
+        container.appendChild(createArrow('next'));
+    }
 }

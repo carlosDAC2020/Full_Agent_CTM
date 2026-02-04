@@ -5,28 +5,69 @@ import { getElements, updateStepper, getAssetUrl } from '../common.js';
 import { loadHistory } from '../sidebar.js';
 import { generateFinal } from './step4.js';
 
+// Internal State
 let baseImageMode = 'current'; // 'current' or 'history'
 let selectedBaseImagePath = null;
 
+export function resetStep3State() {
+    baseImageMode = 'current';
+    selectedBaseImagePath = null;
+}
+
 // Listen for updates from Alliance Modal (Synchronization across steps)
 window.addEventListener('poster-updated', (e) => {
-    console.log("📢 [step3.js] Poster Update Event received", e.detail);
+    console.log("📢 [step3.js] Global Poster Update Event received");
     const generalInfo = e.detail?.report_components?.general_info;
-    if (generalInfo) {
-        console.log("📊 [step3.js] Updating alliances with:", generalInfo);
-        // Sync store.currentSelectedIdea so Step 3 displays latest alliance data
-        if (store.currentSelectedIdea) {
-            console.log("🔄 [step3.js] Syncing store.currentSelectedIdea");
-            store.currentSelectedIdea.executor_entity = generalInfo.executor_entity;
-            store.currentSelectedIdea.executor_entity_logo = generalInfo.executor_entity_logo;
-            store.currentSelectedIdea.coejecutors_entities = generalInfo.coejecutors_entities || [];
-            store.currentSelectedIdea.coejecutors_entities_logos = generalInfo.coejecutors_entities_logos || [];
-            store.currentSelectedIdea.collaborators_entities = generalInfo.collaborators_entities || [];
-            store.currentSelectedIdea.collaborators_entities_logos = generalInfo.collaborators_entities_logos || [];
-        }
-        renderAlliances(generalInfo, store.currentSelectedIdea || {});
-    } else {
-        console.warn("⚠️ [step3.js] Event received but no general_info found in detail");
+
+    if (generalInfo && store.currentSelectedIdea) {
+        console.log("🔄 [step3.js] Syncing store.currentSelectedIdea with event data");
+        // Update store with latest from modal
+        store.currentSelectedIdea.executor_entity = generalInfo.executor_entity;
+        store.currentSelectedIdea.executor_entity_logo = generalInfo.executor_entity_logo;
+        store.currentSelectedIdea.coejecutors_entities = generalInfo.coejecutors_entities || [];
+        store.currentSelectedIdea.coejecutors_entities_logos = generalInfo.coejecutors_entities_logos || [];
+        store.currentSelectedIdea.collaborators_entities = generalInfo.collaborators_entities || [];
+        store.currentSelectedIdea.collaborators_entities_logos = generalInfo.collaborators_entities_logos || [];
+
+        // Forced refresh of the alliances panel in Step 3
+        renderAlliances(generalInfo, store.currentSelectedIdea);
+    }
+});
+
+// Auto-refresh when Step 3 becomes visible
+document.addEventListener('DOMContentLoaded', () => {
+    const step3Div = document.getElementById('step-3-schema');
+    if (step3Div) {
+        const observer = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                if (mutation.attributeName === 'class' && !step3Div.classList.contains('hidden')) {
+                    console.log("👁️ [step3.js] Step 3 became visible - Refreshing Alliances from Store");
+                    if (store.currentSelectedIdea) {
+                        // Use empty generalInfo to force reliance on store (selectedIdea)
+                        renderAlliances({}, store.currentSelectedIdea);
+                    }
+                }
+            });
+        });
+        observer.observe(step3Div, { attributes: true });
+    }
+
+    // Dependency Logic for Regeneration Modal
+    const redoAcademic = document.getElementById('redo-academic');
+    if (redoAcademic) {
+        redoAcademic.addEventListener('change', function () {
+            if (this.checked) {
+                console.log("🔗 [step3.js] Marco Teórico selected - Auto-selecting all other sections");
+                const sections = document.getElementsByName('regen-section');
+                sections.forEach(cb => {
+                    if (!cb.checked) {
+                        cb.checked = true;
+                        // Trigger onchange to show limit inputs if they are configured to show on check
+                        cb.dispatchEvent(new Event('change'));
+                    }
+                });
+            }
+        });
     }
 });
 
@@ -281,23 +322,25 @@ function renderAlliances(generalInfo, selectedIdea) {
     collaboratorsSection?.classList.add('hidden');
     noAlliancesPlaceholder?.classList.remove('hidden');
 
-    // Consolidar datos de alianzas (Priorizar generalInfo del backend, luego selectedIdea)
-    const executorEntity = generalInfo.executor_entity || selectedIdea.executor_entity;
-    const executorLogo = generalInfo.executor_entity_logo || selectedIdea.executor_entity_logo;
+    // Consolidar datos: preferir siempre el store (selectedIdea) si tiene datos.
+    const executorEntity = selectedIdea.executor_entity || generalInfo.executor_entity;
+    const executorLogo = selectedIdea.executor_entity_logo || generalInfo.executor_entity_logo;
 
-    const coejecutorsEntities = (generalInfo.coejecutors_entities && generalInfo.coejecutors_entities.length > 0)
-        ? generalInfo.coejecutors_entities
-        : (selectedIdea.coejecutors_entities || []);
-    const coejecutorsLogos = (generalInfo.coejecutors_entities_logos && generalInfo.coejecutors_entities_logos.length > 0)
-        ? generalInfo.coejecutors_entities_logos
-        : (selectedIdea.coejecutors_entities_logos || []);
+    const coejecutorsEntities = (selectedIdea.coejecutors_entities && selectedIdea.coejecutors_entities.length > 0)
+        ? selectedIdea.coejecutors_entities : (generalInfo.coejecutors_entities || []);
+    const coejecutorsLogos = (selectedIdea.coejecutors_entities_logos && selectedIdea.coejecutors_entities_logos.length > 0)
+        ? selectedIdea.coejecutors_entities_logos : (generalInfo.coejecutors_entities_logos || []);
 
-    const collaboratorsEntities = (generalInfo.collaborators_entities && generalInfo.collaborators_entities.length > 0)
-        ? generalInfo.collaborators_entities
-        : (selectedIdea.collaborators_entities || []);
-    const collaboratorsLogos = (generalInfo.collaborators_entities_logos && generalInfo.collaborators_entities_logos.length > 0)
-        ? generalInfo.collaborators_entities_logos
-        : (selectedIdea.collaborators_entities_logos || []);
+    const collaboratorsEntities = (selectedIdea.collaborators_entities && selectedIdea.collaborators_entities.length > 0)
+        ? selectedIdea.collaborators_entities : (generalInfo.collaborators_entities || []);
+    const collaboratorsLogos = (selectedIdea.collaborators_entities_logos && selectedIdea.collaborators_entities_logos.length > 0)
+        ? selectedIdea.collaborators_entities_logos : (generalInfo.collaborators_entities_logos || []);
+
+    console.log("🛠️ [step3.js] renderAlliances - Syncing UI with:", {
+        executor: executorEntity,
+        coexecs: coejecutorsEntities.length,
+        collabs: collaboratorsEntities.length
+    });
 
     // Ejecutor
     if (executorEntity) {
@@ -512,13 +555,16 @@ export function openConfigModal(isRegen = false) {
     if (redoAcademic) redoAcademic.checked = false;
 
     // Toggle specific containers
+    posterContainer?.classList.remove('hidden');
+    const applyOptions = document.getElementById('poster-apply-options');
+
     if (isRegen) {
         regenContainer?.classList.remove('hidden');
-        posterContainer?.classList.remove('hidden');
+        applyOptions?.classList.remove('hidden');
         if (actionTxt) actionTxt.innerText = "Regenerar Seleccionados";
     } else {
         regenContainer?.classList.add('hidden');
-        posterContainer?.classList.add('hidden');
+        applyOptions?.classList.add('hidden');
         if (actionTxt) actionTxt.innerText = "Confirmar e Investigar";
     }
 
