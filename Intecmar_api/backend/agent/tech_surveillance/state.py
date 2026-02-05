@@ -401,3 +401,7 @@ class GraphState(TypedDict):
     
     # Historial de generaciones
     generation_history: Optional[List[GenerationItem]]
+    
+    # Señales para el nodo generador de imágenes (Case 1 y 3 del flujo de póster)
+    use_historical_base: Optional[str]  # Path de la imagen base del historial
+    use_current_base: Optional[str]  # Path de la imagen base actual (re-aplicar logos)

@@ -134,7 +134,7 @@ def report_node(state: GraphState):
     risks = get_field(plan_obj, 'risk_matrix', '') if plan_obj else ''
     budget = get_field(plan_obj, 'budget', '') if plan_obj else ''
 
-    execution_text = f"**Cronograma de Actividades**\n\n{schedule}\n\n**Presupuesto Estimado**\n\n{budget}\n\n**Matriz de Riesgos**\n\n{risks}"
+    execution_text = f"{schedule}\n\n{budget}\n\n{risks}"
 
     # 8. Resultados
     results = get_section_content(get_field(data, 'results_and_impacts'), 'content')
@@ -232,7 +232,6 @@ def report_node(state: GraphState):
         # ========================================
         image_path_raw = state.get("generated_image_path")
         # Validar si la imagen existe en el sistema de archivos local
-        # A veces la imagen puede venir como ruta relativa o absoluta
         final_img_path = None
         if image_path_raw:
             if os.path.exists(image_path_raw):
@@ -242,6 +241,25 @@ def report_node(state: GraphState):
                 potential_path = os.path.join(base_path, os.path.basename(image_path_raw))
                 if os.path.exists(potential_path):
                     final_img_path = potential_path
+
+        # --- FALLBACK: Si no existe localmente, intentar descargar de MinIO ---
+        if not final_img_path:
+            docs_paths: DocsPaths = state.get("docs_paths") or DocsPaths()
+            if isinstance(docs_paths, dict):
+                img_key = docs_paths.get("poster_image_path")
+            else:
+                img_key = getattr(docs_paths, "poster_image_path", None)
+            
+            if img_key and ("/" in img_key or "generated_images" in img_key):
+                print(f"📥 [REPORT_NODE] Recuperando imagen de MinIO para PDF: {img_key}")
+                data = storage_service.download_file(img_key)
+                if data:
+                    import tempfile
+                    # Guardamos en un temporal que el cleanup final borrará
+                    with tempfile.NamedTemporaryFile(delete=False, suffix=".png") as tmp:
+                        tmp.write(data)
+                        final_img_path = tmp.name
+                        print(f"✅ [REPORT_NODE] Imagen descargada a: {final_img_path}")
 
         if final_img_path:
             # El área imprimible (Frame) es aprox 17.1cm x 22.5cm debido a los márgenes.
@@ -406,7 +424,34 @@ def report_node(state: GraphState):
         
         # --- Actualizar Historial con PDF/MD ---
         current_history = state.get("generation_history", []) or []
-        if current_history:
+        
+        # SI EL PÓSTER SE SALTÓ (image_prompt es None), debemos CREAR un nuevo registro 
+        # en el historial basado en el último póster, de lo contrario report_node 
+        # sobreescribirá los campos pdf_path/md_path del registro anterior.
+        image_prompt = state.get("image_prompt")
+        if not image_prompt and current_history:
+            print("📝 [REPORT_NODE] Creando nueva versión en el historial (preservando selección de usuario)")
+            last_item = current_history[-1]
+            from backend.agent.tech_surveillance.state import GenerationItem
+            
+            # CRITICAL: Usamos docs_paths.poster_image_path si está disponible, 
+            # ya que refleja lo que el usuario seleccionó en la UI o lo que se cargó/mantuvo.
+            poster_to_use = docs_paths.poster_image_path if docs_paths and docs_paths.poster_image_path else (
+                last_item.poster_path if not isinstance(last_item, dict) else last_item.get('poster_path')
+            )
+            
+            new_item = GenerationItem(
+                timestamp=datetime.now().isoformat(),
+                poster_path=poster_to_use,
+                base_image_path=getattr(last_item, 'base_image_path', None) if not isinstance(last_item, dict) else last_item.get('base_image_path'),
+                prompt_used=last_item.prompt_used if not isinstance(last_item, dict) else last_item.get('prompt_used'),
+                pdf_path=pdf_key,
+                md_path=md_key
+            )
+            current_history.append(new_item)
+        elif current_history:
+            # Si el póster SÍ se generó, el nodo images_generator ya creó el registro. 
+            # Solo actualizamos los paths de PDF/MD.
             last_item = current_history[-1]
             
             # El estado puede venir como dict o como objeto Pydantic

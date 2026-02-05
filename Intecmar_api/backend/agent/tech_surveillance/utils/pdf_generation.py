@@ -73,9 +73,20 @@ def get_custom_styles():
             name='CustomBullet', 
             parent=styles['Body'], 
             leftIndent=20, 
-            spaceBefore=2, 
-            spaceAfter=2,
+            spaceBefore=3, 
+            spaceAfter=4, # Aumentado para mejor separación
             bulletIndent=10
+        ))
+    if 'SubBullet' not in styles:
+        styles.add(ParagraphStyle(
+            name='SubBullet', 
+            parent=styles['Body'], 
+            fontSize=9,
+            leftIndent=40, 
+            spaceBefore=1, 
+            spaceAfter=3, # Aumentado
+            bulletIndent=30,
+            textColor=colors.HexColor('#555555')
         ))
     if 'TableHeader' not in styles:
         styles.add(ParagraphStyle(
@@ -157,6 +168,11 @@ def clean_text(text):
     text = html.escape(text, quote=False)
     text = re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', text)
     text = re.sub(r'\*(.*?)\*', r'<i>\1</i>', text)
+    
+    # Soporte para <br/> manual (des-escapar si el modelo lo inyectó)
+    text = text.replace("&lt;br/&gt;", "<br/>")
+    text = text.replace("&lt;br /&gt;", "<br/>")
+    
     return text
 
 def process_table(table_text, styles):
@@ -331,12 +347,24 @@ def markdown_to_flowables(markdown_text, styles):
             flowables.append(Spacer(1, 0.3*cm)) # Espacio después del título
 
         # 3. Listas
-        elif line.startswith('* ') or line.startswith('- ') or (line and line[0].isdigit() and line[1:3] == ". "):
-            # Soporte simple para listas numeradas o con viñetas
-            item_text = re.sub(r'^(\*|-|\d+\.)\s+', '', line)
-            bullet_style = styles['CustomBullet']
-            flowables.append(Paragraph(f'<font color="{COTECMAR_BLUE}">●</font> {clean_text(item_text)}', bullet_style))
-            flowables.append(Spacer(1, 0.15*cm))
+        elif line.startswith('* ') or line.startswith('- ') or (line and line[0].isdigit() and line[1:3] == ". ") or line.startswith('  -') or line.startswith('  *'):
+            # Detección de nivel (indentación básica de 2 espacios O palabra clave Entregable)
+            clean_line = line.strip()
+            is_sub_item = line.startswith('  ') or clean_line.startswith('- **Entregable:**') or clean_line.startswith('* **Entregable:**')
+            
+            item_text = re.sub(r'^(\*|-|\d+\.)\s+', '', clean_line)
+            
+            if is_sub_item:
+                bullet_style = styles['SubBullet']
+                bullet_char = '<font color="#999999">○</font>'
+                space_val = 0.1*cm
+            else:
+                bullet_style = styles['CustomBullet']
+                bullet_char = f'<font color="{COTECMAR_BLUE}">●</font>'
+                space_val = 0.15*cm
+                
+            flowables.append(Paragraph(f'{bullet_char} {clean_text(item_text)}', bullet_style))
+            flowables.append(Spacer(1, space_val))
             
         # 4. Párrafos normales
         elif line:

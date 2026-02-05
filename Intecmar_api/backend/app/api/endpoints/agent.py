@@ -139,6 +139,12 @@ async def generate_ideas(
         }, 
         step_type="proposal_ideas"
     )
+
+    # Actualizar estado de la sesión
+    session.current_task_id = task.id
+    session.status = "ideating"
+    db.commit()
+
     return {"task_id": task.id, "session_id": request.session_id}
 
 @router.post("/select-idea", summary="Paso 3: Seleccionar Idea", description="Confirma qué idea de las propuestas se desarrollará en el reporte técnico final.")
@@ -160,6 +166,12 @@ async def select_idea(
         input_data={"selected_idea": request.selected_idea, "user_email": current_user.email}, 
         step_type="project_idea"
     )
+
+    # Actualizar estado de la sesión
+    session.current_task_id = task.id
+    session.status = "structuring"
+    db.commit()
+
     return {"task_id": task.id, "session_id": request.session_id}
 
 @router.post("/finalize", summary="Paso 5: Finalizar Proyecto", description="Genera el esquema final del proyecto, consolidando toda la investigación y visuales.")
@@ -184,6 +196,12 @@ async def finalize_project(
         }, 
         step_type="generate_project"
     )
+
+    # Actualizar estado de la sesión
+    session.current_task_id = task.id
+    session.status = "generating"
+    db.commit()
+
     return {"task_id": task.id, "session_id": request.session_id}
 
 
@@ -265,6 +283,12 @@ async def append_documents(
         }, 
         step_type="append_docs"
     )
+
+    # Actualizar estado de la sesión
+    session.current_task_id = task.id
+    session.status = "vectorizing"
+    db.commit()
+
     return {"task_id": task.id, "session_id": session_id, "added_docs": len(new_docs_paths)}
 
 
@@ -593,8 +617,8 @@ async def apply_logos_endpoint(
             new_gi = request.report_components.get("general_info", {})
             
             # Debug log
-            old_count = len(updated_data["report_components"]["general_info"].get("coejecutors_entities", []))
-            new_count = len(new_gi.get("coejecutors_entities", []))
+            old_count = len(updated_data["report_components"]["general_info"].get("coejecutors_entities") or [])
+            new_count = len(new_gi.get("coejecutors_entities") or [])
             print(f"   - Coexecutors: {old_count} -> {new_count}")
             
             updated_data["report_components"]["general_info"].update(new_gi)
@@ -603,7 +627,7 @@ async def apply_logos_endpoint(
                 updated_data["docs_paths"] = {}
             updated_data["docs_paths"]["poster_image_path"] = final_key
             
-            if "generation_history" not in updated_data:
+            if "generation_history" not in updated_data or updated_data["generation_history"] is None:
                 updated_data["generation_history"] = []
             updated_data["generation_history"].append(new_item.dict())
             

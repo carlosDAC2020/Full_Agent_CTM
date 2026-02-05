@@ -11,6 +11,7 @@ export async function generateFinal() {
 
     // UI Transition
     step3.classList.add('hidden');
+    step4.classList.add('hidden');
     loader.classList.remove('hidden');
     loaderText.innerText = "Realizando investigación profunda, generando imágenes y redactando documentos finales...";
     updateStepper(4);
@@ -254,12 +255,15 @@ function createAllianceChip(name, logo, color) {
 }
 
 function setupHistorySlider(container, history, currentDocs) {
+    // --- Pagination State ---
+    const THUMBS_PER_PAGE = 8;
+    let currentIndex = history.length - 1;
+    let thumbPage = Math.floor(currentIndex / THUMBS_PER_PAGE);
+
     // 1. Limpiar contenedor para el slider
     container.innerHTML = '';
     // Incrementamos la altura para llenar mejor el espacio vertical y centrar el poster
     container.className = "relative w-full min-h-[600px] lg:h-[700px] bg-slate-950 rounded-[2rem] overflow-hidden shadow-2xl group border border-white/5 flex flex-col";
-
-    let currentIndex = history.length - 1;
 
     // Contenedor para los slides (ocupará el espacio restante arriba del navegador)
     const slidesContainer = document.createElement('div');
@@ -384,9 +388,39 @@ function setupHistorySlider(container, history, currentDocs) {
         if (oldBar) container.removeChild(oldBar);
 
         const nav = document.createElement('div');
-        nav.className = "thumbnail-nav w-full bg-black/40 backdrop-blur-xl border-t border-white/5 p-4 flex justify-center items-center gap-3 z-50";
+        nav.className = "thumbnail-nav w-full bg-black/40 backdrop-blur-xl border-t border-white/5 p-4 flex justify-center items-center gap-2 z-50";
 
-        history.forEach((item, idx) => {
+        const totalPages = Math.ceil(history.length / THUMBS_PER_PAGE);
+
+        // Auto-scroll to page containing current selection
+        thumbPage = Math.floor(currentIndex / THUMBS_PER_PAGE);
+
+        // Calculate visible range
+        const startIdx = thumbPage * THUMBS_PER_PAGE;
+        const endIdx = Math.min(startIdx + THUMBS_PER_PAGE, history.length);
+
+        // --- Left Arrow (Previous Page) ---
+        if (totalPages > 1) {
+            const leftArrow = document.createElement('button');
+            leftArrow.className = `flex items-center justify-center w-8 h-8 rounded-full transition-all duration-200 ${thumbPage > 0 ? 'bg-white/10 hover:bg-white/20 text-white' : 'bg-transparent text-white/20 cursor-not-allowed'}`;
+            leftArrow.innerHTML = `<i class="ph-bold ph-caret-left text-sm"></i>`;
+            leftArrow.disabled = thumbPage === 0;
+            leftArrow.onclick = (e) => {
+                e.stopPropagation();
+                if (thumbPage > 0) {
+                    thumbPage--;
+                    renderThumbnailBar();
+                }
+            };
+            nav.appendChild(leftArrow);
+        }
+
+        // --- Thumbnails Container ---
+        const thumbsContainer = document.createElement('div');
+        thumbsContainer.className = "flex items-center gap-2";
+
+        for (let idx = startIdx; idx < endIdx; idx++) {
+            const item = history[idx];
             const thumb = document.createElement('button');
             const isActive = idx === currentIndex;
 
@@ -411,8 +445,32 @@ function setupHistorySlider(container, history, currentDocs) {
                 renderThumbnailBar();
             };
 
-            nav.appendChild(thumb);
-        });
+            thumbsContainer.appendChild(thumb);
+        }
+
+        nav.appendChild(thumbsContainer);
+
+        // --- Right Arrow (Next Page) ---
+        if (totalPages > 1) {
+            const rightArrow = document.createElement('button');
+            rightArrow.className = `flex items-center justify-center w-8 h-8 rounded-full transition-all duration-200 ${thumbPage < totalPages - 1 ? 'bg-white/10 hover:bg-white/20 text-white' : 'bg-transparent text-white/20 cursor-not-allowed'}`;
+            rightArrow.innerHTML = `<i class="ph-bold ph-caret-right text-sm"></i>`;
+            rightArrow.disabled = thumbPage >= totalPages - 1;
+            rightArrow.onclick = (e) => {
+                e.stopPropagation();
+                if (thumbPage < totalPages - 1) {
+                    thumbPage++;
+                    renderThumbnailBar();
+                }
+            };
+            nav.appendChild(rightArrow);
+
+            // --- Page Indicator ---
+            const pageIndicator = document.createElement('div');
+            pageIndicator.className = "absolute bottom-1 right-4 text-[9px] text-white/40 font-mono";
+            pageIndicator.innerText = `${thumbPage + 1}/${totalPages}`;
+            nav.appendChild(pageIndicator);
+        }
 
         container.appendChild(nav);
     }

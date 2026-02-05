@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import os 
 import time
+import re
 
 from langchain_core.messages import AIMessage
 from langchain_google_genai import ChatGoogleGenerativeAI
@@ -119,6 +120,27 @@ def create_activity_schedule(state: GraphState) -> dict:
 
     # 5. Actualizar el esquema del reporte en el estado
     
+    # --- POST-PROCESAMIENTO DE FORMATO ---
+    schedule_text = generated_output.activity_schedule
+    if schedule_text:
+        # Asegurar espacio ANTES de los encabezados para evitar amontonamiento
+        # 1. Normalizar ### (asegurar que tenga \n\n antes)
+        schedule_text = re.sub(r'([^ \n])###', r'\1\n\n###', schedule_text)
+        schedule_text = re.sub(r'\n###', r'\n\n###', schedule_text)
+        
+        # 2. Colapsar saltos de línea excesivos (máximo 2)
+        schedule_text = re.sub(r'\n{3,}', r'\n\n', schedule_text)
+        
+        # 3. Limpiar espacios iniciales/finales
+        schedule_text = schedule_text.strip()
+        
+        # 4. Corregir posibles alucinaciones de caracteres no latinos (ej: Hindi)
+        # Solo permitimos caracteres ASCII, extendidos del español y símbolos comunes de MD
+        # (Este es un fallback agresivo pero seguro si el modelo alucina)
+        # schedule_text = re.sub(r'[^\x00-\x7F\xc0-\xff]', '', schedule_text) # Opcional: demasiado agresivo
+        
+        generated_output.activity_schedule = schedule_text
+
     # Asegurarnos de que 'execution_plan' exista
     if not report_components.execution_plan:
         report_components.execution_plan = ExecutionPlan()

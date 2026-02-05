@@ -35,7 +35,7 @@ def prompt_generator_image_node(state: GraphState):
     Genera un prompt optimizado para la creación de imágenes basándose
     en el título y descripción del proyecto.
     """
-    print(" genrnado propmt para la portada del proyetco")
+    print(" 🎨 Generando prompt para la portada del proyecto")
     # --- LEER DESDE report_components ---
     report_components = state.get("report_components") or ReportSchema()
     
@@ -58,18 +58,32 @@ def prompt_generator_image_node(state: GraphState):
             
     override_prompt = getattr(gen_config, "poster_prompt_override", None) if gen_config else None
     
-    # Skip if image already exists and no refinement/regeneration requested
-    if getattr(report_components, "poster_image_path", None) and not override_prompt:
-        # If we are in "selective regeneration" mode (config exists) and poster wasn't requested
-        # we skip to save time/tokens.
-        if gen_config and gen_config.sections_to_regenerate:
-            print("⏭️ SKIP: El póster ya existe y no se solicitó refinamiento.")
-            return {
-                "messages": [AIMessage(content="Póster preservado (no se solicitó refinamiento).")]
-            }
-
+    # --- COMPROBAR SI YA EXISTE PÓSTER ---
+    docs_paths = state.get("docs_paths") or DocsPaths()
+    if isinstance(docs_paths, dict):
+        docs_paths = DocsPaths(**docs_paths)
+    
+    existing_poster = docs_paths.poster_image_path
+    
+    # --- LEER CONFIGURACIÓN DE REGENERACIÓN ---
+    override_base = getattr(gen_config, "base_image_path", None) if gen_config else None
+    
+    # ===== CASE 1: HISTORIAL SELECCIONADO =====
+    # Si el usuario eligió una imagen del historial, NO generamos prompt ni IA.
+    # Solo señalamos al siguiente nodo que use esa base y aplique logos.
+    if override_base:
+        print(f"📂 [CASE 1] Usuario seleccionó imagen histórica: {override_base[-40:]}")
+        return {
+            "messages": [AIMessage(content="Usando imagen del historial seleccionada.")],
+            "image_prompt": None,
+            "use_historical_base": override_base  # Señal para generator_image_node
+        }
+    
+    # ===== CASE 2: FEEDBACK / REFINAMIENTO =====
+    # Si hay feedback del usuario, generamos un nuevo prompt refinado y luego IA.
     if override_prompt:
-        print("🚀 Refinando prompt de póster con feedback del usuario.")
+        print("🚀 [CASE 2] Refinando prompt de póster con feedback del usuario.")
+
         from .prompts import template_image_refinement_prompt
         
         prompt_template = PromptTemplate(
@@ -92,20 +106,55 @@ def prompt_generator_image_node(state: GraphState):
             )
             return {
                 "messages": [message],
-                "image_prompt": generated_prompt 
+                "image_prompt": generated_prompt,
+                "use_historical_base": None,  # CLEAR: Forzar generación con IA
+                "use_current_base": None      # CLEAR: No reusar base anterior
             }
         except Exception as e:
             print(f"⚠️ Error refinando prompt: {e}")
             return {
                 "messages": [AIMessage(content="⚠ Error en refinamiento, usando feedback directo.")],
-                "image_prompt": override_prompt 
+                "image_prompt": override_prompt,
+                "use_historical_base": None,
+                "use_current_base": None
             }
 
+    # ===== CASE 3: BASE ACTUAL (poster existe, sin feedback ni historial) =====
+    # El usuario quiere regenerar otras secciones pero mantener la base visual.
+    # Sin embargo, los logos pueden haber cambiado, así que señalamos re-aplicar logos.
+    if existing_poster and gen_config:
+        print("🔄 [CASE 3] Base actual seleccionada. Re-aplicando logos actuales.")
+        # Necesitamos la ruta de la imagen BASE, no la FINAL (con logos).
+        # La obtenemos del último item del historial.
+        current_history = state.get("generation_history", []) or []
+        base_to_use = None
+        if current_history:
+            last_item = current_history[-1]
+            base_to_use = last_item.base_image_path if hasattr(last_item, 'base_image_path') else (
+                last_item.get('base_image_path') if isinstance(last_item, dict) else None
+            )
+        
+        if not base_to_use:
+            # Fallback: si no hay base guardada, usamos el poster final existente
+            base_to_use = existing_poster
+            print(f"   ⚠️ No se encontró base en historial, usando póster final: {base_to_use[-40:]}")
+        
+        return {
+            "messages": [AIMessage(content="Re-aplicando logos a la base actual.")],
+            "image_prompt": None,
+            "use_current_base": base_to_use  # Señal para generator_image_node
+        }
+
+    # ===== CASE 4: PRIMERA VEZ (no existe póster) =====
+    # Generamos un prompt nuevo desde cero.
+    print("🆕 [CASE 4] Primera generación de póster. Creando prompt nuevo.")
+    
     # Template para generar el prompt de imagen
     prompt_template = PromptTemplate(
         input_variables=["title", "description"],
         template=template_image_prompt
     )
+
     
     # Generar el prompt usando el modelo de chat
     chain = prompt_template | chat_model
@@ -310,11 +359,29 @@ def apply_logos_to_image(img: Image.Image, report_components: ReportSchema, logo
 def generator_image_node(state: GraphState):
     """
     Genera un póster vertical usando Gemini 3  (capacidad nativa de imagen).
+    Maneja 4 casos según las señales del nodo prompt_generator:
+    1. use_historical_base: Cargar base del historial, aplicar logos.
+    2. use_current_base: Cargar base actual, re-aplicar logos (alianzas cambiaron).
+    3. image_prompt presente: Generar nueva imagen con IA.
+    4. Ninguno: Skip completo.
     """
-    print(" generando poster del proyetco")
+    print(" 🛠️ Procesando póster del proyecto")
+    
+    # --- LEER SEÑALES DEL NODO ANTERIOR ---
+    image_prompt = state.get("image_prompt")
+    use_historical_base = state.get("use_historical_base")  # Case 1
+    use_current_base = state.get("use_current_base")  # Case 3
+    
     session_id = state.get("session_id", "default_session")
     user_email = state.get("user_email", "unknown_user")
-    image_prompt = state.get("image_prompt")
+    
+    # ===== EARLY EXIT: SKIP COMPLETO =====
+    if not image_prompt and not use_historical_base and not use_current_base:
+        print("⏭️ [SKIP] No hay prompt ni señal de usar base. Salto completo.")
+        return {
+            "messages": [AIMessage(content="Generación de imagen omitida.")]
+        }
+
     report_components = state.get("report_components") or ReportSchema()
     
     # Nombre del proyecto para el archivo
@@ -322,22 +389,27 @@ def generator_image_node(state: GraphState):
     if report_components.general_info:
         project_title = report_components.general_info.project_title or "proyecto_tecnologico"
     
-    # 0. Check for historical base image override in config
-    gen_config = state.get("generation_config")
-    if isinstance(gen_config, dict):
-        try:
-            from backend.agent.tech_surveillance.state import GenerationConfig
-            gen_config = GenerationConfig(**gen_config)
-        except: pass
-        
-    override_base_path = getattr(gen_config, "base_image_path", None) if gen_config else None
+    # --- DETERMINAR QUÉ BASE USAR ---
+    # Prioridad: use_historical_base > use_current_base > generar nueva
+    override_base_path = use_historical_base or use_current_base
     
     img_base = None
     base_image_key = None
-    image_prompt = state.get("image_prompt")
+    
+    # Si vamos a usar una base (Case 1 o 3), recuperamos el prompt anterior para el historial
+    if override_base_path and not image_prompt:
+        last_history = state.get("generation_history", []) or []
+        if last_history:
+            last_item = last_history[-1]
+            image_prompt = last_item.prompt_used if hasattr(last_item, 'prompt_used') else (
+                last_item.get('prompt_used') if isinstance(last_item, dict) else None
+            )
+        if not image_prompt:
+            image_prompt = "Reutilización de imagen base del proyecto."
 
     # 1. Definir carpeta
     base_path = os.getenv("SHARED_DATA_PATH", "generated_images")
+
     output_dir = os.path.join(base_path, "posters")
     os.makedirs(output_dir, exist_ok=True)
 
@@ -407,7 +479,7 @@ def generator_image_node(state: GraphState):
             full_base_path = os.path.join(output_dir, base_filename)
             img_base.save(full_base_path)
             minio_folder_base = f"{user_email}/Agent_Sessions/{session_id}/generated_images/base"
-            base_image_key = storage_service.upload_file(full_base_path, f"{minio_folder_base}/{base_filename}")
+            base_image_key = storage_service.upload_file(full_base_path, f"{minio_folder_base}/{base_filename}", remove_after_upload=True)
             print(f"   ✅ Nueva imagen base guardada: {base_image_key}")
         
         # APLICAR LOGOS
@@ -421,7 +493,7 @@ def generator_image_node(state: GraphState):
         
         print("   ☁️ Subiendo póster FINAL a MinIO...")
         minio_folder_final = f"{user_email}/Agent_Sessions/{session_id}/generated_images/final"
-        minio_key = storage_service.upload_file(full_final_path, f"{minio_folder_final}/{final_filename}")
+        minio_key = storage_service.upload_file(full_final_path, f"{minio_folder_final}/{final_filename}", remove_after_upload=False)
         
         image_path = full_final_path
         

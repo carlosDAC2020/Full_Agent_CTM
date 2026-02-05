@@ -10,7 +10,8 @@ from .utils import create_marp_from_text,  convert_marp_to_formats
 from backend.app.services.core.storage import storage_service
 
 # Usar variable de entorno si existe (Docker), sino carpeta local
-OUTPUT_DIR = os.getenv("SHARED_DATA_PATH", "generated_presentations") 
+BASE_DIR = os.getenv("SHARED_DATA_PATH", "generated_presentations") 
+OUTPUT_DIR = os.path.join(BASE_DIR, "presentations")
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 def presentation_generation_docs_node(state: GraphState):

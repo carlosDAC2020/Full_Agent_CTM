@@ -145,28 +145,68 @@ export async function restoreSession(sessionId) {
 
         updateStepper(targetStep);
 
-        // --- NEW: Restore Modal if Researching ---
-        if (historyData.status === 'researching' && historyData.current_task_id) {
-            console.log("🔄 Reanudando monitoreo de investigación...");
-            const researchModal = document.getElementById('research-loading-modal');
-            const statusText = document.getElementById('research-status-text');
+        // --- NEW: Restore Task Monitoring (In-Progress Processes) ---
+        const inProgressStatuses = ['researching', 'ideating', 'structuring', 'generating', 'vectorizing'];
+        if (inProgressStatuses.includes(historyData.status) && historyData.current_task_id) {
+            console.log(`🔄 Reanudando monitoreo: ${historyData.status}...`);
             const { pollTask } = await import('../api/tasks.js');
 
-            researchModal.classList.remove('hidden');
-            statusText.innerText = "Reconectando con el agente...";
+            if (historyData.status === 'researching') {
+                // Special Modal for RAG/Research Step 1
+                const researchModal = document.getElementById('research-loading-modal');
+                const statusText = document.getElementById('research-status-text');
+                researchModal.classList.remove('hidden');
+                statusText.innerText = "Reconectando con el agente...";
 
-            pollTask(
-                historyData.current_task_id,
-                (msg) => { statusText.innerText = msg || "Analizando..."; },
-                (result) => {
-                    renderStep1Result(result.data);
-                    researchModal.classList.add('hidden');
-                },
-                (err) => {
-                    statusText.innerText = "Error recuperado: " + err;
-                    setTimeout(() => researchModal.classList.add('hidden'), 3000);
-                }
-            );
+                pollTask(historyData.current_task_id,
+                    (msg) => { statusText.innerText = msg || "Analizando..."; },
+                    (result) => {
+                        renderStep1Result(result.data);
+                        researchModal.classList.add('hidden');
+                    },
+                    (err) => {
+                        statusText.innerText = "Error: " + err;
+                        setTimeout(() => researchModal.classList.add('hidden'), 3000);
+                    }
+                );
+            } else {
+                // Generic Loader for Steps 2, 3, 4
+                loader.classList.remove('hidden');
+                loaderText.innerText = "Reanudando proceso en curso...";
+
+                // Hide steps during loading
+                step1.classList.add('hidden');
+                step2.classList.add('hidden');
+                step3.classList.add('hidden');
+                step4.classList.add('hidden');
+
+                pollTask(historyData.current_task_id,
+                    (msg) => { loaderText.innerText = msg || "Procesando..."; },
+                    (result) => {
+                        loader.classList.add('hidden');
+                        const data = typeof result.data === 'string' ? JSON.parse(result.data) : result.data;
+
+                        if (historyData.status === 'ideating') {
+                            renderIdeas(data);
+                            step2.classList.remove('hidden');
+                            updateStepper(2);
+                        } else if (historyData.status === 'structuring') {
+                            renderSchema(data);
+                            step3.classList.remove('hidden');
+                            updateStepper(3);
+                        } else if (historyData.status === 'generating') {
+                            renderFinalResult(data);
+                            step4.classList.remove('hidden');
+                            updateStepper(4);
+                        }
+                        loadHistory(sessionId);
+                    },
+                    (err) => {
+                        loaderText.innerText = "Error: " + err;
+                        loaderText.classList.add('text-red-500');
+                    }
+                );
+            }
         }
 
     } catch (err) {
