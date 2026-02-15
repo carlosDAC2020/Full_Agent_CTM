@@ -103,6 +103,7 @@ La plataforma ofrece una experiencia fluida dividida en dos módulos principales
 *   **PostgreSQL**: Base de datos relacional robusta para usuarios, metadatos y persistencia transaccional.
 *   **Redis**: Utilizado como broker de mensajes para Celery y capa de caché de alto rendimiento.
 *   **MinIO**: Almacenamiento de objetos compatible con S3 para gestionar archivos grandes (PDFs, imágenes generadas) de forma escalable y local.
+*   **Grafana + Loki + Promtail**: Stack de **Observabilidad y Logs**. Permite la recolección, almacenamiento y visualización de logs de todos los contenedores en tiempo real con persistencia y seguridad.
 *   **Docker Compose**: Orquestación de contenedores para un despliegue replicable y aislado de todos los servicios.
 
 ---
@@ -135,6 +136,12 @@ flowchart TD
         Web[Web Search - Arxiv/Wikipedia]
     end
 
+    subgraph Monitoring [Observabilidad]
+        Grafana[Grafana - Dashboard]
+        Loki[Loki - Log Storage]
+        Promtail[Promtail - Log Collector]
+    end
+
     Client --> API
     API --> DB
     API --> MinIO
@@ -148,6 +155,13 @@ flowchart TD
     AgentWorker --> Gemini
     AgentWorker --> Web
     AgentWorker --> Redis
+
+    %% Flujo de Logs
+    Processing -. Logs .-> Promtail
+    Infrastructure -. Logs .-> Promtail
+    API -. Logs .-> Promtail
+    Promtail --> Loki
+    Grafana --> Loki
 ```
 
 ### **✅ Ventajas de esta Arquitectura**
@@ -413,6 +427,10 @@ MINIO_BUCKET_NAME=intecmar-data
 # --- Base de Datos Vectorial (ChromaDB) ---
 CHROMA_HOST=chromadb
 CHROMA_PORT=8000
+
+# --- Monitoreo y Logs (Grafana) ---
+GRAFANA_USER=admin
+GRAFANA_PASSWORD=admin
 ```
 
 > [!TIP]
@@ -437,6 +455,7 @@ docker-compose exec intecmar_api python backend/scripts/migrate_convocatorias.py
 *   **Frontend/Landing**: [http://localhost:8000/landing](http://localhost:8000/landing)
 *   **API Docs (Swagger)**: [http://localhost:8000/docs](http://localhost:8000/docs)
 *   **MinIO Console**: [http://localhost:9001](http://localhost:9001)
+*   **Grafana (Logs)**: [http://localhost:3000](http://localhost:3000) (Login: admin/admin)
 
 ---
 

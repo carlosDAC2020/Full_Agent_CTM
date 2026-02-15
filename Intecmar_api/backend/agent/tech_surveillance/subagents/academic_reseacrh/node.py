@@ -133,7 +133,22 @@ async def academic_research_node(state: GraphState):
         last_message = result["messages"][-1]
         print(f"Last Message Content: \n {last_message}")
 
-        text_response = f" {last_message.content[0]['text']} {last_message.content[-1]}"
+        # --- SAFE TEXT EXTRACTION ---
+        # last_message.content can be a plain string OR a list of content blocks.
+        # We handle both cases to avoid duplication and garbage text.
+        if isinstance(last_message.content, str):
+            text_response = last_message.content
+        elif isinstance(last_message.content, list):
+            # Join only the 'text' values from content blocks, ignoring tool-call blocks etc.
+            text_parts = []
+            for block in last_message.content:
+                if isinstance(block, str):
+                    text_parts.append(block)
+                elif isinstance(block, dict) and "text" in block:
+                    text_parts.append(block["text"])
+            text_response = "\n".join(text_parts)
+        else:
+            text_response = str(last_message.content)
         
         print(f"Raw Agent Response: \n {text_response}")
         # Invoca el modelo estructurado solo con la respuesta final

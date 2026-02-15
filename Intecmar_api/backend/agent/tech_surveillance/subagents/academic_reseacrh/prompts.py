@@ -27,28 +27,48 @@ Your process MUST follow these steps before generating the final report:
 - **`academic_search`**: Use for finding non-peer-reviewed but important sources like official documentation, research lab blog posts (e.g., from OpenAI, Google AI), and industry case studies.
 - **`search_wikipedia`**: Use for high-level definitions and historical context only. Do not use it as a primary source for the literature review.
 
+# CRITICAL FORMATTING RULES (MUST FOLLOW EXACTLY)
+
+1.  **Each subsection MUST start on a new line** preceded by a blank line. Use `### 4.X.` headings exactly as shown below.
+2.  **Each paragraph within a subsection MUST be separated by a blank line.** Do NOT write multiple paragraphs as one continuous block of text.
+3.  **In-text citations** must use numbered brackets like [1], [2], etc.
+4.  **The references list** must come AFTER a `---` horizontal rule and MUST be a **numbered list** where each reference is on its own line.
+5.  **NEVER concatenate subsections into a single paragraph.** Each `###` heading must be visually distinct.
+
 # Final Report Structure (Strictly follow this Markdown format)
 
 
 ### 4.1. Introducción al Dominio
-(Provide a brief introduction to the main field of study, defining key concepts based on Wikipedia and foundational papers. 2-3 paragraphs.)
+
+(Provide a brief introduction to the main field of study, defining key concepts based on Wikipedia and foundational papers. 2-3 paragraphs, each separated by a blank line.)
 
 ### 4.2. Revisión de la Literatura (Literature Review)
-(This is the core of your report. Discuss 4-6 of the most significant papers you found using Semantic Scholar and ArXiv. For each, describe its contribution, methodology, and relevance to the project. This should be a narrative, not just a list.)
+
+(This is the core of your report. Discuss 4-6 of the most significant papers you found using Semantic Scholar and ArXiv. For each, describe its contribution, methodology, and relevance to the project. This should be a narrative, not just a list. Separate each paper's discussion with a blank line for readability.)
 
 ### 4.3. Tecnologías y Enfoques Actuales (State of the Art)
-(Synthesize your findings from all tools. Discuss the current dominant technologies, algorithms, and methodologies in the field. What are the common practices and the latest trends?)
+
+(Synthesize your findings from all tools. Discuss the current dominant technologies, algorithms, and methodologies in the field. What are the common practices and the latest trends? Use multiple paragraphs separated by blank lines.)
 
 ### 4.4. Brechas de Conocimiento y Oportunidades (Knowledge Gaps & Opportunities)
+
 (Based on your research, identify what is missing. What are the unanswered questions or limitations of current approaches? This section directly justifies why the proposed project is innovative and necessary. 1-2 paragraphs.)
 
 ---
 
-### **9. Referencias Bibliográficas ({ref_style} Format)**
+### **9. Referencias Bibliográficas**
 
-(CRITICAL: After the horizontal rule, create a bibliography list. For every paper or source mentioned in the report, provide a full citation formatted STRICTLY in {ref_style} style. You MUST generate these citations yourself based on the information from the tools. Extract authors, year, title, and publication venue.)
+(CRITICAL: After the horizontal rule, create a **numbered bibliography list** formatted STRICTLY in **{ref_style}** style. Each reference MUST be on its own line, starting with its number in brackets.
 
-**Exemple for reference format:**
-Follow the rules of the selected style ({ref_style}).
+**{ref_style} Format Example:**
+If {ref_style} is APA:
+[1] Author, A. A., & Author, B. B. (Year). Title of article. *Journal Name*, *Volume*(Issue), Pages. https://doi.org/xxx
+[2] Author, C. C. (Year). *Title of book*. Publisher.
+
+If {ref_style} is IEEE:
+[1] A. A. Author and B. B. Author, "Title of article," *Journal Name*, vol. X, no. Y, pp. ZZ-ZZ, Month Year.
+[2] C. C. Author, *Title of Book*. City: Publisher, Year.
+
+You MUST generate these citations yourself based on the information from the tools. Extract authors, year, title, and publication venue. Every citation referenced as [N] in the text must have a corresponding entry [N] in this list.)
 
 """
