@@ -40,36 +40,36 @@ La plataforma ofrece una experiencia fluida dividida en dos módulos principales
 
 | Paso | Vista | Acción y Resultado |
 | :--- | :--- | :--- |
-| **01. Discovery** | ![Captura del Buscador de Convocatorias](/docs/images/agent_home.png) | El usuario filtra y selecciona una convocatoria oficial entre cientos de opciones nacionales e internacionales. |
-| **02. Ingesta** | ![Captura de Ficha de Evaluación AI](/docs/images/agent_ingest.png) | El agente analiza el PDF de la convocatoria y extrae: objetivos, financiamiento y fechas clave automáticamente. |
-| **03. Ideación** | ![Captura de Grid de Ideas Generadas](/docs/images/agent_ideas.png) | El LLM propone 3-4 ideas de proyectos únicos alineados con la convocatoria. El usuario puede co-crear editando títulos y objetivos. |
-| **04. Estructura** | ![Captura del Visualizador de Esquema Técnico](/docs/images/agent_initial_squema.png) | Se genera el esquema base (Markdown/PDF) del proyecto, listo para ser expandido con investigación académica. |
-| **05. Entrega** | ![Captura de Reporte Final con Imágenes](/docs/images/agent_final.png) | El agente entrega un reporte técnico completo, justificado científicamente y con apoyo visual generado por IA. |
+| **01. Discovery** | ![Captura del Buscador de Convocatorias](docs/images/agent_home.png) | El usuario filtra y selecciona una convocatoria oficial entre cientos de opciones nacionales e internacionales. |
+| **02. Ingesta** | ![Captura de Ficha de Evaluación AI](docs/images/agent_ingest.png) | El agente analiza el PDF de la convocatoria y extrae: objetivos, financiamiento y fechas clave automáticamente. |
+| **03. Ideación** | ![Captura de Grid de Ideas Generadas](docs/images/agent_ideas.png) | El LLM propone 3-4 ideas de proyectos únicos alineados con la convocatoria. El usuario puede co-crear editando títulos y objetivos. |
+| **04. Estructura** | ![Captura del Visualizador de Esquema Técnico](docs/images/agent_initial_squema.png) | Se genera el esquema base (Markdown/PDF) del proyecto, listo para ser expandido con investigación académica. |
+| **05. Entrega** | ![Captura de Reporte Final con Imágenes](docs/images/agent_final.png) | El agente entrega un reporte técnico completo, justificado científicamente y con apoyo visual generado por IA. |
 
 ---
 
 ### **2. Centro de Gestión de Magazines 📚**
 
 <div align="center">
-  <img src="/docs/images/mag_home.png" alt="Panel Principal de Magazines" width="850">
+  <img src="docs/images/mag_home.png" alt="Panel Principal de Magazines" width="850">
   <p><i>Interfaz central para la gestión, curaduría y generación de revistas digitales interactivas.</i></p>
 </div>
 
 *   **Curaduría Inteligente** 🛒: Selecciona múltiples convocatorias en un "carrito" para consolidarlas en una única publicación.
     <div align="center">
-      <img src="/docs/images/mag_curaduria_intelogente.png" alt="Selección de convocatorias" width="750" style="border-radius: 8px; border: 1px solid #333;">
+      <img src="docs/images/mag_curaduria_intelogente.png" alt="Selección de convocatorias" width="750" style="border-radius: 8px; border: 1px solid #333;">
     </div>
 
 *   **Diseño Automatizado** 🎨: Genera un PDF maquetado profesionalmente con un solo clic, respetando la identidad corporativa.
     <div align="center">
       <table style="border: none; background: transparent;">
         <tr style="border: none; background: transparent;">
-          <td style="border: none; padding: 5px;"><img src="/docs/images/mag_pdf_1.png" width="380" alt="Vista PDF 1" style="border-radius: 4px;"></td>
-          <td style="border: none; padding: 5px;"><img src="/docs/images/mag_pdf_2.png" width="380" alt="Vista PDF 2" style="border-radius: 4px;"></td>
+          <td style="border: none; padding: 5px;"><img src="docs/images/mag_pdf_1.png" width="380" alt="Vista PDF 1" style="border-radius: 4px;"></td>
+          <td style="border: none; padding: 5px;"><img src="docs/images/mag_pdf_2.png" width="380" alt="Vista PDF 2" style="border-radius: 4px;"></td>
         </tr>
         <tr style="border: none; background: transparent;">
-          <td style="border: none; padding: 5px;"><img src="/docs/images/mag_pdf_3.png" width="380" alt="Vista PDF 3" style="border-radius: 4px;"></td>
-          <td style="border: none; padding: 5px;"><img src="/docs/images/mag_pdf_4.png" width="380" alt="Vista PDF 4" style="border-radius: 4px;"></td>
+          <td style="border: none; padding: 5px;"><img src="docs/images/mag_pdf_3.png" width="380" alt="Vista PDF 3" style="border-radius: 4px;"></td>
+          <td style="border: none; padding: 5px;"><img src="docs/images/mag_pdf_4.png" width="380" alt="Vista PDF 4" style="border-radius: 4px;"></td>
         </tr>
       </table>
       <p><i>Ejemplo de maquetación automática: Portada, contenido interno y cierre institucional.</i></p>
@@ -77,7 +77,7 @@ La plataforma ofrece una experiencia fluida dividida en dos módulos principales
 
 *   **Distribución Eficiente** 📧: Envío directo por correo electrónico a listas de suscriptores desde la misma interfaz.
     <div align="center">
-      <img src="/docs/images/mag_email_send.png" alt="Envío de emails" width="750" style="border-radius: 8px; border: 1px solid #333;">
+      <img src="docs/images/mag_email_send.png" alt="Envío de emails" width="750" style="border-radius: 8px; border: 1px solid #333;">
     </div>
 
 
