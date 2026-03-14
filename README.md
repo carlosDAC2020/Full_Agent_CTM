@@ -32,7 +32,7 @@ Su propuesta de valor reside en dos pilares fundamentales:
 
 ---
 
-## **📸 Demo & User Journey**
+## **📸 Demo y User Journey**
 
 La plataforma ofrece una experiencia fluida dividida en dos módulos principales. A continuación se detalla el flujo de trabajo:
 
